@@ -50,6 +50,17 @@ def expected() -> String:
 def scene_expected() -> String:
   "before-tick entities=0 admitted=0\ntick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\nShared mesh scene verified across 8 ticks."
 
+def render_ticks(remaining:Nat,+tick:U32) -> String:
+  match remaining:
+    case 0n:""
+    case 1n+rest:
+      "tick=" ++ U32.show(tick) ++ " all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected\n" ++ render_ticks(rest,U32.inc(tick))
+
+def render_expected() -> String:
+  "Scalar quaternion cross-product and independent coverage bound verified.\nindex-order=near-first\n" ++
+  render_ticks(8n,1) ++ "index-order=far-first\n" ++ render_ticks(8n,1) ++
+  "Terminal Action cleanup verified.\nPublic Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm"
+
 def main() -> IO(Unit):
   do IO<Unit>:
     exact("bend",["version"],Pin.bend_version())
@@ -69,4 +80,7 @@ def main() -> IO(Unit):
     command("bend",["examples/scene.bend","-o","build/scene.c"])
     command("clang",["-std=c11","-O2","build/scene.c","-lpthread","-lm","-ldl","-o","build/scene"])
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/scene","--threads","1","--gpu","off"],scene_expected())
+    command("bend",["examples/scene-render.bend","-o","build/scene-render.c"])
+    command("clang",["-std=c11","-O2","build/scene-render.c","-lpthread","-lm","-ldl","-o","build/scene-render"])
+    exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/scene-render","--threads","1","--gpu","off"],render_expected())
     IO.print("Pinned native toolchain and dependency compatibility verified.")

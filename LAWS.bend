@@ -1,3 +1,5 @@
+import ./src/scene-mesh.bend as Mesh
+import ./src/scene-matrix.bend as Render
 import Base
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
 import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
@@ -177,3 +179,22 @@ law draw_finish_order:
     ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
       ~SceneSchema.components(),~Layout.InRight{Layout.AtLeaf{}},~{==}),[],frame,acc) ==
     (frame,Done{List.reverse(&2,Draw.DrawItem,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+
+
+law render_push_extent:
+  for matrix:Render.Mat4
+  {List.length(&1,U32,Render.matrix_words(matrix)) == 16n : Nat}
+
+law render_indices_append:
+  for +left:List<&2,U32>
+  for +right:List<&2,U32>
+  for +count:U32
+  {Mesh.indices_valid(List.append(&2,U32,left,right),count) ==
+    Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)) : Bool}
+
+law render_indices_order:
+  for +left:List<&2,U32>
+  for +right:List<&2,U32>
+  for +count:U32
+  {Mesh.indices_valid(List.append(&2,U32,left,right),count) ==
+    Mesh.indices_valid(List.append(&2,U32,right,left),count) : Bool}

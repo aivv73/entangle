@@ -1,3 +1,5 @@
+import ./src/scene-mesh.bend as Mesh
+import ./src/scene-matrix.bend as Render
 import ./deps/bend-vulkan/PROOF.bend as Vulkan
 import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
 import ./tools/component-consumer.bend as Consumer
@@ -89,3 +91,52 @@ def Laws.draw_absent_strict(H,next,frame,handle,transform,acc,added,changed):{==
 def Laws.row_missing_strict(H,next,frame,handle,transform,acc,added,changed):{==}
 
 def Laws.draw_finish_order(frame,acc):{==}
+
+
+def Laws.render_push_extent(matrix):
+  match matrix:
+    case Render.Mat4{Render.Vec4{a,b,c,d},Render.Vec4{e,f,g,h},Render.Vec4{i,j,k,l},Render.Vec4{m,n,o,p}}:{==}
+
+def conjunction_associative(+a:Bool,+b:Bool,+c:Bool) ->
+  {Bool.and(a,Bool.and(b,c)) == Bool.and(Bool.and(a,b),c) : Bool}:
+  match a:
+    case False{}:{==}
+    case True{}:{==}
+
+def conjunction_commutative(+a:Bool,+b:Bool) ->
+  {Bool.and(a,b) == Bool.and(b,a) : Bool}:
+  match a b:
+    case False{} False{}:{==}
+    case False{} True{}:{==}
+    case True{} False{}:{==}
+    case True{} True{}:{==}
+
+def Laws.render_indices_append(left,right,count):
+  match left:
+    case []:{==}
+    case +head <> +tail:
+      Equal.trans(Bool,
+        Mesh.indices_valid(List.append(&2,U32,head <> tail,right),count),
+        Bool.and(U32.is_lt(head,count),Bool.and(Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count))),
+        Bool.and(Mesh.indices_valid(head <> tail,count),Mesh.indices_valid(right,count)),
+        Equal.cong(Bool,Bool,b => Bool.and(U32.is_lt(head,count),b),
+          Mesh.indices_valid(List.append(&2,U32,tail,right),count),
+          Bool.and(Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count)),
+          Laws.render_indices_append(tail,right,count)),
+        conjunction_associative(U32.is_lt(head,count),Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count)))
+
+def Laws.render_indices_order(left,right,count):
+  Equal.trans(Bool,
+    Mesh.indices_valid(List.append(&2,U32,left,right),count),
+    Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
+    Mesh.indices_valid(List.append(&2,U32,right,left),count),
+    Laws.render_indices_append(left,right,count),
+    Equal.trans(Bool,
+      Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
+      Bool.and(Mesh.indices_valid(right,count),Mesh.indices_valid(left,count)),
+      Mesh.indices_valid(List.append(&2,U32,right,left),count),
+      conjunction_commutative(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
+      Equal.sym(Bool,
+        Mesh.indices_valid(List.append(&2,U32,right,left),count),
+        Bool.and(Mesh.indices_valid(right,count),Mesh.indices_valid(left,count)),
+        Laws.render_indices_append(right,left,count))))
