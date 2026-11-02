@@ -18,7 +18,8 @@
 
 - Completed the separate engine project and native dependency-pinning task in Entangle. Exact commits and compiler requirements are in [toolchain.bend](toolchain.bend); Git submodules retain the dependency revisions.
 - `bend tools/verify.bend` passed on Linux x86-64. One native executable runs the upstream scheduled-health consumer and Vulkan buffer roundtrip. The check compares the complete ECS output and requires zero live Vulkan objects after cleanup [S25].
-- The dependency checkouts are clean. The Entangle changes and evidence are local and uncommitted. This run did not include a rendered ECS scene, window checks, Khronos validation, sanitizers, benchmarks, or the full upstream suites.
+- Project component records, exact defaults, structural laws, and a native field-preservation consumer are implemented. ECS registration and movement remain open.
+- The dependency checkouts are clean. Component verification passed alongside the native dependency baseline. This run did not include a rendered ECS scene, window checks, Khronos validation, sanitizers, benchmarks, or the full upstream suites.
 
 ## History: what changed in revision 6 before E1
 
@@ -62,7 +63,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action: continue E1 by adding `Transform`, `Velocity`, `MeshRef`, and `MaterialRef`, then build the first scene with 100 rendered ECS entities through the public API. The native dependency baseline is verified; E0 is complete.**
+**Next action: continue E1 with the project components now defined, and build the first scene with 100 rendered ECS entities through the public API. The native dependency baseline is verified; E0 is complete.**
 
 ---
 
@@ -254,7 +255,7 @@ Baseline, environment, and results: [library split report](.audit/library-split.
 ### Tasks
 
 - [x] Create a separate engine project. Pin compatible Bendvy and `bend-vulkan` revisions on one native toolchain. Completed locally in Entangle on November 2, 2026 [S25].
-- [ ] Add project components `Transform`, `Velocity`, `MeshRef`, and `MaterialRef`.
+- [x] Add project components `Transform`, `Velocity`, `MeshRef`, and `MaterialRef`. Structural laws and the native consumer are gated by `bend tools/verify.bend`.
 - [ ] Create 100 entities sharing a mesh; a Bendvy system changes their position or orientation.
 - [ ] Extract only drawing data into a small `DrawList`, not a copy of the entire World.
 - [ ] Render it through the public `bend-vulkan` API, without a C function that knows about ECS or a particular scene.
@@ -270,7 +271,7 @@ Baseline, environment, and results: [library split report](.audit/library-split.
 
 Run `bend tools/verify.bend` from Entangle after the [dependency setup](README.md#verify-the-native-baseline). The imported Vulkan and Bendvy execution-law proofs passed. The combined native executable produced the expected output across six scheduled ECS updates, verified host and GPU buffer readback, and left zero live Vulkan objects. It used one Bend CPU thread with Bend GPU dispatch disabled; the Vulkan buffer fill still ran on the graphics device [S25].
 
-This completes the first E1 task. The ECS example and Vulkan example run sequentially in one executable; ECS drawing data is not yet passed to the renderer. The remaining component, scene, input, and timing tasks are open.
+This completes the first E1 task. The ECS example and Vulkan example run sequentially in one executable; ECS drawing data is not yet passed to the renderer. The component records now have structural proofs and a native verifier. The scene, input, and timing tasks remain open.
 
 **Done when:** one executable shows moving ECS entities, a controllable camera, and correct resize/exit behavior. The example does not require game logic inside dependencies.
 
@@ -687,7 +688,7 @@ Complete, E0. The voxel-code migration and removal of the reverse dependency are
 
 ### 2. Render a Bendvy scene through the public bend-vulkan API
 
-In progress after E0. Entangle's dependency revisions and native toolchain are pinned and verified [S25]. Next, add the project components and provide 100 moving entities, a conventional mesh, a camera, and baseline timings. No render graph within this issue.
+In progress after E0. Entangle's dependency revisions and native toolchain are pinned and verified [S25]. The project components are defined and verified. Next, provide 100 moving entities, a conventional mesh, a camera, and baseline timings. No render graph within this issue.
 
 ### 3. Run a second non-voxel application through App and RenderPlugin
 
@@ -746,4 +747,4 @@ The R0–R4 architectural decisions are our design synthesis. External papers es
 
 - [S25] Local Entangle evidence dated November 2, 2026: [report](docs/verification/2026-11-02/README.md), [result.json](docs/verification/2026-11-02/result.json), [native verification log](docs/verification/2026-11-02/native.log), and [environment and compiler fingerprints](docs/verification/2026-11-02/environment.log). Exact pins are in [toolchain.bend](toolchain.bend). `bend tools/verify.bend` exited with code `0`. The [work item](https://entire.com/et/bend-engine/-/trails/1) records the scope; the implementation and evidence remain local and uncommitted.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. This update completes E1's separate-project and dependency-pinning task. E1 as a whole, E2–E7, and R0–R4 remain incomplete.
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. E1's separate-project, dependency-pinning, and component tasks are complete. E1 as a whole, E2–E7, and R0–R4 remain incomplete.

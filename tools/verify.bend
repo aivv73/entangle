@@ -60,4 +60,7 @@ def main() -> IO(Unit):
     command("bend",["examples/native_compatibility.bend","-o","build/native-compatibility.c"])
     command("clang",["-std=c11","-O2","build/native-compatibility.c","-lpthread","-lm","-ldl","-o","build/native-compatibility"])
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/native-compatibility","--threads","1","--gpu","off"],expected())
+    command("bend",["examples/components.bend","-o","build/components.c"])
+    command("clang",["-std=c11","-O2","build/components.c","-lpthread","-lm","-ldl","-o","build/components"])
+    exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/components","--threads","1","--gpu","off"],"Project component fields and defaults verified.")
     IO.print("Pinned native toolchain and dependency compatibility verified.")
