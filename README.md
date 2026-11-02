@@ -38,6 +38,8 @@ still executes the buffer fill on the graphics device.
 
 A second native executable checks every component field, exact defaults, float bit
 preservation, and translation replacement while preserving rotation and scale.
+A third runs the shared mesh scene through eight schedule ticks and checks all
+100 entities after every tick.
 
 Successful verification ends with:
 
@@ -93,5 +95,57 @@ def main() -> C.Transform:
 translation replacement claims. `PROOF.bend` proves them alongside the dependency
 laws. These claims use structural equality without float arithmetic or quaternion
 normalization assumptions. `bend tools/verify.bend` also runs the native consumer
-in `examples/components.bend`. ECS schema registration, movement, and rendering
-remain separate E1 work.
+in `examples/components.bend`. The scene below registers Transform and MeshRef.
+Rendering remains separate E1 work.
+
+## Shared mesh scene
+
+Run the native scene and all existing verification from the repository root:
+
+```sh
+bend tools/verify.bend
+```
+
+To run the scene alone with the same pinned compiler and runtime options:
+
+```sh
+mkdir -p build
+bend examples/scene.bend -o build/scene.c
+clang -std=c11 -O2 build/scene.c -lpthread -lm -ldl -o build/scene
+./build/scene --threads 1 --gpu off
+```
+
+The scene starts with an empty Bendvy world. Its first schedule tick queues 100
+entities, publishes them before movement, and translates each once by
+`(1.0, 0.5, -2.0)`. Later ticks translate the same entities once each. Every entity
+has a Transform and the same logical `MeshRef{7}`. A registered writer changes
+only Transform translation and preserves rotation and scale.
+
+The executable prints the empty initial population, then one verified line per
+tick. The last tick and success line are:
+
+```text
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+Shared mesh scene verified across 8 ticks.
+```
+
+`src/scene.bend` owns registration and the retained two-node schedule.
+`scene-schema.bend`, `scene-spawn.bend`, and `scene-motion.bend` define its two
+component columns, one-time recursive bootstrap, and translation writer.
+`scene-observe.bend` reads the actual retained world through Bendvy's passive
+inspector. `examples/scene.bend` compares every row against independent integer
+and half-integer arithmetic. It requires the complete live set to match the
+admitted set by namespace, index, and generation. It rejects duplicate or missing
+rows, failed component reads, unsuccessful schedule reports, changed handles,
+remaining seeds, pending commands, and refused publication receipts.
+
+`LAWS.bend` states general claims for translation, rotation and scale
+preservation, seed contents and count, and exhausted-bootstrap behavior.
+`PROOF.bend` contains their proofs. Native validation covers the framework's
+registration, publication, and repeated execution for this 100-entity workload.
+The bounded coordinates are exactly representable in F32. The proofs do not
+assume arbitrary F32 associativity or prove the native runtime.
+
+Mesh ID 7 is a shared logical identity. This example has no mesh payload, asset
+manager, renderer, or rotation update. It uses sequential CPU execution and adds
+no GPU dispatch or runtime parallelism.

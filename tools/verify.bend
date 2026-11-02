@@ -47,6 +47,9 @@ def revisions(pins: List<(String & String)>) -> IO(Unit):
 def expected() -> String:
   "before-barrier=\ntick=1 health=5,5\ntick=2 health=2.5,1.25\ntick=3 health=1.25,0.3125\ntick=4 health=0.625,0.078125\ntick=5 health=0.3125,0.01953125\ntick=6 health=0.15625,0.0048828125\nuntouched=30\nHost roundtrip and GPU buffer fill verified\nBendvy + Vulkan native compatibility verified; live Vulkan objects: 0"
 
+def scene_expected() -> String:
+  "before-tick entities=0 admitted=0\ntick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\ntick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted\nShared mesh scene verified across 8 ticks."
+
 def main() -> IO(Unit):
   do IO<Unit>:
     exact("bend",["version"],Pin.bend_version())
@@ -63,4 +66,7 @@ def main() -> IO(Unit):
     command("bend",["examples/components.bend","-o","build/components.c"])
     command("clang",["-std=c11","-O2","build/components.c","-lpthread","-lm","-ldl","-o","build/components"])
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/components","--threads","1","--gpu","off"],"Project component fields and defaults verified.")
+    command("bend",["examples/scene.bend","-o","build/scene.c"])
+    command("clang",["-std=c11","-O2","build/scene.c","-lpthread","-lm","-ldl","-o","build/scene"])
+    exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/scene","--threads","1","--gpu","off"],scene_expected())
     IO.print("Pinned native toolchain and dependency compatibility verified.")
