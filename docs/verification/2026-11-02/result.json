@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-02",
+  "bend": "2.0.39",
+  "clang": "23.1.4",
+  "target": "x86_64-pc-linux-gnu",
+  "dependencies": {
+    "bendvy": "16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee",
+    "bend-vulkan": "a144f7dd4fb4835ca3d5ce17350fc850de049038",
+    "bend-collections": "bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c"
+  },
+  "verification": {
+    "command": ["bend", "tools/verify.bend"],
+    "exit_code": 0,
+    "log": "native.log",
+    "proofs": ["bend-vulkan/PROOF.bend", "bendvy/test-fixtures/execution-laws/PROOF.bend"],
+    "proof_status": "ALL PROOFS CHECK",
+    "build_commands": [
+      ["bend", "examples/native_compatibility.bend", "-o", "build/native-compatibility.c"],
+      ["clang", "-std=c11", "-O2", "build/native-compatibility.c", "-lpthread", "-lm", "-ldl", "-o", "build/native-compatibility"]
+    ],
+    "run_command": ["env", "-u", "DISPLAY", "-u", "WAYLAND_DISPLAY", "./build/native-compatibility", "--threads", "1", "--gpu", "off"],
+    "ecs_complete_output_matched": true,
+    "host_and_gpu_buffer_readback_passed": true,
+    "live_vulkan_objects_after_cleanup": 0,
+    "dependency_sources_modified": false
+  },
+  "environment": "environment.log",
+  "window_validation": false,
+  "khronos_validation": false,
+  "sanitizers": false,
+  "benchmarks": false,
+  "rendered_ecs_scene": false
+}

@@ -1,0 +1,75 @@
+2026-11-02T18:09:07+00:00
+bend 2.0.39
+clang version 23.1.4
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Linux x86_64
+ldd (GNU libc) 2.44
+2ec160fa4486d33aff51e9eedcc294d6b531dc10c279c00b0c00685dae2045cd  /home/aivv/.bend/bin/bend
+3cd0b0944b11e15c4da5c9af2560e3c04f27d3d37027f1617899aeec17b499ce  /home/aivv/.bend/bend2/base.bend
+08bc7039b99d6b0ea2338e9f83b57338ad1a86134804b335f7d8ce02ac0369d4  /home/aivv/.bend/guide/GUIDE.md
+'DISPLAY' environment variable not set... skipping surface info
+==========
+VULKANINFO
+==========
+
+Vulkan Instance Version: 1.4.363
+
+
+Instance Extensions: count = 25
+-------------------------------
+VK_EXT_acquire_drm_display             : extension revision 1
+VK_EXT_acquire_xlib_display            : extension revision 1
+VK_EXT_debug_report                    : extension revision 10
+VK_EXT_debug_utils                     : extension revision 2
+VK_EXT_direct_mode_display             : extension revision 1
+VK_EXT_display_surface_counter         : extension revision 1
+VK_EXT_surface_maintenance1            : extension revision 1
+VK_EXT_swapchain_colorspace            : extension revision 5
+VK_KHR_device_group_creation           : extension revision 1
+VK_KHR_display                         : extension revision 23
+VK_KHR_external_fence_capabilities     : extension revision 1
+VK_KHR_external_memory_capabilities    : extension revision 1
+VK_KHR_external_semaphore_capabilities : extension revision 1
+VK_KHR_get_display_properties2         : extension revision 1
+VK_KHR_get_physical_device_properties2 : extension revision 2
+VK_KHR_get_surface_capabilities2       : extension revision 1
+VK_KHR_portability_enumeration         : extension revision 1
+VK_KHR_surface                         : extension revision 25
+VK_KHR_surface_maintenance1            : extension revision 1
+VK_KHR_surface_protected_capabilities  : extension revision 1
+VK_KHR_wayland_surface                 : extension revision 6
+VK_KHR_xcb_surface                     : extension revision 6
+VK_KHR_xlib_surface                    : extension revision 6
+VK_LUNARG_direct_driver_loading        : extension revision 1
+VK_NV_display_stereo                   : extension revision 1
+
+Instance Layers: count = 10
+---------------------------
+VK_LAYER_FROG_gamescope_wsi_x86_64 Gamescope WSI (XWayland Bypass) Layer (x86_64) 1.3.221  version 1
+VK_LAYER_KHRONOS_validation        Khronos Validation Layer                       1.4.363  version 1
+VK_LAYER_MANGOHUD_overlay_x86      Vulkan Hud Overlay                             1.3.0    version 1
+VK_LAYER_MANGOHUD_overlay_x86_64   Vulkan Hud Overlay                             1.3.0    version 1
+VK_LAYER_NV_optimus                NVIDIA Optimus layer                           1.4.351  version 1
+VK_LAYER_NV_present                NVIDIA Presentation Layer                      1.4.351  version 1
+VK_LAYER_VALVE_steam_fossilize_32  Steam Pipeline Caching Layer                   1.3.207  version 1
+VK_LAYER_VALVE_steam_fossilize_64  Steam Pipeline Caching Layer                   1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_32    Steam Overlay Layer                            1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_64    Steam Overlay Layer                            1.3.207  version 1
+
+Devices:
+========
+GPU0:
+	apiVersion         = 1.4.351
+	driverVersion      = 615.78.8.0
+	vendorID           = 0x10de
+	deviceID           = 0x2184
+	deviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+	deviceName         = NVIDIA GeForce GTX 1660
+	driverID           = DRIVER_ID_NVIDIA_PROPRIETARY
+	driverName         = NVIDIA
+	driverInfo         = 615.78.08
+	conformanceVersion = 1.4.3.3
+	deviceUUID         = 175d6128-af27-3150-5da4-fe7e3fd2f124
+	driverUUID         = ad632510-8a66-58c8-aa0c-9ffd3f6f97fe

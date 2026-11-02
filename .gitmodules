@@ -1,0 +1,7 @@
+[submodule "deps/bendvy"]
+	path = deps/bendvy
+	url = https://github.com/dearlordylord/bendvy.git
+	shallow = true
+[submodule "deps/bend-vulkan"]
+	path = deps/bend-vulkan
+	url = entire://aws-eu-central-1.entire.io/et/bend-engine/bend-vulkan

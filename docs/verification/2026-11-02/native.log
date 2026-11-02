@@ -1,0 +1,34 @@
++ bend
+bend 2.0.39
++ clang
++ clang
+x86_64-pc-linux-gnu
++ uname
+Linux x86_64
++ git
+16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee
++ git
++ git
+a144f7dd4fb4835ca3d5ce17350fc850de049038
++ git
++ git
+bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c
++ git
++ mkdir
++ bend
+ALL PROOFS CHECK
+Use --verdict for mathematical validity.
++ bend
++ clang
++ env
+before-barrier=
+tick=1 health=5,5
+tick=2 health=2.5,1.25
+tick=3 health=1.25,0.3125
+tick=4 health=0.625,0.078125
+tick=5 health=0.3125,0.01953125
+tick=6 health=0.15625,0.0048828125
+untouched=30
+Host roundtrip and GPU buffer fill verified
+Bendvy + Vulkan native compatibility verified; live Vulkan objects: 0
+Pinned native toolchain and dependency compatibility verified.
