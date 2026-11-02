@@ -77,3 +77,15 @@ def Laws.scene_seed_count(count,index):
 
 def Laws.scene_empty_bootstrap(F,effects,H,Q,caps,commands,scope,queue,handles):
   {==}
+
+def Laws.draw_payload(handle,transform,mesh):{==}
+
+def Laws.draw_handle_independent(left,right,transform,mesh):{==}
+
+def Laws.draw_found_order(H,next,frame,handle,transform,mesh,acc,added,changed):{==}
+
+def Laws.draw_absent_strict(H,next,frame,handle,transform,acc,added,changed):{==}
+
+def Laws.row_missing_strict(H,next,frame,handle,transform,acc,added,changed):{==}
+
+def Laws.draw_finish_order(frame,acc):{==}

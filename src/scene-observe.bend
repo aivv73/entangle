@@ -1,4 +1,5 @@
 import Base
+import ./scene-draw.bend as Draw
 import ./components.bend as C
 import ./scene-schema.bend as D
 import ./scene.bend as Scene
@@ -45,27 +46,33 @@ def transform_rows(~H:Type,caps:Ops(H)) -> H -> H & List<&2,Rows.Row<D.Schema,C.
   match caps:
     case Reads{Query.ReadQuery{Cap.ValueRead{read},_,_},_}:read
 
-def found_mesh(~H:Type,next:H -> List<&2,Row> -> H & Result<&2,&2,Unit,List<&2,Row>>,handle:W.Handle<D.Schema>,
-  value:C.Transform,rows:List<&2,Row>,result:H & I.Value<C.MeshRef>) -> H & Result<&2,&2,Unit,List<&2,Row>>:
+def row(handle:W.Handle<D.Schema>,value:C.Transform,mesh:C.MeshRef) -> Row:Row{handle,value,mesh}
+
+def found_mesh(~Out:Data,~project:W.Handle<D.Schema> -> C.Transform -> C.MeshRef -> Out,~H:Type,
+  next:H -> List<&2,Out> -> H & Result<&2,&2,Unit,List<&2,Out>>,handle:W.Handle<D.Schema>,
+  value:C.Transform,rows:List<&2,Out>,result:H & I.Value<C.MeshRef>) -> H & Result<&2,&2,Unit,List<&2,Out>>:
   match result:
-    case (frame,I.Value{Component.Found{mesh},_,_}):next(frame,Row{handle,value,mesh} <> rows)
+    case (frame,I.Value{Component.Found{mesh},_,_}):next(frame,project(handle,value,mesh) <> rows)
     case (frame,_):(frame,Fail{Unit{}})
 
-def values(~H:Type,~get:H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>,rows:List<&2,Rows.Row<D.Schema,
-  C.Transform>>,frame:H,acc:List<&2,Row>) -> H & Result<&2,&2,Unit,List<&2,Row>>:
+def values(~Out:Data,~project:W.Handle<D.Schema> -> C.Transform -> C.MeshRef -> Out,~H:Type,
+  ~get:H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>,rows:List<&2,Rows.Row<D.Schema,
+  C.Transform>>,frame:H,acc:List<&2,Out>) -> H & Result<&2,&2,Unit,List<&2,Out>>:
   match rows:
-    case []:(frame,Done{List.reverse(&2,Row,acc)})
-    case Rows.Row{+handle,I.Value{Component.Found{value},_,_}} <> rest:found_mesh(~H,values(~H,~get,rest),
-      handle,value,acc,get(frame,handle))
+    case []:(frame,Done{List.reverse(&2,Out,acc)})
+    case Rows.Row{+handle,I.Value{Component.Found{value},_,_}} <> rest:found_mesh(~Out,~project,~H,
+      values(~Out,~project,~H,~get,rest),handle,value,acc,get(frame,handle))
     case _:(frame,Fail{Unit{}})
 
-def selected(~H:Type,~get:H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>,result:H & List<&2,Rows.Row<D.Schema,
-  C.Transform>>) -> H & Result<&2,&2,Unit,List<&2,Row>>:
+def selected(~Out:Data,~project:W.Handle<D.Schema> -> C.Transform -> C.MeshRef -> Out,~H:Type,
+  ~get:H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>,result:H & List<&2,Rows.Row<D.Schema,
+  C.Transform>>) -> H & Result<&2,&2,Unit,List<&2,Out>>:
   match result:
-    case (frame,rows):values(~H,~get,rows,frame,[])
+    case (frame,rows):values(~Out,~project,~H,~get,rows,frame,[])
 
-def body(~H:Type,~caps:Ops(H),_:Unit,frame:H) -> H & Result<&2,&2,Unit,List<&2,Row>>:
-  selected(~H,~mesh_read(~H,caps),transform_rows(~H,caps)(frame))
+def body(~Out:Data,~project:W.Handle<D.Schema> -> C.Transform -> C.MeshRef -> Out,~H:Type,~caps:Ops(H),
+  _:Unit,frame:H) -> H & Result<&2,&2,Unit,List<&2,Out>>:
+  selected(~Out,~project,~H,~mesh_read(~H,caps),transform_rows(~H,caps)(frame))
 
 def Receipt() -> Type:Buffer.Receipt<D.Schema,C.Transform,Removed.Removed(D.components())>
 
@@ -107,7 +114,7 @@ def live_observed(rebuild:D.World() -> Scene.Application(),admitted:List<&2,W.Ha
   &2,Unit,Snapshot>):
   match result:
     case (world,live):observed(rebuild,live,admitted,exhausted,clean,I.passive(~D.Schema,~D.Columns(),
-      ~D.Resources(),~Unit,~Ops,~Unit,~Unit,~(List<&2,Row>),~plan(),~body,instance,Unit{},world))
+      ~D.Resources(),~Unit,~Ops,~Unit,~Unit,~(List<&2,Row>),~plan(),~body(~Row,~row),instance,Unit{},world))
 
 def bootstrap_observed(rebuild:Spawn.Node() -> D.World() -> Scene.Application(),world:D.World(),instance:I.Instance<D.Schema>,
   result:Spawn.Node() & (List<&2,W.Handle<D.Schema>> & (Bool & Bool))) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,
@@ -123,3 +130,19 @@ def snapshot(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.App
       bootstrap_observed(left => world => Scheduled.Scheduled{App.State{world,Reg.Product{left,right,
         routing},guards,handler,stateBindings},settings,bindings,deferred},world,instance,Retained.map_owner(Scene.Compilation(),
         Scene.Owner(),List<&2,W.Handle<D.Schema>> & (Bool & Bool),bootstrap,left))
+
+def draw_item(_:W.Handle<D.Schema>,value:C.Transform,mesh:C.MeshRef) -> Draw.DrawItem:
+  Draw.DrawItem{value,mesh}
+
+def drawn(rebuild:D.World() -> Scene.Application(),result:I.Observed<D.Schema,D.Columns(),D.Resources(),
+  Unit,Unit,List<&2,Draw.DrawItem>>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+  match result:
+    case I.Observed{world,instance,Done{items}}:(rebuild(world),(instance,Done{Draw.DrawList{items}}))
+    case I.Observed{world,instance,Fail{error}}:(rebuild(world),(instance,Fail{error}))
+
+def draw_list(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+  match app:
+    case Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}:
+      drawn(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,
+        bindings,deferred},I.passive(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~Ops,~Unit,~Unit,
+        ~(List<&2,Draw.DrawItem>),~plan(),~body(~Draw.DrawItem,~draw_item),instance,Unit{},world))

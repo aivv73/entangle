@@ -1,4 +1,6 @@
 import Base
+import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
+import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
 import ./src/components.bend as C
 import ./tools/component-consumer.bend as Consumer
 import ./src/scene-motion.bend as Move
@@ -10,6 +12,10 @@ import ./deps/bendvy/src/ecs/execution-effects.bend as Effects
 import ./deps/bendvy/src/ecs/execution-system.bend as Sys
 import ./deps/bendvy/src/ecs/world.bend as W
 import ./deps/bendvy/src/ecs/execution-command-local.bend as Local
+import ./src/scene-draw.bend as Draw
+import ./src/scene-observe.bend as Observe
+import ./deps/bendvy/src/ecs/inspector.bend as Inspector
+import ./deps/bendvy/src/ecs/component.bend as Component
 
 law vec3_reconstruct:
   for +value: C.Vec3
@@ -114,3 +120,60 @@ law scene_empty_bootstrap:
   for queue:Q
   for +handles:List<&2,W.Handle<SceneSchema.Schema>>
   {Spawn.body(~Unit,~F,~effects,~H,~Q,~caps,~commands,scope,queue,Spawn.User{[],handles,[]}) == Effects.pure(~F,(H & (Q & (Spawn.User & Sys.Completion<String,Unit>))),effects,(scope,(queue,(Spawn.User{[],handles,[]},Sys.Success{Unit{}})))) : F(H & (Q & (Spawn.User & Sys.Completion<String,Unit>)))}
+
+
+law draw_payload:
+  for handle:W.Handle<SceneSchema.Schema>
+  for +transform:C.Transform
+  for +mesh:C.MeshRef
+  {Observe.draw_item(handle,transform,mesh) == Draw.DrawItem{transform,mesh} : Draw.DrawItem}
+
+law draw_handle_independent:
+  for left:W.Handle<SceneSchema.Schema>
+  for right:W.Handle<SceneSchema.Schema>
+  for +transform:C.Transform
+  for +mesh:C.MeshRef
+  {Observe.draw_item(left,transform,mesh) == Observe.draw_item(right,transform,mesh) : Draw.DrawItem}
+
+law draw_found_order:
+  for H:Type
+  for next:H -> List<&2,Draw.DrawItem> -> H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>
+  for frame:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for +transform:C.Transform
+  for +mesh:C.MeshRef
+  for acc:List<&2,Draw.DrawItem>
+  for added:Bool
+  for changed:Bool
+  {Observe.found_mesh(~Draw.DrawItem,~Observe.draw_item,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.Found{mesh},added,changed})) == next(frame,Draw.DrawItem{transform,mesh} <> acc) : H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+
+law draw_absent_strict:
+  for H:Type
+  for next:H -> List<&2,Draw.DrawItem> -> H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>
+  for frame:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for transform:C.Transform
+  for acc:List<&2,Draw.DrawItem>
+  for added:Bool
+  for changed:Bool
+  {Observe.found_mesh(~Draw.DrawItem,~Observe.draw_item,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.ComponentAbsent{},added,changed})) == (frame,Fail{Unit{}}) : H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+
+law row_missing_strict:
+  for H:Type
+  for next:H -> List<&2,Observe.Row> -> H & Result<&2,&2,Unit,List<&2,Observe.Row>>
+  for frame:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for transform:C.Transform
+  for acc:List<&2,Observe.Row>
+  for added:Bool
+  for changed:Bool
+  {Observe.found_mesh(~Observe.Row,~Observe.row,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.MissingEntity{},added,changed})) == (frame,Fail{Unit{}}) : H & Result<&2,&2,Unit,List<&2,Observe.Row>>}
+
+law draw_finish_order:
+  for frame:Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>
+  for acc:List<&2,Draw.DrawItem>
+  {Observe.values(~Draw.DrawItem,~Observe.draw_item,
+    ~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,
+    ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
+      ~SceneSchema.components(),~Layout.InRight{Layout.AtLeaf{}},~{==}),[],frame,acc) ==
+    (frame,Done{List.reverse(&2,Draw.DrawItem,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}

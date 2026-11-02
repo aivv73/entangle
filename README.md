@@ -149,3 +149,20 @@ assume arbitrary F32 associativity or prove the native runtime.
 Mesh ID 7 is a shared logical identity. This example has no mesh payload, asset
 manager, renderer, or rotation update. It uses sequential CPU execution and adds
 no GPU dispatch or runtime parallelism.
+
+`Observe.draw_list(app, instance)` in `src/scene-observe.bend` returns
+`(app, (instance, Result Draw.DrawList))`. Import `src/scene-draw.bend` for the
+detached payload types. Each ordered `DrawItem` contains the complete `Transform`
+and `MeshRef` ID. A scene before its first tick returns an empty list. Missing
+required component reads fail the entire extraction without a partial list.
+
+Thread the returned application and inspector instance into subsequent calls.
+Extraction preserves the inspector instance and world clock, including a Fresh
+instance, and retains every schedule/application field. DrawList contains no
+World, handles, bootstrap evidence, or materials. It can be retained across ticks.
+The drawing path shares the observer's strict component traversal and query
+order without building a diagnostic Snapshot or separately enumerating handles.
+`examples/scene.bend` validates exact ordered payloads, every transform float bit,
+mesh IDs, repeated extraction, retained lists across ticks, and continued scene
+execution. The formal drawing laws cover projection and local traversal steps;
+they do not claim a proof of the complete runtime.

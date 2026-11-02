@@ -1,4 +1,8 @@
 import Base
+import ../src/scene-draw.bend as Draw
+import ../deps/bendvy/src/ecs/execution-schedule.bend as Scheduled
+import ../deps/bendvy/src/ecs/dependency-application.bend as App
+import ../deps/bendvy/src/ecs/change-tick.bend as Tick
 import ../src/components.bend as C
 import ../src/scene.bend as Scene
 import ../src/scene-schema.bend as D
@@ -106,38 +110,127 @@ def validate(+tick:U32,+baseline:List<&2,Identity>,snapshot:Observe.Snapshot) ->
     require(exhausted && clean,"scene bootstrap seeds, pending commands, or rejected collections remain")
     rows(values,baseline,tick)
 
-def observed(next:Scene.Application() -> I.Instance<D.Schema> -> List<&2,Identity> -> IO(Unit),+tick:U32,
+def vec_equal(left:C.Vec3,right:C.Vec3) -> Bool:
+  C.Vec3{x,y,z} = left
+  C.Vec3{a,b,c} = right
+  bits(x,a) && bits(y,b) && bits(z,c)
+
+def transform_equal(left:C.Transform,right:C.Transform) -> Bool:
+  C.Transform{p,C.Quat{x,y,z,w},s} = left
+  C.Transform{q,C.Quat{a,b,c,d},t} = right
+  vec_equal(p,q) && bits(x,a) && bits(y,b) && bits(z,c) && bits(w,d) && vec_equal(s,t)
+
+def drawing_equal(items:List<&2,Draw.DrawItem>,rows:List<&2,Observe.Row>) -> Bool:
+  match items rows:
+    case [], []:True{}
+    case Draw.DrawItem{t,C.MeshRef{id}} <> rest, Observe.Row{_,u,C.MeshRef{other}} <> tail:
+      transform_equal(t,u) && U32.is_eq(id,other) && drawing_equal(rest,tail)
+    case _, _:False{}
+
+def cursor_key(cursor:Maybe<&2,Tick.Tick>) -> String:
+  match cursor:
+    case None{}:"none"
+    case Some{tick}:Nat.show(Tick.total(tick))
+
+def instance_key(instance:I.Instance<D.Schema>) -> I.Instance<D.Schema> & String:
+  match instance:
+    case I.Fresh{}:(I.Fresh{},"fresh")
+    case I.Active{+cursor,+registered}:(I.Active{cursor,registered},cursor_key(cursor) ++ "/" ++ Nat.show(Tick.total(registered)))
+
+def clocked(rebuild:D.World() -> Scene.Application(),result:D.World() & Tick.Tick) -> Scene.Application() & Tick.Tick:
+  match result:
+    case (world,clock):(rebuild(world),clock)
+
+def app_clock(app:Scene.Application()) -> Scene.Application() & Tick.Tick:
+  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
+  clocked(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},
+    W.clock(~D.Schema,~D.Columns(),~D.Resources(),~Unit,world))
+
+def checked_clock(next:Scene.Application() -> IO(Unit),before:Tick.Tick,result:Scene.Application() & Tick.Tick) -> IO(Unit):
+  match result:
+    case (app,after):
+      do IO<Unit>:
+        require(Nat.is_eq(Tick.total(before),Tick.total(after)),"drawing changed world clock")
+        next(app)
+
+def checked_instance(next:Scene.Application() -> I.Instance<D.Schema> -> Draw.DrawList -> IO(Unit),
+  retained:Draw.DrawList,prior:String,before:Tick.Tick,app:Scene.Application(),result:I.Instance<D.Schema> & String) -> IO(Unit):
+  match result:
+    case (instance,key):
+      do IO<Unit>:
+        require(String.eq(prior,key),"drawing changed inspector instance")
+        checked_clock(app => next(app,instance,retained),before,app_clock(app))
+
+def drawn(next:Scene.Application() -> I.Instance<D.Schema> -> Draw.DrawList -> IO(Unit),
+  +expected:List<&2,Observe.Row>,prior:String,before:Tick.Tick,
+  result:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> IO(Unit):
+  match result:
+    case (app,(instance,Done{Draw.DrawList{+items}})):
+      do IO<Unit>:
+        require(drawing_equal(items,expected),"drawing payload differs from ordered observer rows")
+        checked_instance(next,Draw.DrawList{items},prior,before,app,instance_key(instance))
+    case _:IO.die(Unit,1,"scene drawing extraction refused")
+
+def drawing_instance(next:Scene.Application() -> I.Instance<D.Schema> -> Draw.DrawList -> IO(Unit),
+  expected:List<&2,Observe.Row>,before:Tick.Tick,app:Scene.Application(),result:I.Instance<D.Schema> & String) -> IO(Unit):
+  match result:
+    case (instance,key):drawn(next,expected,key,before,Observe.draw_list(app,instance))
+
+def drawing_clock(next:Scene.Application() -> I.Instance<D.Schema> -> Draw.DrawList -> IO(Unit),
+  expected:List<&2,Observe.Row>,instance:I.Instance<D.Schema>,result:Scene.Application() & Tick.Tick) -> IO(Unit):
+  match result:
+    case (app,before):drawing_instance(next,expected,before,app,instance_key(instance))
+
+def drawing(next:Scene.Application() -> I.Instance<D.Schema> -> Draw.DrawList -> IO(Unit),
+  expected:List<&2,Observe.Row>,app:Scene.Application(),instance:I.Instance<D.Schema>) -> IO(Unit):
+  drawing_clock(next,expected,instance,app_clock(app))
+
+def retained_checked(next:Scene.Application() -> I.Instance<D.Schema> -> IO(Unit),expected:List<&2,Observe.Row>,
+  retained:Draw.DrawList,app:Scene.Application(),instance:I.Instance<D.Schema>) -> IO(Unit):
+  Draw.DrawList{items} = retained
+  do IO<Unit>:
+    require(drawing_equal(items,expected),"retained drawing changed after extraction or tick")
+    next(app,instance)
+
+def repeated(next:Scene.Application() -> I.Instance<D.Schema> -> IO(Unit),+expected:List<&2,Observe.Row>,
+  app:Scene.Application(),instance:I.Instance<D.Schema>) -> IO(Unit):
+  drawing(app => instance => retained => drawing(app => instance => _ =>
+    retained_checked(next,expected,retained,app,instance),expected,app,instance),expected,app,instance)
+
+def observed(next:Scene.Application() -> I.Instance<D.Schema> -> List<&2,Identity> -> List<&2,Observe.Row> -> IO(Unit),+tick:U32,
   baseline:List<&2,Identity>,result:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>)) -> IO(Unit):
   match baseline result:
-    case [], (app,(instance,Done{Observe.Snapshot{live,+admitted,exhausted,clean,values}})):
+    case [], (app,(instance,Done{Observe.Snapshot{live,+admitted,exhausted,clean,+values}})):
       +baseline = identities(admitted,0)
       do IO<Unit>:
         validate(tick,baseline,Observe.Snapshot{live,admitted,exhausted,clean,values})
         IO.print("tick=" ++ U32.show(tick) ++ " entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted")
-        next(app,instance,baseline)
-    case +baseline, (app,(instance,Done{snapshot})):
+        repeated(app => instance => next(app,instance,baseline,values),values,app,instance)
+    case +baseline, (app,(instance,Done{Observe.Snapshot{live,admitted,exhausted,clean,+values}})):
       do IO<Unit>:
-        validate(tick,baseline,snapshot)
+        validate(tick,baseline,Observe.Snapshot{live,admitted,exhausted,clean,values})
         IO.print("tick=" ++ U32.show(tick) ++ " entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted")
-        next(app,instance,baseline)
+        repeated(app => instance => next(app,instance,baseline,values),values,app,instance)
     case _, _:IO.die(Unit,1,"scene component observation refused")
 
 def ticks(remaining:Nat,+tick:U32,app:Scene.Application(),instance:I.Instance<D.Schema>,baseline:List<&2,
-  Identity>) -> IO(Unit):
+  Identity>,retained:Draw.DrawList,previous:List<&2,Observe.Row>) -> IO(Unit):
   match remaining:
     case 0n:IO.print("Shared mesh scene verified across 8 ticks.")
     case 1n++rest:
       do IO<Unit>:
         app : Scene.Application() <- Scene.tick(app)
-        observed(app => instance => baseline => ticks(rest,U32.add(tick,1),app,instance,baseline),tick,
-          baseline,Observe.snapshot(app,instance))
+        retained_checked(app => instance => observed(app => instance => baseline => +values =>
+          drawing(app => instance => retained => ticks(rest,U32.add(tick,1),app,instance,baseline,retained,values),
+            values,app,instance),tick,baseline,Observe.snapshot(app,instance)),previous,retained,app,instance)
 
 def initial(result:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>)) -> IO(Unit):
   match result:
     case (app,(instance,Done{Observe.Snapshot{[],[],_,_,[]}})):
       do IO<Unit>:
         IO.print("before-tick entities=0 admitted=0")
-        ticks(8n,1,app,instance,[])
+        repeated(app => _ => repeated(app => instance => ticks(8n,1,app,instance,[],Draw.DrawList{[]},[]),[],app,
+          I.Active{Some{Tick.zero()},Tick.zero()}),[],app,instance)
     case _:IO.die(Unit,1,"scene must start empty before its first tick")
 
 def main() -> IO(Unit):
