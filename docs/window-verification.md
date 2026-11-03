@@ -59,11 +59,12 @@ increase from the tentative scale 1.8 to 3. No entity data, mesh IDs, item order
 or model transforms changed for framing. The cubes overlap in the original
 scene and appear as a dense diagonal line.
 
-Live mode schedules at most one ECS tick when each 250 ms deadline becomes due.
-It sets the next deadline from that poll's time. This is demonstration pacing,
-not a fixed-dt simulation or catch-up policy. It never resets or follows the
-World. Uniform translation is visible and eventually moves beyond this fixed
-view. R resets only the existing orbit camera.
+Live mode uses [fixed 250 ms steps](fixed-timestep.md), with at most four catch-up
+steps per poll. It drops excess whole steps and preserves fractional time.
+The camera never resets or follows the World. Uniform translation is visible and
+eventually moves beyond this fixed view. R resets only the existing orbit camera.
+The window gate now pauses the real process and audits bounded catch-up against
+executed world ticks. See the [new verification record](verification/2026-11-03-fixed-timestep/README.md).
 
 Replay first advances the actual application to tick one and retains its
 DrawList. It then reaches tick two, validates the retained tick-one bits against

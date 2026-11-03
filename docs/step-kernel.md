@@ -60,10 +60,11 @@ Query and write refusals stay in the ECS adapter. A refused write stops traversa
 earlier writes are not rolled back. The extraction leaves those branches
 unchanged. The numerical kernel itself has no failure variant.
 
-The host owns polling, camera input, due-time decisions, clock reads, logging,
-and rendering. Live mode still runs at most one scene tick per due poll and sets
-the next deadline to `now + 250 ms`. This extraction adds no fixed timestep,
-catch-up policy, or full headless scene API.
+The host owns polling, camera input, scheduling, clock reads, logging, and
+rendering. The [fixed-timestep policy](fixed-timestep.md) now schedules zero to
+four 250 ms scene steps per live poll. It drops excess whole steps and retains
+fractional time. This kernel extraction itself adds no timing policy or full
+headless scene API.
 
 ## Design decision
 

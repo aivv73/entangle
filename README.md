@@ -327,8 +327,10 @@ its named output files there. It runs five fresh live and five fresh replay
 processes in alternating order. Each process has an external watchdog. A failed
 repeat stops collection and retains its output and status.
 
-The live collector preserves the 250 ms ECS schedule and extends steady collection
-until eight actual live ticks complete. Replay retains tick-one drawing while the
+The live collector uses fixed 250 ms ECS steps, with at most four catch-up steps
+per poll, and extends steady collection until eight actual live ticks complete.
+It records executed and dropped steps and sums each batch's CPU spans.
+Replay retains tick-one drawing while the
 real world is at tick two. Both use 30 completed warm-up frames, at least 120 steady
 frames, a fixed initial camera, a 640 by 480 window, and one frame slot.
 
@@ -340,8 +342,10 @@ claim. Push payload bytes are separate from host mesh writes and physical traffi
 ## Application ownership
 
 The [frame-order contract](docs/frame-order.md) defines the E2 phase sequence and
-distinguishes it from the current demonstration loop. Fixed-timestep scheduling
-and global-transform propagation remain unimplemented.
+distinguishes it from the current demonstration loop. The
+[fixed-timestep policy](docs/fixed-timestep.md) implements bounded scheduling,
+fractional carry, whole-step dropping, and clock-regression handling.
+Global-transform propagation remains unimplemented.
 
 The [schedule-visibility reference](docs/schedule-visibility.md) defines when
 Bendvy publishes structural commands and how removal notices reach readers and
@@ -351,8 +355,8 @@ no removal producer or reader.
 `examples/scene-window-app.bend` owns concrete scene state, mesh, camera projection,
 observation, drawing, retention, and verification. `examples/scene-window.bend`
 owns executable modes and the interactive loop. `src/app.bend` owns the Vulkan
-entry scope and post-scope live-object count. `src/time.bend` owns due-time
-construction and comparison. `src/input.bend` owns the camera controller and
+entry scope and post-scope live-object count. `src/time.bend` owns fixed-step
+configuration, clock state, and bounded catch-up batches. `src/input.bend` owns the camera controller and
 snapshot event draining. `src/error.bend` owns shared Action requirements and
 renderer input-error promotion. The baseline retains its instrumented execution
 and reporting policy.

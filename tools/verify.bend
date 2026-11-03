@@ -71,6 +71,8 @@ def main() -> IO(Unit):
     revisions(Pin.dependencies())
     command("mkdir",["-p","build"])
     command("bend",["PROOF.bend"])
+    command("bend",["tools/verify-time.bend","-o","build/verify-time"])
+    exact("./build/verify-time",["+RTS","--threads","1","--gpu","off"],"Fixed-step accounting, cap, remainder, duplicate and regressing samples verified across 768826 configurations and clock samples.")
     command("bend",["examples/native_compatibility.bend","-o","build/native-compatibility.c"])
     command("clang",["-std=c11","-O2","build/native-compatibility.c","-lpthread","-lm","-ldl","-o","build/native-compatibility"])
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/native-compatibility","--threads","1","--gpu","off"],expected())

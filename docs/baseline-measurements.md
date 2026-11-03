@@ -1,5 +1,11 @@
 # Native window baseline measurements
 
+This historical record predates the [fixed-timestep policy](fixed-timestep.md).
+Its measurements and source hashes retain the original one-tick due-time policy.
+New collector runs sum catch-up spans and record executed and dropped steps.
+The [fixed-timestep evidence](verification/2026-11-03-fixed-timestep/README.md)
+validates those changes without replacing these measurements.
+
 This is an instrumented baseline for the current 100-object Entangle window scene on one Linux desktop. It makes no speedup claim. Five fresh live processes and five fresh replay processes ran sequentially in alternating order. All reported samples come from the measured collector source identified by `source.sha256`.
 
 The normal application keeps its controls and 250 ms schedule. Maintainers get successful-call counters and a bounded executable that uses the same upload, draw, acquisition, recording, presentation, and cleanup path.

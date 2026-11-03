@@ -127,6 +127,47 @@ def clean(+suffix:String) -> IO(Unit):
     Check.assert(String.contains(output,"Entangle window closed; live Vulkan objects: 0"),"Missing zero-live-object shutdown")
     Check.assert(Check.clean_diagnostics(output),"Vulkan validation diagnostics in " ++ suffix)
 
+type TimingEvent is Data:
+  Batch{steps:Nat,dropped:Nat}
+  Tick{number:Nat}
+  Other{}
+
+def timing_word(is_tick:Bool,word:String) -> Maybe<&2,TimingEvent>:
+  match is_tick:
+    case False{}:Some{Other{}}
+    case True{}:
+      do Maybe<&2,TimingEvent>:
+        number:Nat <- Nat.read(String.drop(word,12n))
+        return Tick{number}
+
+def timing_event(words:List<&2,String>) -> Maybe<&2,TimingEvent>:
+  match words:
+    case "fixed-batch" <> steps <> dropped <> rest:
+      do Maybe<&2,TimingEvent>:
+        steps:Nat <- Nat.read(String.drop(steps,6n))
+        dropped:Nat <- Nat.read(String.drop(dropped,8n))
+        return Batch{steps,dropped}
+    case +word <> rest:timing_word(String.starts_with(word,"window-tick="),word)
+    case []:Some{Other{}}
+
+def timing_checked(event:Maybe<&2,TimingEvent>,+pending:Nat,expected:Nat,caught:Bool,next:Nat -> Nat -> Bool -> IO(Unit)) -> IO(Unit):
+  match event:
+    case None{}:IO.die(Unit,1,"Malformed timing evidence")
+    case Some{Other{}}:next(pending)(expected)(caught)
+    case Some{Tick{+number}}:
+      do IO<Unit>:
+        Check.assert(Nat.is_gt(pending,0n) && Nat.is_eq(number,expected),"World tick disagrees with bounded batch")
+        next(Nat.sub(pending,1n))(1n+number)(caught)
+    case Some{Batch{+steps,+dropped}}:
+      do IO<Unit>:
+        Check.assert(Nat.is_eq(pending,0n) && Nat.is_gt(steps,0n) && Nat.is_le(steps,4n),"Catch-up batch exceeded four steps or left work unfinished")
+        next(steps)(expected)(caught || (Nat.is_eq(steps,4n) && Nat.is_gt(dropped,0n)))
+
+def timing_audit(lines:List<&2,String>,pending:Nat,expected:Nat,caught:Bool) -> IO(Unit):
+  match lines:
+    case []:Check.assert(Nat.is_eq(pending,0n) && caught,"Missing complete four-step catch-up with excess dropped")
+    case line <> rest:timing_checked(timing_event(String.split(line,' ')),pending,expected,caught,p => e => c => timing_audit(rest,p,e,c))
+
 def live(+display:String,validation:Bool) -> IO(Unit):
   do IO<Unit>:
     +pid : U32 <- IO.try(U32,Host.start("build/window-evidence/live.log",validation))
@@ -137,6 +178,10 @@ def live(+display:String,validation:Bool) -> IO(Unit):
     IO.sleep(750)
     +second : Pixels.Frame <- wait(pid,id,Moved{first})
     save("live-successive-ticks",second)
+    Check.command("kill",["-STOP",U32.show(pid)])
+    IO.sleep(1600)
+    Check.command("kill",["-CONT",U32.show(pid)])
+    IO.sleep(150)
     IO.try(Unit,Host.control(id,1,0,0))
     IO.sleep(800)
     Existing.alive(pid)
@@ -144,6 +189,7 @@ def live(+display:String,validation:Bool) -> IO(Unit):
     Existing.wait_exit(300n,pid)
     clean("live")
     +output : String <- Check.read("build/window-evidence/live.log")
+    timing_audit(String.split(output,'\n'),1n,1n,False{})
     Check.assert(U32.is_ge(occurrences(output,"window-tick="),3),"No genuine successive ECS ticks")
     Check.assert(U32.is_ge(occurrences(output,"window-hidden-tick"),2),"Hidden window stopped ECS ticks or polling")
     IO.print("Successive ECS geometry movement, hidden ticks and hidden Close passed")

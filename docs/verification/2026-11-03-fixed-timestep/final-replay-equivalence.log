@@ -1,0 +1,31 @@
++ cmp
+exact=replay-tick-one.ppm
++ cmp
+exact=key-97.ppm
++ cmp
+exact=key-100.ppm
++ cmp
+exact=key-119.ppm
++ cmp
+exact=key-115.ppm
++ cmp
+exact=key-113.ppm
++ cmp
+exact=key-101.ppm
++ cmp
+exact=resize-800x450.ppm
++ cmp
+exact=resize-360x640.ppm
++ cmp
+exact=resize-720x480.ppm
++ cmp
+exact=resize-640x480.ppm
++ cmp
+exact=restored-moved.ppm
++ cmp
+exact=restored-exact.ppm
++ cmp
+exact=replay.log
++ cmp
+exact=terminal.log
+Window replay pixels and deterministic logs are byte-identical.

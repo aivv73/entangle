@@ -1,0 +1,11 @@
+ts	phase	decision	why	evidence	result
+2026-11-03T06:39:33Z	design	Selected elapsed accumulator over deadline grid	Direct accounting needs fewer coupled invariants	docs/fixed-timestep.md	selected
+2026-11-03T06:39:33Z	policy	Kept 250 ms interval and limited catch-up to four steps	Preserve scene pacing while bounding work per poll	src/time.bend	implemented
+2026-11-03T06:39:33Z	policy	Drop excess whole steps and retain the fraction	Avoid unbounded debt without resetting schedule phase	src/time.bend	implemented
+2026-11-03T06:39:33Z	diagnostics	Count actual executed steps and sum spans per batch	A Boolean tick-bearing-frame count and duplicate span keys undercount catch-up	examples/scene-window-baseline.bend	implemented
+2026-11-03T06:39:33Z	proof	Reused pinned natural arithmetic proofs	General bounds and accounting need no new dependency pin	PROOF.bend	ALL PROOFS CHECK
+2026-11-03T06:45:25Z	verification	Validated a real process stall and exact replay	Bounded catch-up must agree with real world ticks and preserved drawing	docs/verification/2026-11-03-fixed-timestep/window.log	window gate and replay equivalence passed
+2026-11-03T06:45:26Z	verification	Stalled the measured collector during steady collection	Exercise multiple-step span sums and actual-step counters on the real renderer	docs/verification/2026-11-03-fixed-timestep/live-stall.jsonl	attempt 45 executed four and dropped two; world two to six; cleanup zero
+2026-11-03T06:45:26Z	cleanup	Removed unused initialization timestamp arguments	Forced startup and replay advancement no longer reset time	examples/scene-window.bend	rebuilding final native executables
+2026-11-03T06:48:33Z	review	Added exact executed-step law and saturation property	Bounds and accounting alone permit dropping before the batch is full	LAWS.bend	normal proof checker and stronger runtime sweep pass
+2026-11-03T06:49:38Z	proof	Checked isolated final timing claims with BendTT	Whole-repository kernel translation rejects pinned scene template declarations	docs/verification/2026-11-03-fixed-timestep/time-verdict.log	isolated timing ALL PROOFS CHECK; full kernel limitation recorded

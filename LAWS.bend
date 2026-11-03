@@ -288,15 +288,62 @@ law measurement_draw_preserves_pushes:
   {Counts.push_count(Counts.draw(c)) == Counts.push_count(c) : U32}
 
 
-law time_ready:
-  for now:Nat
-  for due:Nat
-  {Time.ready(now,due) == Nat.is_ge(now,due) : Bool}
+law time_defaults:
+  {(Time.interval(Time.defaults()),Time.limit(Time.defaults())) == (250n,4n) : Nat & Nat}
 
-law time_next_due:
+law time_positive:
+  for config:Time.Config
+  {Bool.and(Nat.is_lt(0n,Time.interval(config)),Nat.is_lt(0n,Time.limit(config))) == True{} : Bool}
+
+law time_start:
+  for +now:Nat
+  {Time.start(now) == Time.Clock{now,0n} : Time.Clock}
+
+law time_partition_total:
+  for +limit:Nat
+  for +whole:Nat
+  for remainder:Nat
+  for sample:Nat
+  {Time.total(Time.partition(limit,whole,remainder,sample)) == whole : Nat}
+
+law time_bounded:
+  for +config:Time.Config
+  for +clock:Time.Clock
+  for +now:Nat
+  {Nat.is_le(Time.steps(Time.poll(config,clock,now)),Time.limit(config)) == True{} : Bool}
+
+law time_execution:
+  for +config:Time.Config
+  for +sample:Nat
+  for +remainder:Nat
+  for +now:Nat
+  {Time.steps(Time.poll(config,Time.Clock{sample,remainder},now)) == Nat.min(Nat.div(Nat.add(remainder,Nat.sub(now,sample)),Time.interval(config)),Time.limit(config)) : Nat}
+
+law time_remainder:
+  for +config:Time.Config
+  for clock:Time.Clock
   for now:Nat
-  for interval:Nat
-  {Time.next_due(now,interval) == Nat.add(now,interval) : Nat}
+  {Nat.is_lt(Time.remainder(Time.poll(config,clock,now)),Time.interval(config)) == True{} : Bool}
+
+law time_accumulated_accounting:
+  for +config:Time.Config
+  for sample:Nat
+  for +elapsed:Nat
+  {Time.covered(config,Time.accumulated(config,sample,elapsed)) == elapsed : Nat}
+
+law time_accounting:
+  for +config:Time.Config
+  for +sample:Nat
+  for +remainder:Nat
+  for +now:Nat
+  {Time.covered(config,Time.poll(config,Time.Clock{sample,remainder},now)) == Nat.add(remainder,Nat.sub(now,sample)) : Nat}
+
+law time_high_water:
+  for config:Time.Config
+  for +sample:Nat
+  for remainder:Nat
+  for +now:Nat
+  {Time.clock(Time.poll(config,Time.Clock{sample,remainder},now)) == Time.Clock{Nat.max(sample,now),Nat.mod(Nat.add(remainder,Nat.sub(now,sample)),Time.interval(config))} : Time.Clock}
 
 law input_close:
   for rest:List<Event>

@@ -15,17 +15,24 @@ import ../deps/bendvy/src/ecs/inspector.bend as I
 import ../deps/bend-vulkan/Vulkan.bend as V
 
 type Mode is Data:Live{} Replay{} Terminal{}
-def scheduled(ready:Bool,mode:Mode,state:SceneApp.State,now:Nat,mapped:Bool) -> V.Action(SceneApp.State):
-  match ready mode:
-    case True{} Live{}:
+def scheduled(steps:Nat,state:SceneApp.State,mapped:Bool,dropped:Nat,remainder:Nat) -> V.Action(SceneApp.State):
+  match steps:
+    case 0n:V.Action.pure(SceneApp.State,state)
+    case 1n++rest:
       do V.Action<SceneApp.State>:
         V.Action.lift(Unit,IO.print(Bool.pick(String,mapped,"window-visible-tick","window-hidden-tick")))
-        SceneApp.advance(state,now)
-    case _ _:V.Action.pure(SceneApp.State,state)
+        V.Action.lift(Unit,IO.print("fixed-batch steps=" ++ Nat.show(1n+rest) ++ " dropped=" ++ Nat.show(dropped) ++ " remainder-ms=" ++ Nat.show(remainder)))
+        SceneApp.steps(1n+rest,state)
 
-def update(+mode:Mode,state:SceneApp.State,+now:Nat,mapped:Bool) -> V.Action(SceneApp.State):
-  SceneApp.State{app,inspector,baseline,rows,draws,retained,saved,tick,+due} = state
-  scheduled(Time.ready(now,due),mode,SceneApp.State{app,inspector,baseline,rows,draws,retained,saved,tick,due},now,mapped)
+def batch(pair:SceneApp.State & Time.Batch,mapped:Bool) -> V.Action(SceneApp.State):
+  (state,Time.Batch{Time.Clock{sample,remainder},steps,dropped}) = pair
+  scheduled(steps,state,mapped,dropped,remainder)
+
+def update(mode:Mode,state:SceneApp.State,now:Nat,mapped:Bool) -> V.Action(SceneApp.State):
+  match mode:
+    case Live{}:
+      batch(SceneApp.schedule(state,now),mapped)
+    case _:V.Action.pure(SceneApp.State,state)
 
 def is_replay(mode:Mode) -> Bool:
   match mode:
@@ -79,11 +86,11 @@ def loop(fuel:Nat,running:Maybe<Running>,+mode:Mode) -> V.Action(Unit):
         next : Maybe<Running> <- step(value,mode)
         loop(rest,next,mode)
 
-def initialized(mode:Mode,state:SceneApp.State,now:Nat) -> V.Action(SceneApp.State):
+def initialized(mode:Mode,state:SceneApp.State) -> V.Action(SceneApp.State):
   match mode:
     case Replay{}:
       do V.Action<SceneApp.State>:
-        state : SceneApp.State <- SceneApp.advance(SceneApp.retain(state),now)
+        state : SceneApp.State <- SceneApp.advance(SceneApp.retain(state))
         SceneApp.replay_ready(state)
     case _:V.Action.pure(SceneApp.State,SceneApp.retain(state))
 
@@ -93,9 +100,9 @@ def run(modules:Modules.Registration<Scene.Application()>,entry:V.Entry,+mode:Mo
     renderer : Win.Renderer <- open(entry,load(Unit{}))
     renderer : Win.Renderer <- Input.enabled(is_replay(mode),renderer)
     app : Scene.Application() <- V.Action.lift(Scene.Application(),start(Unit{}))
-    +now : Nat <- V.Action.lift(Nat,IO.now())
-    state : SceneApp.State <- SceneApp.observed(Observe.snapshot(app,I.Fresh{}),[],1,Time.next_due(now,250n),Draw.DrawList{[]},[])
-    state : SceneApp.State <- initialized(mode,state,now)
+    now : Nat <- V.Action.lift(Nat,IO.now())
+    state : SceneApp.State <- SceneApp.observed(Observe.snapshot(app,I.Fresh{}),[],1,Time.start(now),Draw.DrawList{[]},[])
+    state : SceneApp.State <- initialized(mode,state)
     loop(U32.to_nat(4294967295),Some{Running{renderer,state,initial(Unit{})}},mode)
 
 def mode(result:Result<&1,&1,U32 & String,String>) -> Mode:

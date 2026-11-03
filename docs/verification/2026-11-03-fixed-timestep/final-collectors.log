@@ -1,0 +1,2 @@
+{"schema":1,"kind":"terminal","status":"complete","attempts":291,"completed_presentations":291,"steady_actual_ticks":8,"startup_through_first_completed_frame_ns":{"value":{"lo":236146344,"hi":0}},"live_before_close":36,"live_after_cleanup":0}
+{"schema":1,"kind":"terminal","status":"complete","attempts":151,"completed_presentations":151,"steady_actual_ticks":0,"startup_through_first_completed_frame_ns":{"value":{"lo":241643085,"hi":0}},"live_before_close":36,"live_after_cleanup":0}

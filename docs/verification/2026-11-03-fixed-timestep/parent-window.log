@@ -1,0 +1,5 @@
+live-first 640x480 geometry-pixels=2671
+live-successive-ticks 640x480 geometry-pixels=2684
++ kill
++ kill
+Successive ECS geometry movement, hidden ticks and hidden Close passed

@@ -17,8 +17,8 @@ without producing a drawable frame.
    step. Input preparation owns event consumption, not the renderer.
 2. **Fixed simulation.** Run zero or more due simulation steps with a fixed
    timestep. Steps consume prepared input and update the authoritative application
-   state in order. The timestep, catch-up limit, excess-time policy, and assignment
-   of input events to steps belong to the fixed-timestep implementation task.
+   state in order. The [fixed-timestep policy](fixed-timestep.md) defines the
+   current interval, catch-up limit, dropped time, and input assignment.
 3. **Update.** Run once per continuing loop iteration after all due fixed steps,
    including iterations with no fixed step. Apply frame-level application work,
    such as camera updates. Systems may queue structural changes through Bendvy.
@@ -59,15 +59,16 @@ determinism.
 ## Current implementation
 
 The [interactive loop](../examples/scene-window.bend) calls `Win.poll`, then
-`Camera.snapshot`, then its due-tick `update`, and finally `SceneApp.draw`.
-Camera input currently changes the camera before the due tick. The function named
-`update` selects a demonstration tick; it is not the separate update phase above.
+`Camera.snapshot`, then its fixed-step `update`, and finally `SceneApp.draw`.
+Camera input changes the camera once before the batch. The function named
+`update` executes scheduled steps; it is not the separate update phase above.
 
 [SceneApp.advance](../examples/scene-window-app.bend) runs `Scene.tick`, validates
-the observed world, and extracts a drawing list. Live mode runs at most one tick
-per due poll and sets the next deadline to `now + 250 ms`. It has no fixed timestep,
-accumulator, or catch-up policy. Between due ticks, drawing reuses the existing
-list. The [time helpers](../src/time.bend) only compare and construct deadlines.
+the observed world, and extracts a drawing list. Live mode runs zero to four
+250 ms steps per poll. The [clock](../src/time.bend) drops excess whole steps,
+preserves fractional time, and ignores clock regression until the high-water
+sample is exceeded. Every executed step validates and extracts. Rendering uses
+the final list and reuses it on zero-step polls.
 
 [Scene.configure](../src/scene.bend) disables automatic deferred barriers, enables
 final apply, and inserts an explicit barrier before movement. Bootstrap precedes
@@ -116,12 +117,14 @@ This definition completes only the frame-order item in the
 The [schedule-visibility contract](schedule-visibility.md) separately defines
 structural publication and removal-notice semantics. The
 [sequential movement kernel](step-kernel.md) now exposes the per-transform
-numerical update. Fixed-timestep policy, headless execution, and the second
-application remain separate tasks.
+numerical update. The [fixed-timestep implementation](fixed-timestep.md) adds
+bounded scheduling. Headless execution and the second application remain
+separate tasks.
 The [static module slots](../src/modules.bend) remain startup-only.
 
 The current-path descriptions were checked against the linked source files.
 The existing [window verification](window-verification.md) and
 [App verification record](verification/2026-11-03-app/README.md) cover the current
-demonstration. They do not verify the complete target sequence. This documentation
-change adds no runtime behavior or formal proof of that sequence.
+demonstration. The [fixed-timestep record](verification/2026-11-03-fixed-timestep/README.md)
+covers the clock and real-window catch-up. These checks do not verify the complete
+target phase sequence.

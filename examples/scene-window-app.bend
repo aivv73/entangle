@@ -18,7 +18,7 @@ import ./scene-render.bend as Extract
 
 
 type State is Type:
-  State{app:Scene.Application(),inspector:I.Instance<D.Schema>,baseline:List<&2,Check.Identity>,rows:List<&2,Observe.Row>,draws:Draw.DrawList,retained:Draw.DrawList,saved:List<&2,Observe.Row>,tick:U32,due:Nat}
+  State{app:Scene.Application(),inspector:I.Instance<D.Schema>,baseline:List<&2,Check.Identity>,rows:List<&2,Observe.Row>,draws:Draw.DrawList,retained:Draw.DrawList,saved:List<&2,Observe.Row>,tick:U32,clock:Time.Clock}
 
 def vertices(words:List<U32>) -> List<&2,R.Vertex>:
   match words:
@@ -73,55 +73,68 @@ def digest(items:List<&2,Draw.DrawItem>,hash:U32) -> U32:
     case Draw.DrawItem{C.Transform{C.Vec3{x,y,z},C.Quat{a,b,c,d},C.Vec3{sx,sy,sz}},C.MeshRef{id}} <> rest:
       digest(rest,fold([F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(a),F32.bits(b),F32.bits(c),F32.bits(d),F32.bits(sx),F32.bits(sy),F32.bits(sz),id],hash))
 
-def extracted(pair:Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList),+baseline:List<&2,Check.Identity>,+rows:List<&2,Observe.Row>,+tick:U32,due:Nat,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
+def extracted(pair:Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList),+baseline:List<&2,Check.Identity>,+rows:List<&2,Observe.Row>,+tick:U32,clock:Time.Clock,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
   (app,(inspector,Draw.DrawList{+items})) = pair
   do V.Action<State>:
     Error.require(Check.drawing_equal(items,rows),"Window extraction changed ordered drawing bits")
     V.Action.lift(Unit,IO.print("window-tick=" ++ U32.show(tick) ++ " draws=100 ordered-bits=" ++ U32.show(digest(items,2166136261)) ++ " world/inspector=preserved"))
-    return State{app,inspector,baseline,rows,Draw.DrawList{items},retained,saved,tick,due}
+    return State{app,inspector,baseline,rows,Draw.DrawList{items},retained,saved,tick,clock}
 
-def observed(pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>),baseline:List<&2,Check.Identity>,+tick:U32,due:Nat,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
+def observed(pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>),baseline:List<&2,Check.Identity>,+tick:U32,clock:Time.Clock,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
   match pair baseline:
     case (app,(inspector,Done{Observe.Snapshot{+live,+admitted,+exhausted,+clean,+rows}})), []:
       +identities = Check.identities(admitted,0)
       do V.Action<State>:
         V.Action.lift(Unit,Check.validate(tick,identities,Observe.Snapshot{live,admitted,exhausted,clean,rows}))
         pair : Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList) <- Extract.observe(app,inspector)
-        extracted(pair,identities,rows,tick,due,retained,saved)
+        extracted(pair,identities,rows,tick,clock,retained,saved)
     case (app,(inspector,Done{Observe.Snapshot{+live,+admitted,+exhausted,+clean,+rows}})), +identities:
       do V.Action<State>:
         V.Action.lift(Unit,Check.validate(tick,identities,Observe.Snapshot{live,admitted,exhausted,clean,rows}))
         pair : Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList) <- Extract.observe(app,inspector)
-        extracted(pair,identities,rows,tick,due,retained,saved)
+        extracted(pair,identities,rows,tick,clock,retained,saved)
     case _, _:IO.pure(V.VkResult(State),Fail{(1,"Window scene observation refused")})
 
 def retain(state:State) -> State:
-  State{app,inspector,baseline,+rows,+draws,retained,saved,tick,due} = state
-  State{app,inspector,baseline,rows,draws,draws,rows,tick,due}
+  State{app,inspector,baseline,+rows,+draws,retained,saved,tick,clock} = state
+  State{app,inspector,baseline,rows,draws,draws,rows,tick,clock}
 
-def advance(state:State,now:Nat) -> V.Action(State):
-  State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,due} = state
+def advance(state:State) -> V.Action(State):
+  State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,clock} = state
   do V.Action<State>:
     Error.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Retained original drawing bits changed")
     app : Scene.Application() <- V.Action.lift(Scene.Application(),Scene.tick(app))
-    observed(Observe.snapshot(app,inspector),baseline,U32.inc(tick),Time.next_due(now,250n),Draw.DrawList{held},saved)
+    observed(Observe.snapshot(app,inspector),baseline,U32.inc(tick),clock,Draw.DrawList{held},saved)
+
+def steps(remaining:Nat,state:State) -> V.Action(State):
+  match remaining:
+    case 0n:V.Action.pure(State,state)
+    case 1n+rest:
+      do V.Action<State>:
+        state:State <- advance(state)
+        steps(rest,state)
+
+def schedule(state:State,now:Nat) -> State & Time.Batch:
+  State{app,inspector,baseline,rows,draws,retained,saved,tick,clock} = state
+  +batch = Time.poll(Time.defaults(),clock,now)
+  (State{app,inspector,baseline,rows,draws,retained,saved,tick,Time.clock(batch)},batch)
 
 def unchanged(draws:Draw.DrawList,rows:List<&2,Observe.Row>) -> Bool:
   Draw.DrawList{items} = draws
   Check.drawing_equal(items,rows)
 
 def draw(state:State,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Camera.Camera,replay:Bool) -> V.Action(Win.Renderer & State):
-  State{app,inspector,baseline,+rows,+draws,+retained,+saved,tick,due} = state
+  State{app,inspector,baseline,+rows,+draws,+retained,+saved,tick,clock} = state
   +list = Bool.pick(Draw.DrawList,replay,retained,draws)
   do V.Action<Win.Renderer & State>:
     Error.require(unchanged(draws,rows) && unchanged(retained,saved),"Window frame changed original or retained drawing bits")
     pair : Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,snapshot,w => h => view(camera,w,h),list)
     renderer : Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,pair,"Window drawing rejected")
-    return (renderer,State{app,inspector,baseline,rows,draws,retained,saved,tick,due})
+    return (renderer,State{app,inspector,baseline,rows,draws,retained,saved,tick,clock})
 
 def replay_ready(state:State) -> V.Action(State):
-  State{app,inspector,baseline,+rows,+draws,+retained,+saved,tick,due} = state
+  State{app,inspector,baseline,+rows,+draws,+retained,+saved,tick,clock} = state
   do V.Action<State>:
     Error.require(unchanged(draws,rows) && unchanged(retained,saved),"Replay changed retained tick-one drawing")
     V.Action.lift(Unit,IO.print("replay-tick=1 world-tick=2 retained=exact"))
-    return State{app,inspector,baseline,rows,draws,retained,saved,tick,due}
+    return State{app,inspector,baseline,rows,draws,retained,saved,tick,clock}

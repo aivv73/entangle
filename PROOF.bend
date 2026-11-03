@@ -5,6 +5,9 @@ import ./deps/bend-vulkan/PROOF.bend as Vulkan
 import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
 import ./tools/component-consumer.bend as Consumer
 import Base
+import ./src/time.bend as Time
+import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/arith.bend as Arithmetic
+import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/misc.bend as Misc
 import ./src/components.bend as C
 import ./LAWS.bend as Laws
 import ./src/scene-spawn.bend as Spawn
@@ -182,11 +185,54 @@ def Laws.measurement_draw_preserves_pushes(c):
   match c:
     case Counts.Counters{w,b,p,pb,d,s}:{==}
 
-def Laws.time_ready(now,due):
+def Laws.time_defaults():
   {==}
 
-def Laws.time_next_due(now,interval):
+def Laws.time_positive(config):
+  match config:
+    case Time.Config{interval,limit}:{==}
+
+def Laws.time_start(now):
   {==}
+
+def Laws.time_partition_total(limit,whole,remainder,sample):
+  match limit whole:
+    case 0n 0n:{==}
+    case 0n 1n+p:{==}
+    case 1n+l 0n:{==}
+    case 1n+l 1n+w:
+      %Laws.time_partition_total(l,w,remainder,sample) : {1n+Nat.add(Nat.min(w,l),Nat.sub(w,Nat.min(w,l))) == 1n+_ : Nat}
+      {==}
+
+def Laws.time_bounded(config,clock,now):
+  match config clock:
+    case Time.Config{+interval,+limit} Time.Clock{+sample,+remainder}:
+      Misc.min_le_r(Nat.div(Nat.add(remainder,Nat.sub(now,sample)),1n+interval),1n+limit)
+
+def Laws.time_execution(config,sample,remainder,now):
+  match config:
+    case Time.Config{interval,limit}:{==}
+
+def Laws.time_remainder(config,clock,now):
+  match config clock:
+    case Time.Config{+interval,limit} Time.Clock{+sample,remainder}:
+      Arithmetic.dm_lt(interval,Nat.add(remainder,Nat.sub(now,sample)))
+
+def Laws.time_accumulated_accounting(config,sample,elapsed):
+  match config:
+    case Time.Config{+interval,+limit}:
+      +q = Nat.div(elapsed,1n+interval)
+      +r = Nat.mod(elapsed,1n+interval)
+      Equal.trans(Nat,Time.covered(Time.Config{interval,limit},Time.accumulated(Time.Config{interval,limit},sample,elapsed)),Nat.add(Nat.mul(q,1n+interval),r),elapsed,
+        Equal.cong(Nat,Nat,x => Nat.add(Nat.mul(x,1n+interval),r),Time.total(Time.partition(1n+limit,q,r,sample)),q,Laws.time_partition_total(1n+limit,q,r,sample)),
+        Equal.sym(Nat,elapsed,Nat.add(Nat.mul(q,1n+interval),r),Arithmetic.dm_eq(interval,elapsed)))
+
+def Laws.time_accounting(config,sample,remainder,now):
+  Laws.time_accumulated_accounting(config,Nat.max(sample,now),Nat.add(remainder,Nat.sub(now,sample)))
+
+def Laws.time_high_water(config,sample,remainder,now):
+  match config:
+    case Time.Config{interval,limit}:{==}
 
 def Laws.input_close(rest,camera):
   match camera:
