@@ -52,9 +52,9 @@ verification. Do not use `git submodule update --remote` or `bend update` to
 prepare this baseline.
 
 This establishes native compilation and runtime compatibility. The offscreen
-renderer below also verifies the first rendered ECS scene. Window/input
-integration and performance measurements remain separate E1 work. Pure proofs
-do not cover the native ABI or GPU driver.
+renderer below also verifies the first rendered ECS scene. The separate window
+gate verifies input, camera controls, and presentation. Performance measurements
+remain separate E1 work. Pure proofs do not cover the native ABI or GPU driver.
 
 The [verification record](docs/verification/2026-11-02/README.md) contains the
 successful run, exact commands, and environment details.
@@ -222,3 +222,75 @@ The independently derived coverage bound and exact depth formula are recorded in
 `docs/render-verification.md`. Formal claims in `LAWS.bend` cover push-constant
 extent and index validation under concatenation and reordered mesh sections.
 They do not prove driver behavior or arbitrary floating-point matrix algebra.
+
+## Run the ECS window
+
+Install X11 development headers and use an X11 display with Vulkan presentation
+support. From the repository root:
+
+```sh
+mkdir -p build
+bend examples/scene-window.bend -o build/indexed-window
+./build/indexed-window
+```
+
+A/D orbit, W/S change elevation, Q/E zoom, and R resets the existing camera.
+Escape or Close exits. The 100 shared cubes advance one genuine ECS tick every
+250 ms, including while hidden. They overlap into a dense line because the
+original scene positions and scales are unchanged. The view stays centered on
+tick one, so the scene eventually leaves the view. R resets the camera, not ECS.
+
+The window renderer uses the dependency's back-face-culling pipeline. Supply a
+closed, consistently wound mesh with orientation-preserving model transforms.
+It does not promise arbitrary-mesh parity with the unculled offscreen renderer.
+The example uploads the existing cube faces once, without the dependency's floor.
+
+## Verify the ECS window
+
+Run the headless gate and the separate native-window gate:
+
+```sh
+bend PROOF.bend
+bend tools/verify.bend
+bend tools/verify-window.bend -o build/verify-window
+./build/verify-window
+```
+
+The window gate builds and drives **Entangle's** executable at
+`build/indexed-window`. It requires an unobscured display that respects requested
+client sizes. Tiling desktops can override resize requests. For deterministic
+resizing, start an owned rootful Xwayland and stop it after the verifier exits:
+
+```sh
+mkdir -p build/window-evidence
+: > build/window-evidence/display
+Xwayland -displayfd 3 -geometry 1280x1024 -nolisten tcp \
+  3>build/window-evidence/display >build/window-evidence/xwayland.log 2>&1 &
+window_display_pid=$!
+trap 'kill "$window_display_pid" 2>/dev/null; wait "$window_display_pid" 2>/dev/null' EXIT
+for attempt in $(seq 1 100); do
+  [ -s build/window-evidence/display ] && break
+  kill -0 "$window_display_pid" || break
+  sleep 0.05
+done
+[ -s build/window-evidence/display ] || exit 1
+read -r window_display_number < build/window-evidence/display
+DISPLAY=":$window_display_number" ./build/verify-window
+```
+
+Live execution checks populated geometry, successive ECS movement, ticks while
+hidden, and hidden Close. Retained tick-one replay checks all six camera keys,
+exact R reset, repeated portrait and landscape resizing, unmap/restore, and Escape.
+It also checks rejected-input recovery and scoped terminal-error cleanup. All
+scenarios check live Vulkan objects after Entry returns and reject validation
+errors. Khronos and synchronization validation run when discovery finds the layer.
+Logs and PPM captures go to `build/window-evidence`.
+
+`ENTANGLE_WINDOW_MODE=replay` retains the genuine tick-one DrawList while the
+World reaches tick two. `ENTANGLE_WINDOW_MODE=terminal` returns an intentional
+Action error after a frame to verify scope cleanup. Both are verification modes
+of the same executable and rendering path.
+
+See [the window verification record](docs/window-verification.md) for the
+verified environment, API contract, proof scope, and limitations. Timings and
+performance counters remain a separate E1 task.
