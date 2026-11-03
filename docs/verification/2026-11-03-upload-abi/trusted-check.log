@@ -1,0 +1,4 @@
+src/scene-buffer.bend: OK
+src/upload-size.bend: OK
+examples/native_compatibility.bend: OK
+tools/verify-upload-native-limit.bend: OK

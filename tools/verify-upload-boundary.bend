@@ -25,7 +25,7 @@ def scan(xs:List<&2,String>,+all:List<&2,String>,+policy:List<&2,String>,+hashes
     case +file <> rest:
       do IO<Unit>:
         +capsule:Bool <- trusted(file,hashes)
-        S.require(Bool.not(String.eq(file,"src/scene-buffer.bend") || String.eq(file,"src/upload-size.bend") || String.eq(file,"examples/native_compatibility.bend")) || capsule,"Upload trusted capsule changed. Review source and refresh tools/upload-boundary/trusted.sha256 after verification: " ++ file)
+        S.require(Bool.not(String.eq(file,"src/scene-buffer.bend") || String.eq(file,"src/upload-size.bend") || String.eq(file,"examples/native_compatibility.bend") || String.eq(file,"tools/verify-upload-native-limit.bend")) || capsule,"Upload trusted capsule changed. Review source and refresh tools/upload-boundary/trusted.sha256 after verification: " ++ file)
         Bool.pick(IO(Unit),capsule,IO.pure(Unit,Unit{}),S.scan(file,all,policy))
         scan(rest,all,policy,hashes)
 

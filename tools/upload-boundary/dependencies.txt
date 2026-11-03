@@ -134,6 +134,7 @@ deps/bend-vulkan/Vulkan.bend Viewport
 deps/bend-vulkan/Vulkan.bend VkResult
 deps/bend-vulkan/Vulkan.bend WindowSnapshot
 deps/bend-vulkan/Vulkan.bend debug_live_objects
+deps/bend-vulkan/Vulkan.bend debug_u64_roundtrip
 deps/bend-vulkan/Vulkan.bend monotonic_ns
 deps/bend-vulkan/Vulkan.bend or_exit
 deps/bend-vulkan/deps/bend-collections/proofs/lib/lemmas/proofs/modular_addition.bend increment_refines

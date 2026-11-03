@@ -1,0 +1,73 @@
+[Vulkan Loader] LAYER:          Searching for implicit layer manifest files
+[Vulkan Loader] LAYER:             In following locations:
+[Vulkan Loader] LAYER:                /home/aivv/.config/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /etc/xdg/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /etc/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /opt/t3code-nightly-bin/usr/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/flatpak/exports/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /var/lib/flatpak/exports/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /usr/local/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /usr/share/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:                /usr/share/gnome/vulkan/implicit_layer.d
+[Vulkan Loader] LAYER:             Found the following files:
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/implicit_layer.d/steamoverlay_i386.json
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/implicit_layer.d/steamoverlay_x86_64.json
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/implicit_layer.d/steamfossilize_i386.json
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/implicit_layer.d/steamfossilize_x86_64.json
+[Vulkan Loader] LAYER:                /usr/share/vulkan/implicit_layer.d/MangoHud.x86_64.json
+[Vulkan Loader] LAYER:                /usr/share/vulkan/implicit_layer.d/MangoHud.x86.json
+[Vulkan Loader] LAYER:                /usr/share/vulkan/implicit_layer.d/nvidia_layers.json
+[Vulkan Loader] LAYER:                /usr/share/vulkan/implicit_layer.d/VkLayer_FROG_gamescope_wsi.x86_64.json
+[Vulkan Loader] LAYER:          Searching for explicit layer manifest files
+[Vulkan Loader] LAYER:             In following locations:
+[Vulkan Loader] LAYER:                /home/aivv/.config/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /etc/xdg/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /etc/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /opt/t3code-nightly-bin/usr/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /home/aivv/.local/share/flatpak/exports/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /var/lib/flatpak/exports/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /usr/local/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /usr/share/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:                /usr/share/gnome/vulkan/explicit_layer.d
+[Vulkan Loader] LAYER:             Found the following files:
+[Vulkan Loader] LAYER:                /usr/share/vulkan/explicit_layer.d/VkLayer_khronos_validation.json
+[Vulkan Loader] WARNING | LAYER: env var 'VK_INSTANCE_LAYERS' defined and adding layers "VK_LAYER_KHRONOS_validation"
+[Vulkan Loader] WARNING | LAYER: env var 'VK_INSTANCE_LAYERS' defined and adding layers "VK_LAYER_KHRONOS_validation"
+[Vulkan Loader] DEBUG | LAYER:  Loading layer library libVkLayer_khronos_validation.so
+[Vulkan Loader] INFO | LAYER:   Insert instance layer "VK_LAYER_KHRONOS_validation" (/usr/lib/libVkLayer_khronos_validation.so)
+[Vulkan Loader] LAYER:          vkCreateInstance layer callstack setup to:
+[Vulkan Loader] LAYER:             <Application>
+[Vulkan Loader] LAYER:               ||
+[Vulkan Loader] LAYER:             <Loader>
+[Vulkan Loader] LAYER:               ||
+[Vulkan Loader] LAYER:             VK_LAYER_KHRONOS_validation
+[Vulkan Loader] LAYER:                     Type: Explicit
+[Vulkan Loader] LAYER:                     Enabled By: Environment Variable VK_INSTANCE_LAYERS
+[Vulkan Loader] LAYER:                     Manifest: /usr/share/vulkan/explicit_layer.d/VkLayer_khronos_validation.json
+[Vulkan Loader] LAYER:                     Library:  /usr/lib/libVkLayer_khronos_validation.so
+[Vulkan Loader] LAYER:               ||
+[Vulkan Loader] LAYER:             <Drivers>
+[Vulkan Loader] INFO | LAYER:   Inserted device layer "VK_LAYER_KHRONOS_validation" (/usr/lib/libVkLayer_khronos_validation.so)
+[Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+[Vulkan Loader] DRIVER:            <Application>
+[Vulkan Loader] DRIVER:              ||
+[Vulkan Loader] DRIVER:            <Loader>
+[Vulkan Loader] DRIVER:              ||
+[Vulkan Loader] LAYER:             VK_LAYER_KHRONOS_validation
+[Vulkan Loader] LAYER:                     Type: Explicit
+[Vulkan Loader] LAYER:                     Enabled By: Environment Variable VK_INSTANCE_LAYERS
+[Vulkan Loader] LAYER:                     Manifest: /usr/share/vulkan/explicit_layer.d/VkLayer_khronos_validation.json
+[Vulkan Loader] LAYER:                     Library:  /usr/lib/libVkLayer_khronos_validation.so
+[Vulkan Loader] LAYER:               ||
+[Vulkan Loader] DRIVER:            <Device>
+[Vulkan Loader] DRIVER:                Using "NVIDIA GeForce GTX 1660" with driver: "/usr/lib/libGLX_nvidia.so.615.78.08"
+Native scalar U64 ABI verified: 12 boundary pairs, 64 walking-one and 64 walking-zero values; both returned limbs compared.
+Flattened BufferCreateInfo ABI verified: requested lo=257 hi=1; requirements lo=272 hi=1; unbound buffer only, no large allocation.
+Native exact-limit write/read begins: L=16777216, capacity=L+2, offset=1.
+Native exact-limit verified: every byte and exact list exhaustion compared; both guards intact.
+Native limit-plus-one writer rejected with argument code/message; all 16777218 destination bytes unchanged.
+Native negative boundaries verified: read limit, invalid byte after prefix, U64max empty/nonempty offsets, U32max count precedence; all destination bytes unchanged; zero allocation and immediate disposal counts restored.
+[Vulkan Loader] DEBUG | LAYER:  Unloading layer library /usr/lib/libVkLayer_khronos_validation.so
+Standalone native upload verified; live Vulkan objects=0.

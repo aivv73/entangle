@@ -1,0 +1,131 @@
+small-build-1
+SOME PROOFS FAIL
+Error:
+- expected : a term
+- observed : ']'
+Location:
+20 |   match bytes expected:
+21>|     case [] []:True{}
+   |              ^
+22 |     case a <> rest b <> tail:U32.is_eq(a,b) && same(rest,tail)
+Exit status: 1
+
+small-build-2
+SOME PROOFS FAIL
+Error:
+- message  : a name (a parallel or typed let binds names; destructure in its body)
+Location:
+17 |   do V.Action<Unit>:
+18>|     pair:U32 & U32 <- V.debug_u64_roundtrip(value)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 |     (actual_lo,actual_hi):U32 & U32 = pair
+Exit status: 1
+
+small-build-3
+SOME PROOFS FAIL
+Error:
+- expected : a pattern (a binder or a constructor)
+- observed : ../deps/bend-vulkan/Vulkan.Action.bind(Pair(U32, U32), Unit, ../deps/bend-vulkan/Vulkan.debug_u64_roundtrip(value), pair => {(upload-boundary/checks.actual_lo, upload-boundary/checks.actual_hi) : ../deps/bend-vulkan/Vulkan.Action(Unit)})
+Location:
+17 |   do V.Action<Unit>:
+18>|     pair:U32 & U32 <- V.debug_u64_roundtrip(value)
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 |     (actual_lo,actual_hi) = pair
+Exit status: 1
+
+small-build-4
+SOME PROOFS FAIL
+Error:
+- expected : a function type
+- observed : U32
+Context:
+- index : U32
+Location: byte_at
+5 | def byte_at(+index:U32) -> U32:
+6>|   U32.and(U32.xor(index,U32.xor(U32.shr(index,8n),U32.shr(index,16n))),255)
+  |                                 ^^^^^^^^^^^^^^^^^
+7 |
+Exit status: 1
+
+small-build-5
+SOME PROOFS FAIL
+Error:
+- expected : index
+- observed : index (consumed more than once)
+Context:
+- rest : Nat
+Location: payload
+7 |
+8>| def payload(remaining:Nat,index:U32) -> List<&2,U32>:
+  |                           ^^^^^
+9 |   match remaining:
+Exit status: 1
+
+small-build-6
+SOME PROOFS FAIL
+Error:
+- expected : actual
+- observed : actual (consumed more than once)
+Location: rejected
+ 8 |     case Done{_}:Error.require(False{},"Expected rejection: " ++ expected)
+ 9>|     case Fail{(actual,+message)}:
+   |                ^^^^^^
+10 |       Error.require(U32.is_eq(actual,code) && String.eq(message,expected),"Wrong rejection: " ++ U32.show(actual) ++ " " ++ message ++ "; expected " ++ U32.show(code) ++ " " ++ expected)
+Exit status: 1
+
+small-build-7
+SOME PROOFS FAIL
+Error:
+- expected : before
+- observed : before (consumed more than once)
+Context:
+- instance : V.Instance
+- physical : V.PhysicalDevice
+- device   : V.Device
+Location: zero_new
+47 |   do V.Action<Unit>:
+48>|     before:U32 <- V.debug_live_objects()
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+49 |     result:V.VkResult(B.Buffer) <- V.Action.lift(V.VkResult(B.Buffer),B.allocate(instance,physical,device,W.zero(),vk.VK_BUFFER_USAGE_TRANSFER_SRC_BIT()))
+Exit status: 1
+
+native-build-1
+SOME PROOFS FAIL
+Error:
+- expected : List<&1, U32>
+- observed : List<&2, U32>
+Context:
+- entry     : V.Entry
+- _         : Unit
+- instance  : V.Instance
+- devices   : List<&1, V.PhysicalDevice>
+- physical  : V.PhysicalDevice
+- families  : List<&1, Sigma<&1, &1, U32, _ => U32>>
+- family    : U32
+- device    : V.Device
+- before    : U32
+- large     : V.Buffer
+- req       : V.MemoryRequirements
+- _         : Unit
+- _         : Unit
+- after     : U32
+- _         : Unit
+- buffer    : V.Buffer
+- req       : V.MemoryRequirements
+- types     : List<&1, Core.MemoryType>
+- index     : U32
+- allocated : Result<&1, &1, Sigma<&1, &1, U32, _ => String>, V.DeviceMemory>
+- _         : Unit
+- count     : U32
+- _         : Unit
+- memory    : V.DeviceMemory
+- _         : Unit
+- _         : Unit
+- _         : Unit
+- _         : Unit
+Location: run
+54 |     V.Action.lift(Unit,IO.print("Native exact-limit write/read begins: L=16777216, capacity=L+2, offset=1."))
+55>|     V.Device.write_memory(device,memory,W.of_u32(1),Bytes.payload(U32.to_nat(Bytes.limit()),0))
+   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+56 |     bytes:List<U32> <- V.Device.read_memory(device,memory,W.of_u32(1),Bytes.limit())
+Exit status: 1

@@ -1,0 +1,12 @@
+57d1f4c04e2642d37a45dae31d59625c25e47f74
+verify/upload-abi-limits
+bend 2.0.39
+clang version 23.1.4
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+x86_64-pc-linux-gnu
+Linux x86_64
+ a144f7dd4fb4835ca3d5ce17350fc850de049038 deps/bend-vulkan (a144f7d)
+ bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c deps/bend-vulkan/deps/bend-collections (v0.1.0-503-gbc78c4f)
+ 16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee deps/bendvy (heads/master)

@@ -1,0 +1,10 @@
+bend PROOF.bend
+bend tools/verify-upload-runtime.bend -o build/verification/upload-abi-eRwOfahQ/review/production
+env VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation VK_LAYER_VALIDATE_SYNC=1 VK_LOADER_DEBUG=layer timeout --signal=KILL 300s build/verification/upload-abi-eRwOfahQ/review/production +RTS --threads 1 --gpu off
+bend tools/verify-upload-native-limit.bend -o build/verification/upload-abi-eRwOfahQ/review/native
+env VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation VK_LAYER_VALIDATE_SYNC=1 VK_LOADER_DEBUG=layer timeout --signal=KILL 300s build/verification/upload-abi-eRwOfahQ/review/native +RTS --threads 1 --gpu off
+sha256sum -c tools/upload-boundary/trusted.sha256
+env VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation VK_LAYER_VALIDATE_SYNC=1 bend tools/verify.bend
+bend tools/verify-upload-mutations.bend -o build/verify-upload-mutations
+./build/verify-upload-mutations
+git diff --check
