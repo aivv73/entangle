@@ -1,3 +1,6 @@
+import ./proofs/upload-range/spec.bend as UploadValue
+import ./deps/bend-vulkan/src/core.bend as UploadCore
+import ./deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as UploadWord
 import ./src/mesh-control.bend as Player
 import ./src/creation.bend as Create
 import ./src/headless.bend as Headless
@@ -565,3 +568,9 @@ law player_query_gate:
   for state:Player.Control
   for scope:H
   {Player.selected(~H,~modify,state,(scope,Query.SelectionRefused{})) == (scope,(state,Sys.BodyError{"player transform query refused",Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+
+law upload_range_universal:
+  for +c:UploadWord.U64
+  for +o:UploadWord.U64
+  for +l:UploadWord.U64
+  {UploadCore.subrange_contains(c,o,l) == Bool.and(Nat.is_le(UploadValue.value(o),UploadValue.value(c)),Nat.is_le(Nat.add(UploadValue.value(o),UploadValue.value(l)),UploadValue.value(c))) : Bool}

@@ -1,3 +1,5 @@
+import ./proofs/upload-range/PROOF.bend as UploadProof
+import ./proofs/upload-range/LAWS.bend as UploadLaws
 import ./src/mesh-control.bend as Player
 import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/u32.bend as U32Proof
 import ./src/creation.bend as Create
@@ -356,3 +358,6 @@ def Laws.player_active_clock_policy(clock,now):{==}
 def Laws.player_native_focus_boundary(rest):{==}
 
 def Laws.player_query_gate(H,modify,state,scope):{==}
+
+def Laws.upload_range_universal(c,o,l):
+  UploadLaws.universal(c,o,l)

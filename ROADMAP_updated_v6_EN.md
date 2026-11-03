@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E2 completion and E3 checker selection
+**Revision:** 6 · November 3, 2026 · updated for E2 completion and the E3 universal range proof
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The existing upload-range checker is selected; its universal range proof and integration into Entangle's upload paths remain open [S38]. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Integration into Entangle's upload paths remains open. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -83,7 +83,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** encode the [U64 range contract](#u64-representation-and-preconditions) in `LAWS.bend` and prove containment for arbitrary accepted inputs. Reuse the existing arithmetic proofs, then connect the selected `Core.subrange_contains` to Entangle's production upload paths [S38].
+**Next action:** connect the proven `Core.subrange_contains` to Entangle's production upload paths using exact byte quantities. The [universal proof](docs/upload-range.md) establishes the numeric contract; production enforcement remains open [S38].
 
 ---
 
@@ -361,9 +361,9 @@ For any accepted `offset`, `length`, and `capacity`, the mathematical range `[of
 
 Reuse [`Core.subrange_contains(capacity, offset, length)`](deps/bend-vulkan/src/core.bend). Its unsigned comparisons implement `offset <= capacity` and `length <= capacity - offset`. The difference uses wrapping addition and negation. When the first condition holds, the difference is exact. The checker does not compute `offset + length` during validation. No replacement checker is needed [S38].
 
-The [U64 representation and preconditions](#u64-representation-and-preconditions) below specify this check. Encoding the mathematical containment claim in `LAWS.bend` and proving it remain the next task.
+The [U64 representation and preconditions](#u64-representation-and-preconditions) below specify this check. The root `upload_range_universal` law now proves its arbitrary-input Boolean equivalence with natural-number containment. See the [proof and trust limits](docs/upload-range.md).
 
-The existing arithmetic proofs establish modular addition and negation and provide packed-word comparison lemmas. The four upload-range laws prove concrete boundary cases. The missing universal proof must connect unsigned `Core.size_less`, exact subtraction under the accepted bound, and containment for this checker [S38].
+The universal proof reuses the existing modular arithmetic and packed-word comparison lemmas [S38]. It connects unsigned `Core.size_less`, exact subtraction under the first bound, and containment for every input triple. The [verification record](docs/verification/2026-11-03-upload-range/README.md) includes standard proof checks and rejection of a copied checker with its first guard removed.
 
 The dependency's [staging API](deps/bend-vulkan/src/upload.bend) already checks source and destination ranges with this function. Entangle's [offscreen](src/scene-render.bend) and [window](src/scene-window.bend) uploads call `Device.write_memory` directly. Those paths also multiply sizes in U32 before widening to U64. Integration must address that earlier truncation risk and prevent ordinary API bypass. Native bounds checks remain a separate safeguard [S38].
 
@@ -380,7 +380,7 @@ The acceptance rule uses these ordered conditions:
 
 Both comparisons are unsigned. The selected implementation expresses the conditions as a Boolean conjunction. Its subtraction is `W.add(capacity, W.neg(offset))`, computed modulo `2^64`. Once `offset <= capacity` holds, that result equals the mathematical difference and lies in `[0, 2^64 - 1]`. If the first condition fails, the checker rejects regardless of the wrapped difference. Correctness therefore does not depend on short-circuit evaluation. Validation never computes the machine sum `offset + length`.
 
-The mathematical contract to encode and prove is, for every `capacity`, `offset`, and `length` of type `W.U64`:
+The mathematical contract now proved is, for every `capacity`, `offset`, and `length` of type `W.U64`:
 
 ```text
 Core.subrange_contains(capacity, offset, length) = True
@@ -393,16 +393,16 @@ The subtraction in this statement is interpreted under the preceding bound. Acce
 
 For this numeric guarantee to protect an upload, callers must supply exact byte quantities for the same storage region and origin. Capacity must describe accessible storage that remains valid through the operation. Any source and destination ranges require separate checks against their respective capacities. Conversion and size calculation must preserve the intended values before validation. In particular, widening a U32 product after it wraps cannot recover its byte count. Values outside U64 must be rejected before conversion, and any whole-size sentinel must be resolved before this check.
 
-Acceptance establishes numeric containment only. A native operation may impose stricter limits or reject zero-length operations. Handle validity, source payload availability, alignment, binding offsets, synchronization, and resource lifetime remain separate obligations. This specification does not claim a new machine-checked theorem or production integration.
+Acceptance establishes numeric containment only. A native operation may impose stricter limits or reject zero-length operations. Handle validity, source payload availability, alignment, binding offsets, synchronization, and resource lifetime remain separate obligations. The new theorem establishes the numeric equivalence under the verification trust limits. Production integration remains open.
 
 ### Tasks
 
 - [x] Review existing arithmetic laws and select an existing checker if its contract is sufficient. Selected `Core.subrange_contains`; reuse its implementation and the existing arithmetic proofs [S38].
 - [x] Specify the U64 representation and preconditions; use a check without unsafe addition, such as `offset <= capacity`, followed by `length <= capacity - offset`. The [contract above](#u64-representation-and-preconditions) defines the full input domain, unsigned comparisons, empty ranges, maximum values, and upload caller obligations for the selected checker.
-- [ ] Prove the property for arbitrary accepted input, not only for the sizes of one scene.
+- [x] Prove the property for arbitrary accepted input, not only for the sizes of one scene. `upload_range_universal` proves the Boolean equivalence for every production U64 triple, with no offset or no-overflow premise. See [proof and verification limits](docs/upload-range.md).
 - [ ] Integrate this exact function into the production upload path; prevent the engine's ordinary API from bypassing the check.
 - [ ] Add ABI, boundary, and negative tests, including zero sizes and maximum values.
-- [ ] Introduce a controlled bug that violates the contract and confirm that the proof is no longer accepted. Do not weaken the law to fix a failing status.
+- [x] Introduce a controlled bug that violates the contract and confirm that the proof is no longer accepted. Removing the first guard in a disposable copy rejects the unchanged universal proof; restoration passes. See the [mutation evidence](docs/verification/2026-11-03-upload-range/README.md). Production upload enforcement remains a separate task.
 
 ### Resource lifecycle
 
@@ -784,7 +784,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** specify and prove the arbitrary-input range contract for the selected `Core.subrange_contains`, then integrate it into Entangle's uploads [S38]. E0–E2 are complete. E3 still requires production enforcement, boundary and ABI verification, rejection of a controlled contract violation, and the resource-lifecycle work listed above. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** integrate the proven arbitrary-input `Core.subrange_contains` contract into Entangle's uploads. See [proof and trust limits](docs/upload-range.md) and the earlier checker review [S38]. E0–E2 are complete. E3 still requires production enforcement, boundary and ABI verification, and the resource-lifecycle work listed above. The pure-checker mutation result is recorded with the numeric proof. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
 
 ---
 
@@ -883,4 +883,4 @@ The R0–R4 architectural decisions are our design synthesis. External papers es
 
 - [S38] Read-only source review and proof checks on November 3, 2026, at Entangle `7043fa6b76edb50b43a7f9a81e5f5116ecdea235`, bend-vulkan `a144f7dd4fb4835ca3d5ce17350fc850de049038`, and bend-collections `bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c`. Sources are the [existing checker](deps/bend-vulkan/src/core.bend), [staging callers](deps/bend-vulkan/src/upload.bend), [range laws](deps/bend-vulkan/LAWS.bend), [range proofs](deps/bend-vulkan/PROOF.bend), [U64 specification](deps/bend-vulkan/deps/bend-collections/spec/math/u64.bend), [arithmetic lemmas](deps/bend-vulkan/deps/bend-collections/proofs/math/u64/u64.bend), and [arithmetic contract proofs](deps/bend-vulkan/deps/bend-collections/proofs/math/proof.bend). `bend PROOF.bend` passed from both the Entangle and bend-vulkan roots. From the bend-collections root, `bend proofs/math/u64/u64.bend` and `bend proofs/math/proof.bend` also passed. Each command exited with code `0` and reported `ALL PROOFS CHECK`. These were standard checks without `--verdict`. The review selected an existing implementation without code changes. It did not add the universal accepted-range theorem, integrate the checker into Entangle, or rerun native uploads.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection is complete [S38]. E3–E7 and R0–R4 remain incomplete.
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38] and the [universal numeric theorem](docs/upload-range.md) are complete under the recorded verification limits. E3–E7 and R0–R4 remain incomplete.
