@@ -327,6 +327,10 @@ claim. Push payload bytes are separate from host mesh writes and physical traffi
 
 ## Application ownership
 
+The [frame-order contract](docs/frame-order.md) defines the E2 phase sequence and
+distinguishes it from the current demonstration loop. Fixed-timestep scheduling
+and global-transform propagation remain unimplemented.
+
 `examples/scene-window-app.bend` owns concrete scene state, mesh, camera projection,
 observation, drawing, retention, and verification. `examples/scene-window.bend`
 owns executable modes and the interactive loop. `src/app.bend` owns the Vulkan

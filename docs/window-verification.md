@@ -8,6 +8,10 @@ acceptance command is `./build/verify-window`, built from
 
 ## Renderer contract
 
+The [frame-order contract](frame-order.md) defines the target application phases
+and maps them to this demonstration. The checks here cover the current runtime,
+not the complete target sequence.
+
 `src/scene-window.bend` owns one affine `Renderer`. Its indexed resources contain
 a persistent vertex buffer and index buffer. Its optional target is created,
 replaced, and retired by the existing `Indexed.ensure`, `retire`, and `destroy`

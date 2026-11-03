@@ -326,7 +326,7 @@ This completes the offscreen public-API rendering task. The separate window inte
 
 - [x] Factor out `App`, startup/shutdown, time, input, and error handling. Implemented, verified, and merged into `main` at `912639e` [S31].
 - [x] Add static module registration for `Core`, `Input`, `Assets`, and `Render`. Implemented and verified in `66413bf`, published for review in [change 8](https://entire.com/et/bend-engine/-/trails/7/changes/entangle/8), and awaiting merge [S32]. Four typed callable slots support source-fixed startup assembly with the existing camera, mesh, and renderer. No general plugin lifecycle or Bevy Rust API is implemented.
-- [ ] Define the order: input → fixed simulation → update → apply deferred changes → update global transforms → extraction → rendering → completion handling.
+- [x] Define the order: input → fixed simulation → update → apply deferred changes → update global transforms → extraction → rendering → completion handling. The [frame-order contract](docs/frame-order.md) defines phase responsibilities and maps the current demonstration to them. This completes the definition only; full runtime phase support remains unimplemented.
 - [ ] Use Bendvy schedules. Define when structural changes and removal events become visible.
 - [ ] Extract a small sequential `step` kernel from the existing movement logic. Specify tick inputs, state ownership, and output events; do not read I/O or real clocks inside the kernel.
 - [ ] Use a headless example to define consistent semantics for tick start, numerical updates, and structural commit. This is the reference for R0, not a new ECS or a mandatory parallel runtime.
