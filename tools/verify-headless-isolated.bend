@@ -113,6 +113,7 @@ def main() -> IO(Unit):
       "-o","-name","libgcc_s.so",")"])
     copy(paths(gcc),root)
     sources(["toolchain.bend","src/headless.bend","src/scene.bend","src/scene-schema.bend",
+      "src/creation.bend","src/scene-matrix.bend","src/scene-mesh.bend","examples/scene-seeds.bend",
       "src/scene-spawn.bend","src/scene-motion.bend","src/scene-step.bend","src/scene-observe.bend",
       "src/scene-draw.bend","src/components.bend","examples/scene.bend","examples/scene-headless.bend",
       "tools/verify-headless.bend","tools/verify-headless-scene.bend"],root)

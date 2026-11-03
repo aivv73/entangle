@@ -1,0 +1,39 @@
++ bend
++ mkdir
++ mkdir
++ bend
++ bend
++ bend
++ ./build/window-discover
+Window validation=validation
++ env
+live-first 640x480 geometry-pixels=2671
+live-successive-ticks 640x480 geometry-pixels=2673
++ kill
++ kill
+Successive ECS geometry movement, hidden ticks and hidden Close passed
++ env
+replay-tick-one 640x480 geometry-pixels=2671
+key-97 640x480 geometry-pixels=2801
+key=97 geometry-moved=true R=exact
+key-100 640x480 geometry-pixels=2543
+key=100 geometry-moved=true R=exact
+key-119 640x480 geometry-pixels=2718
+key=119 geometry-moved=true R=exact
+key-115 640x480 geometry-pixels=2610
+key=115 geometry-moved=true R=exact
+key-113 640x480 geometry-pixels=3011
+key=113 geometry-moved=true R=exact
+key-101 640x480 geometry-pixels=2393
+key=101 geometry-moved=true R=exact
+resize-800x450 800x450 geometry-pixels=2363
+resize-360x640 360x640 geometry-pixels=1468
+resize-720x480 720x480 geometry-pixels=2671
+resize-360x640 360x640 geometry-pixels=1468
+resize-800x450 800x450 geometry-pixels=2363
+resize-640x480 640x480 geometry-pixels=2671
+restored-moved 640x480 geometry-pixels=2543
+restored-exact 640x480 geometry-pixels=2671
+Retained ECS camera replay, repeated resize, unmap/restore and Escape passed
++ env
+Entangle actual executable native window verification passed.

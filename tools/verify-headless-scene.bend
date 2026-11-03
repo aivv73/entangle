@@ -1,4 +1,5 @@
 import Base
+import ../examples/scene-seeds.bend as Seeds
 import ../src/headless.bend as Headless
 import ../src/scene.bend as Scene
 import ../src/scene-schema.bend as D
@@ -170,7 +171,7 @@ def created(result:Scene.Application() & Reference.Inventory) -> IO(Evidence):
 
 def replay(+split:Nat) -> IO(Unit):
   do IO<Unit>:
-    app : Scene.Application() <- Scene.create()
+    app : Scene.Application() <- Scene.create(Seeds.defaults())
     state : Evidence <- created(Reference.inventory(app))
     state : Evidence <- zero(state)
     state : Evidence <- Headless.advance(~Evidence,~checked_tick,split,state)

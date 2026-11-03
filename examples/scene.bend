@@ -1,4 +1,6 @@
 import Base
+import ../src/creation.bend as Create
+import ./scene-seeds.bend as Seeds
 import ../src/scene-step.bend as Step
 import ../src/scene-spawn.bend as Spawn
 import ../deps/bendvy/src/ecs/execution-generalized-root-application.bend as Root
@@ -233,12 +235,11 @@ def previous_transform(values:List<&2,Observe.Row>,+target:W.Handle<D.Schema>) -
     case Observe.Row{handle,value,_} <> rest:
       Bool.pick(Maybe<&2,C.Transform>,equal(handle,target),Some{value},previous_transform(rest,target))
 
-def seeded_transform(seed:Removed.Removed(D.components())) -> Maybe<&2,C.Transform>:
-  match seed:
-    case Product.Owner{Some{value},Some{_}}:Some{value}
-    case _:None{}
+def seeded_transform(seed:Create.Seed) -> Maybe<&2,C.Transform>:
+  Create.Seed{value,_} = seed
+  Some{value}
 
-def seed_transform(index:U32) -> Maybe<&2,C.Transform>:seeded_transform(Spawn.seed(index))
+def seed_transform(index:U32) -> Maybe<&2,C.Transform>:seeded_transform(Seeds.seed(index))
 
 def stepped(result:C.Transform & Unit) -> C.Transform:
   match result:
@@ -439,5 +440,5 @@ def initial(result:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Un
 
 def main() -> IO(Unit):
   do IO<Unit>:
-    app : Scene.Application() <- Scene.create()
+    app : Scene.Application() <- Scene.create(Seeds.defaults())
     initial(Observe.snapshot(app,I.Fresh{}))

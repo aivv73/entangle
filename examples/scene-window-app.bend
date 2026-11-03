@@ -1,4 +1,5 @@
 import Base
+import ../src/creation.bend as Create
 import ../src/scene-window.bend as Win
 import ../src/scene-render.bend as R
 import ../src/scene-matrix.bend as M
@@ -20,10 +21,10 @@ import ./scene-render.bend as Extract
 type State is Type:
   State{app:Scene.Application(),inspector:I.Instance<D.Schema>,baseline:List<&2,Check.Identity>,rows:List<&2,Observe.Row>,draws:Draw.DrawList,retained:Draw.DrawList,saved:List<&2,Observe.Row>,tick:U32,clock:Time.Clock}
 
-def vertices(words:List<U32>) -> List<&2,R.Vertex>:
+def vertices(words:List<U32>) -> List<&2,Create.Vertex>:
   match words:
     case a <> b <> c <> r <> g <> b1 <> rest:
-      R.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)}} <> vertices(rest)
+      Create.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)}} <> vertices(rest)
     case _:[]
 
 def indices(words:List<U32>) -> List<&2,U32>:
@@ -31,8 +32,8 @@ def indices(words:List<U32>) -> List<&2,U32>:
     case []:[]
     case x <> rest:x <> indices(rest)
 
-def mesh() -> R.Mesh:
-  R.Mesh{7,vertices(List.take(&1,U32,Geometry.vertices(),144n)),indices(List.take(&1,U32,Geometry.indices(),36n))}
+def mesh() -> Create.Geometry:
+  Create.Geometry{vertices(List.take(&1,U32,Geometry.vertices(),144n)),indices(List.take(&1,U32,Geometry.indices(),36n)),[Create.Range{7,0,36}]}
 
 def tick_one_framing(width:U32,height:U32) -> M.Mat4:
   tick_one_center_x : F32 = 50.5
@@ -46,21 +47,8 @@ def composed(matrix:Maybe<M.Mat4>,width:U32,height:U32) -> Maybe<M.Mat4>:
     case None{}:None{}
     case Some{camera}:Some{M.multiply(camera,tick_one_framing(width,height))}
 
-def matrix(camera: Camera.Camera, width: U32, height: U32) -> List<U32>:
-  Camera.Camera{+yaw,+pitch,+distance} = camera
-  +sy +cy +sp +cp = F32.sin(yaw) F32.cos(yaw) F32.sin(pitch) F32.cos(pitch)
-  +f : F32 = 1.7320508
-  +fx : F32 = (f * U32.to_f32(height) / U32.to_f32(width) : F32)
-  +a : F32 = (100.0 / 99.9 : F32)
-  List.map(~F32,~U32,~F32.bits,[
-    (fx * cy : F32),(f * sy * sp : F32),F32.neg((a * sy * cp : F32)),F32.neg((sy * cp : F32)),
-    0.0,F32.neg((f * cp : F32)),F32.neg((a * sp : F32)),F32.neg(sp),
-    F32.neg((fx * sy : F32)),(f * cy * sp : F32),F32.neg((a * cy * cp : F32)),F32.neg((cy * cp : F32)),
-    0.0,0.0,(a * distance - 10.0 / 99.9 : F32),distance])
-
-
-def view(camera:Camera.Camera,+width:U32,+height:U32) -> Maybe<M.Mat4>:
-  composed(M.from_words(matrix(camera,width,height)),width,height)
+def view(camera:Create.Camera,+width:U32,+height:U32) -> Maybe<M.Mat4>:
+  composed(Create.view(camera,width,height),width,height)
 
 def fold(words:List<U32>,hash:U32) -> U32:
   match words:
@@ -123,7 +111,7 @@ def unchanged(draws:Draw.DrawList,rows:List<&2,Observe.Row>) -> Bool:
   Draw.DrawList{items} = draws
   Check.drawing_equal(items,rows)
 
-def draw(state:State,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Camera.Camera,replay:Bool) -> V.Action(Win.Renderer & State):
+def draw(state:State,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Create.Camera,replay:Bool) -> V.Action(Win.Renderer & State):
   State{app,inspector,baseline,+rows,+draws,+retained,+saved,tick,clock} = state
   +list = Bool.pick(Draw.DrawList,replay,retained,draws)
   do V.Action<Win.Renderer & State>:

@@ -1,4 +1,5 @@
 import Base
+import ./creation.bend as Create
 import ../deps/bendvy/src/ecs/world.bend as W
 import ../deps/bendvy/src/ecs/execution-composer-schema.bend as Setup
 import ./scene-schema.bend as D
@@ -145,17 +146,17 @@ def author(result:Compilation() & Sys.Defined<D.World(),Owner(),Cmd.Captures(~D.
       ~String,~Unit,~Move.kernel,~Move.body,Move.compiled(),world,"Scene movement",Unit{}))
     case _:IO.die(Application(),1,"scene bootstrap registration refused")
 
-def attach(world:D.World()) -> IO(Application()):
+def attach(seeds:List<&2,Create.Seed>,world:D.World()) -> IO(Application()):
   author(Author.define_with_compilation(~D.Schema,~D.components(),~D.resources(),~Unit,~Spawn.route(),
     ~Spawn.Ops,~Spawn.User,~String,~Unit,~Spawn.declaration,~Spawn.body,~{==},Spawn.compilation(),world,
-    "Scene bootstrap",Spawn.initial()))
+    "Scene bootstrap",Spawn.initial(seeds)))
 
-def created(result:Setup.Initialized<D.Schema,D.components(),D.resources(),Unit>) -> IO(Application()):
+def created(seeds:List<&2,Create.Seed>,result:Setup.Initialized<D.Schema,D.components(),D.resources(),Unit>) -> IO(Application()):
   match result:
-    case Setup.SchemaCreated{_,world}:attach(world)
+    case Setup.SchemaCreated{_,world}:attach(seeds,world)
     case _:IO.die(Application(),1,"scene schema creation refused")
 
-def create() -> IO(Application()):created(D.create(W.factory()))
+def create(seeds:List<&2,Create.Seed>) -> IO(Application()):created(seeds,D.create(W.factory()))
 
 def distinct_systems(same:Bool) -> IO(Unit):
   match same:

@@ -1,5 +1,6 @@
 import ../deps/bendvy/src/ecs/execution-effects.bend as Effects
 import Base
+import ./creation.bend as Create
 import ./scene-schema.bend as D
 import ./components.bend as V
 import ../deps/bendvy/src/ecs/owner-product.bend as Product
@@ -23,16 +24,12 @@ def Ops(Permit:Data,F:(Type -> Type),H:Type,Q:Type) -> Type:Permission.EntityCom
 type User is Type:
   User{seeds:List<Removed.Removed(D.components())>,handles:List<&2,W.Handle<D.Schema>>,returned:List<Removed.Removed(D.components())>}
 
-def seed(+index:U32) -> Removed.Removed(D.components()):
-  +i = U32.to_f32(index)
-  Product.Owner{Some{V.Transform{V.Vec3{i,F32.mul(2.0,i),F32.neg(i)},V.Quat{0.0,0.0,0.6,0.8},V.Vec3{2.0,3.0,4.0}}},Some{V.MeshRef{7}}}
+def bundles(seeds:List<&2,Create.Seed>) -> List<Removed.Removed(D.components())>:
+  match seeds:
+    case []:[]
+    case Create.Seed{transform,mesh} <> rest:Product.Owner{Some{transform},Some{mesh}} <> bundles(rest)
 
-def seeds(count:Nat,+index:U32) -> List<Removed.Removed(D.components())>:
-  match count:
-    case 0n:[]
-    case 1n++rest:seed(index) <> seeds(rest,U32.add(index,1))
-
-def initial() -> User:User{seeds(100n,0),[],[]}
+def initial(seeds:List<&2,Create.Seed>) -> User:User{bundles(seeds),[],[]}
 
 def granted(~Permit:Data,~F:(Type -> Type),~H:Type,~Q:Type,-B:Type,-K:Type,book:B,result:K & Ops(Permit,
   F,H,Q)) -> B & (K & Ops(Permit,F,H,Q)):(book,result)

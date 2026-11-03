@@ -1,3 +1,4 @@
+import ./src/creation.bend as Create
 import ./src/headless.bend as Headless
 import ./src/scene.bend as Scene
 import ./src/time.bend as Time
@@ -5,6 +6,7 @@ import ./src/input.bend as Input
 import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
+import ./examples/scene-seeds.bend as Seeds
 import Base
 import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
@@ -153,12 +155,12 @@ law scene_rotation_scale:
 
 law scene_seed:
   for +index:U32
-  {Spawn.seed(index) == Product.Owner{Some{C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}}},Some{C.MeshRef{7}}} : Removed.Removed(SceneSchema.components())}
+  {Seeds.seed(index) == Create.Seed{C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}},C.MeshRef{7}} : Create.Seed}
 
 law scene_seed_count:
   for +count:Nat
   for +index:U32
-  {List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.seeds(count,index)) == count : Nat}
+  {List.length(&2,Create.Seed,Seeds.values(count,index)) == count : Nat}
 
 law scene_empty_bootstrap:
   for F:Type -> Type
@@ -349,13 +351,13 @@ law time_high_water:
 
 law input_close:
   for rest:List<Event>
-  for camera:Maybe<Input.Camera>
-  {Input.events(Close{} <> rest,camera) == None{} : Maybe<Input.Camera>}
+  for camera:Maybe<Create.Camera>
+  {Input.events(Close{} <> rest,camera) == None{} : Maybe<Create.Camera>}
 
 law input_escape:
   for rest:List<Event>
-  for camera:Maybe<Input.Camera>
-  {Input.events(Key{27,True{}} <> rest,camera) == None{} : Maybe<Input.Camera>}
+  for camera:Maybe<Create.Camera>
+  {Input.events(Key{27,True{}} <> rest,camera) == None{} : Maybe<Create.Camera>}
 
 law input_drain:
   for -A:Type
@@ -367,15 +369,15 @@ law input_snapshot:
   for -A:Type
   for rebuild:List<Event> -> A
   for pending:List<Event>
-  for camera:Maybe<Input.Camera>
-  {Input.snapshot(A,rebuild,pending,camera) == (Input.events(pending,camera),rebuild([])) : Maybe<Input.Camera> & A}
+  for camera:Maybe<Create.Camera>
+  {Input.snapshot(A,rebuild,pending,camera) == (Input.events(pending,camera),rebuild([])) : Maybe<Create.Camera> & A}
 
 law module_initial_camera:
-  {Input.initial() == Input.Camera{0.65,0.45,7.0} : Input.Camera}
+  {Input.initial() == Create.Camera{C.Vec3{0.0,0.0,0.0},0.65,0.45,7.0,Create.Perspective{1.7320508,0.1,100.0}} : Create.Camera}
 
 law module_camera_reset:
-  for camera: Input.Camera
-  {Input.key(114,camera) == Input.initial() : Input.Camera}
+  for camera: Create.Camera
+  {Input.key(114,camera) == Input.reset(camera) : Create.Camera}
 
 law headless_scene_zero:
   for app:Scene.Application()
@@ -388,3 +390,54 @@ law headless_scene_successor:
   {Headless.advance(~Scene.Application(),~Scene.tick,1n+remaining,app) ==
     IO.bind(Scene.Application(),Scene.Application(),Scene.tick(app),
       next => Headless.advance(~Scene.Application(),~Scene.tick,remaining,next)) : IO(Scene.Application())}
+
+law creation_white:
+  for vertex:Create.Vertex
+  {Create.tint(vertex,Create.white()) == vertex : Create.Vertex}
+
+law creation_tint_position:
+  for +position:C.Vec3
+  for color:C.Vec3
+  for material:Create.Material
+  exs tinted:C.Vec3
+  {Create.tint(Create.Vertex{position,color},material) == Create.Vertex{position,tinted} : Create.Vertex}
+
+law creation_bundle_order:
+  for transform:C.Transform
+  for mesh:C.MeshRef
+  for rest:List<&2,Create.Seed>
+  {Spawn.bundles(Create.Seed{transform,mesh} <> rest) == Product.Owner{Some{transform},Some{mesh}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
+
+law creation_empty:
+  {Create.compile(Create.Scene{[]}) == Done{Create.Compiled{[],Create.Geometry{[],[],[]}}} : Result<&2,&2,Create.Error,Create.Compiled>}
+
+law creation_resolve_empty:
+  for id:U32
+  {Create.resolve([],id) == None{} : Maybe<Create.Range>}
+
+law creation_resolve_head:
+  for +id:U32
+  for first:U32
+  for count:U32
+  for rest:List<&2,Create.Range>
+  {Create.resolve(Create.Range{id,first,count} <> rest,id) == Some{Create.Range{id,first,count}} : Maybe<Create.Range>}
+
+law creation_empty_prepend:
+  for geometry:Create.Geometry
+  {Create.compile_items([],[],geometry,0,7) == Done{Create.Compiled{[],geometry}} : Result<&2,&2,Create.Error,Create.Compiled>}
+
+law camera_reset_configuration:
+  for target:C.Vec3
+  for yaw:F32
+  for pitch:F32
+  for distance:F32
+  for projection:Create.Projection
+  {Input.reset(Create.Camera{target,yaw,pitch,distance,projection}) == Create.Camera{target,0.65,0.45,7.0,projection} : Create.Camera}
+
+law creation_white_mesh:
+  for vertices:List<&2,Create.Vertex>
+  {Create.bake(vertices,Create.white()) == vertices : List<&2,Create.Vertex>}
+
+law creation_bundle_count:
+  for +seeds:List<&2,Create.Seed>
+  {List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(seeds)) == List.length(&2,Create.Seed,seeds) : Nat}

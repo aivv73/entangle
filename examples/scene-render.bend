@@ -1,4 +1,6 @@
 import Base
+import ../src/creation.bend as Create
+import ./scene-seeds.bend as Seeds
 import ../src/error.bend as Error
 import ../src/scene-render.bend as R
 import ../src/scene-matrix.bend as M
@@ -15,16 +17,16 @@ import ./scene.bend as Check
 def camera() -> M.Mat4:
   M.Mat4{M.Vec4{0.015625,F32.neg(0.125),0.0,0.0},M.Vec4{0.0,0.0625,0.0,0.0},M.Vec4{0.0,0.0,0.00390625,0.0},M.Vec4{F32.neg(0.96875),0.25,0.5,1.0}}
 
-def quad(+z:F32,+color:C.Vec3) -> List<&2,R.Vertex>:
-  [R.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color},
-   R.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color},
-   R.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color},
-   R.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color}]
+def quad(+z:F32,+color:C.Vec3) -> List<&2,Create.Vertex>:
+  [Create.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color},
+   Create.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color},
+   Create.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color},
+   Create.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color}]
 
-def mesh(reverse:Bool) -> R.Mesh:
-  vertices = List.append(&2,R.Vertex,quad(0.03125,C.Vec3{1.0,0.0,0.0}),quad(0.09375,C.Vec3{0.0,1.0,0.0}))
-  indices = Bool.pick(List<&2,U32>,reverse,[4,5,6,6,7,4,0,1,2,2,3,0],[0,1,2,2,3,0,4,5,6,6,7,4])
-  R.Mesh{7,vertices,indices}
+def mesh(reverse:Bool) -> Create.Geometry:
+  vertices = List.append(&2,Create.Vertex,quad(0.03125,C.Vec3{1.0,0.0,0.0}),quad(0.09375,C.Vec3{0.0,1.0,0.0}))
+  +indices = Bool.pick(List<&2,U32>,reverse,[4,5,6,6,7,4,0,1,2,2,3,0],[0,1,2,2,3,0,4,5,6,6,7,4])
+  Create.Geometry{vertices,indices,[Create.Range{7,0,U32.from_nat(List.length(&2,U32,indices))}]}
 
 def depth_word(+numerator:U32) -> U32:
   +power = U32.log2(numerator)
@@ -301,7 +303,7 @@ def ticks(remaining:Nat,+tick:U32,renderer:R.Renderer,app:Scene.Application(),in
 
 def run(renderer:R.Renderer) -> V.Action(Unit):
   do V.Action<Unit>:
-    app : Scene.Application() <- V.Action.lift(Scene.Application(),Scene.create())
+    app : Scene.Application() <- V.Action.lift(Scene.Application(),Scene.create(Seeds.defaults()))
     pair : Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList) <- observe(app,I.Fresh{})
     initial_empty(renderer,pair,renderer => app => instance => ticks(8n,1,renderer,app,I.Active{Some{Tick.zero()},Tick.zero()},Draw.DrawList{[]}))
 

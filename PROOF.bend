@@ -1,9 +1,12 @@
+import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/u32.bend as U32Proof
+import ./src/creation.bend as Create
 import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import ./deps/bend-vulkan/PROOF.bend as Vulkan
 import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
 import ./tools/component-consumer.bend as Consumer
+import ./examples/scene-seeds.bend as Seeds
 import Base
 import ./src/time.bend as Time
 import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/arith.bend as Arithmetic
@@ -94,7 +97,7 @@ def Laws.scene_seed_count(count,index):
   match count:
     case 0n:{==}
     case 1n++rest:
-      Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.seeds(rest,U32.add(index,1))),rest,Laws.scene_seed_count(rest,U32.add(index,1)))
+      Equal.cong(Nat,Nat,n => 1n+n,List.length(&2,Create.Seed,Seeds.values(rest,U32.inc(index))),rest,Laws.scene_seed_count(rest,U32.inc(index)))
 
 def Laws.scene_empty_bootstrap(F,effects,H,Q,caps,commands,scope,queue,handles):
   {==}
@@ -259,3 +262,39 @@ def Laws.module_camera_reset(camera):
 def Laws.headless_scene_zero(app):{==}
 
 def Laws.headless_scene_successor(remaining,app):{==}
+
+def Laws.creation_white(vertex):
+  match vertex:
+    case Create.Vertex{position,C.Vec3{r,g,b}}:{==}
+
+def Laws.creation_tint_position(position,color,material):
+  match color material:
+    case C.Vec3{r,g,b} Create.Basic{C.Vec3{x,y,z}}:
+      (C.Vec3{Create.tint_channel(r,x),Create.tint_channel(g,y),Create.tint_channel(b,z)},{==})
+
+def Laws.creation_bundle_order(transform,mesh,rest):{==}
+
+def Laws.creation_empty():{==}
+
+def Laws.creation_resolve_empty(id):{==}
+
+def Laws.creation_resolve_head(id,first,count,rest):
+  Equal.cong(Bool,Maybe<Create.Range>,b => Bool.pick(Maybe<Create.Range>,b,Some{Create.Range{id,first,count}},Create.resolve(rest,id)),U32.is_eq(id,id),True{},U32Proof.u32_eq_refl(id))
+
+def Laws.creation_empty_prepend(geometry):{==}
+
+def Laws.camera_reset_configuration(target,yaw,pitch,distance,projection):{==}
+
+def Laws.creation_white_mesh(vertices):
+  match vertices:
+    case []:{==}
+    case +vertex <> +rest:
+      Equal.trans(List<&2,Create.Vertex>,Create.tint(vertex,Create.white()) <> Create.bake(rest,Create.white()),vertex <> Create.bake(rest,Create.white()),vertex <> rest,
+        Equal.cong(Create.Vertex,List<&2,Create.Vertex>,v => v <> Create.bake(rest,Create.white()),Create.tint(vertex,Create.white()),vertex,Laws.creation_white(vertex)),
+        Equal.cong(List<&2,Create.Vertex>,List<&2,Create.Vertex>,xs => vertex <> xs,Create.bake(rest,Create.white()),rest,Laws.creation_white_mesh(rest)))
+
+def Laws.creation_bundle_count(seeds):
+  match seeds:
+    case []:{==}
+    case Create.Seed{transform,mesh} <> +rest:
+      Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(rest)),List.length(&2,Create.Seed,rest),Laws.creation_bundle_count(rest))

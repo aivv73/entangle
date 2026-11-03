@@ -1,0 +1,3 @@
+Public creation verified: 4 distinct ECS entities; 3 used pairs; shared pair reused; ranges=3,3,6; two ticks; D32=0.28125/0.03125; red/green/white pixels; tint depth=white depth; retained replay; rejection recovery; live Vulkan objects=0.
+Empty scene and empty-mesh ECS instance render clear-only with absent buffers; invalid index, tint and transform rejected.
+Configured camera target and lens survive six controls and reset; configured view accepted; zero extent and invalid lens rejected.

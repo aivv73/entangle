@@ -1,4 +1,7 @@
+import ../src/creation.bend as Create
 import Base
+import ./scene-window-modules.bend as Recipe
+import ../src/modules.bend as Modules
 import ../src/error.bend as Error
 import ../src/measurement-counters.bend as Count
 import ../src/baseline-output.bend as Out
@@ -158,14 +161,14 @@ def buffered(run:Run,start:D.Metric<&2,W.U64>,loop_start:D.Metric<&2,W.U64>) -> 
     return Run{renderer,state,buffer_spans(samples,span("evidence_checks_digest_initial_buffer",start,end),span("loop_through_initial_buffer",loop_start,end)),attempt,accepted,ticks,origin,startup,deadline}
 
 def record_sample(renderer:Win.Renderer,state:SceneApp.State,+samples:List<&2,Sample>,+attempt:U32,+accepted:U32,+ticks:U32,+start:D.Metric<&2,W.U64>,old_startup:D.Metric<&2,W.U64>,deadline:Nat,+replay:Bool,+spans:List<&2,D.Span>,render_start:D.Metric<&2,W.U64>,+loop_start:D.Metric<&2,W.U64>,+width:U32,+height:U32,+steps:Nat,dropped:Nat) -> V.Action(Run):
-  Win.Renderer{window,target,id,count,+probe} = renderer
+  Win.Renderer{window,target,ranges,+probe} = renderer
   SceneApp.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,fixed} = state
   +ok = eligible(probe,width,height)
   do V.Action<Run>:
     +end:D.Metric<&2,W.U64> <- clock()
     Error.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline frame changed exact ordered drawing bits")
     +sample:Sample = Sample{attempt,phase(accepted),tick,Bool.pick(U32,replay,1,tick),SceneApp.digest(Bool.pick(List<&2,Draw.DrawItem>,replay,held,items),2166136261),SceneApp.digest(held,2166136261),width,height,probe,span("render_call_wall",render_start,end) <> span("loop_service_before_buffer",loop_start,end) <> spans,steps,dropped}
-    buffered(Run{Win.Renderer{window,target,id,count,probe},SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,fixed},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.pick(U32,ok && U32.is_gt(accepted,30),U32.from_nat(steps),0)),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
+    buffered(Run{Win.Renderer{window,target,ranges,probe},SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,fixed},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.pick(U32,ok && U32.is_gt(accepted,30),U32.from_nat(steps),0)),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
 
 def render(updated:Updated,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+replay:Bool,samples:List<&2,Sample>,attempt:U32,+accepted:U32,ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat,poll:D.Span,loop_start:D.Metric<&2,W.U64>) -> V.Action(Run):
   Updated{SceneApp.State{app,inspector,baseline,+rows,+draws,+held,+saved,tick,fixed},spans,steps,dropped} = updated
@@ -280,11 +283,11 @@ def add_spans(updated:Updated,prior:List<&2,D.Span>) -> Updated:
   Updated{state,spans,steps,dropped} = updated
   Updated{state,List.append(&2,D.Span,spans,prior),steps,dropped}
 
-def setup(pair:Win.Renderer & List<&2,D.Span>,+replay:Bool,+start:D.Metric<&2,W.U64>,+now:Nat,setup_end:D.Metric<&2,W.U64>) -> V.Action(Evidence):
+def setup(seeds:List<&2,Create.Seed>,pair:Win.Renderer & List<&2,D.Span>,+replay:Bool,+start:D.Metric<&2,W.U64>,+now:Nat,setup_end:D.Metric<&2,W.U64>) -> V.Action(Evidence):
   (renderer,spans) = pair
   do V.Action<Evidence>:
     before:D.Metric<&2,W.U64> <- clock()
-    app:Scene.Application() <- V.Action.lift(Scene.Application(),Scene.create())
+    app:Scene.Application() <- V.Action.lift(Scene.Application(),Scene.create(seeds))
     +created:D.Metric<&2,W.U64> <- clock()
     app:Scene.Application() <- V.Action.lift(Scene.Application(),Scene.tick(app))
     end_tick:D.Metric<&2,W.U64> <- clock()
@@ -293,13 +296,19 @@ def setup(pair:Win.Renderer & List<&2,D.Span>,+replay:Bool,+start:D.Metric<&2,W.
     updated:Updated <- observed(Observe.snapshot(app,I.Fresh{}),[],1,Time.start(tick_now),Draw.DrawList{[]},[],[span("simulation",created,end_tick)],obs_start)
     initialized(add_spans(updated,span("open_window_device_mesh",start,setup_end) <> span("world_create",before,created) <> spans),renderer,replay,start,Nat.add(now,60000n))
 
-def run(+entry:V.Entry,+replay:Bool) -> V.Action(Evidence):
+def run_compiled(+entry:V.Entry,+replay:Bool,+start:D.Metric<&2,W.U64>,+now:Nat,compiled:Create.Compiled) -> V.Action(Evidence):
+  Create.Compiled{seeds,geometry} = compiled
   do V.Action<Evidence>:
-    +start:D.Metric<&2,W.U64> <- clock()
-    +now:Nat <- V.Action.lift(Nat,IO.now())
-    renderer:Win.Renderer <- Win.open_measured(entry,"Entangle baseline",SceneApp.mesh())
+    renderer:Win.Renderer <- Win.open_measured(entry,"Entangle baseline",geometry)
     +end:D.Metric<&2,W.U64> <- clock()
-    setup(Win.setup_spans(renderer),replay,start,now,end)
+    setup(seeds,Win.setup_spans(renderer),replay,start,now,end)
+
+def run(entry:V.Entry,replay:Bool) -> V.Action(Evidence):
+  do V.Action<Evidence>:
+    start:D.Metric<&2,W.U64> <- clock()
+    now:Nat <- V.Action.lift(Nat,IO.now())
+    compiled:Create.Compiled <- Modules.compile(Create.compile(Recipe.asset_load(Unit{})))
+    run_compiled(entry,replay,start,now,compiled)
 
 def sample(value:Sample) -> String:
   Sample{attempt,phase,tick,draw_tick,digest,retained,width,height,probe,spans,steps,dropped} = value
