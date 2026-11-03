@@ -83,7 +83,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** formalize the U64 contract for the selected `Core.subrange_contains` and prove containment for arbitrary accepted inputs. Reuse the existing arithmetic proofs, then connect this exact checker to Entangle's production upload paths [S38].
+**Next action:** encode the [U64 range contract](#u64-representation-and-preconditions) in `LAWS.bend` and prove containment for arbitrary accepted inputs. Reuse the existing arithmetic proofs, then connect the selected `Core.subrange_contains` to Entangle's production upload paths [S38].
 
 ---
 
@@ -361,16 +361,44 @@ For any accepted `offset`, `length`, and `capacity`, the mathematical range `[of
 
 Reuse [`Core.subrange_contains(capacity, offset, length)`](deps/bend-vulkan/src/core.bend). Its unsigned comparisons implement `offset <= capacity` and `length <= capacity - offset`. The difference uses wrapping addition and negation. When the first condition holds, the difference is exact. The checker does not compute `offset + length` during validation. No replacement checker is needed [S38].
 
-`W.U64{lo, hi}` denotes `lo + 2^32 * hi`. All limb pairs are valid unsigned values. Acceptance must establish the range bounds without a caller-supplied no-overflow assumption. An actual upload also requires an accurate capacity for the target storage. The formal contract remains to be written.
+The [U64 representation and preconditions](#u64-representation-and-preconditions) below specify this check. Encoding the mathematical containment claim in `LAWS.bend` and proving it remain the next task.
 
 The existing arithmetic proofs establish modular addition and negation and provide packed-word comparison lemmas. The four upload-range laws prove concrete boundary cases. The missing universal proof must connect unsigned `Core.size_less`, exact subtraction under the accepted bound, and containment for this checker [S38].
 
 The dependency's [staging API](deps/bend-vulkan/src/upload.bend) already checks source and destination ranges with this function. Entangle's [offscreen](src/scene-render.bend) and [window](src/scene-window.bend) uploads call `Device.write_memory` directly. Those paths also multiply sizes in U32 before widening to U64. Integration must address that earlier truncation risk and prevent ordinary API bypass. Native bounds checks remain a separate safeguard [S38].
 
+### U64 representation and preconditions
+
+The input type is [`W.U64{lo: U32, hi: U32}`](deps/bend-vulkan/deps/bend-collections/src/math/u64.bend). Define its mathematical value as `V(W.U64{lo, hi}) = lo + 2^32 * hi`, interpreting each limb as an unsigned integer in `[0, 2^32 - 1]`. Arithmetic in `V` uses unbounded natural numbers. Every limb pair is valid and denotes exactly one value in `[0, 2^64 - 1]`. No normalization or signed interpretation is required. This describes a value, not native memory layout or byte order.
+
+`capacity`, `offset`, and `length` all use this representation. The pure checker is total over all three inputs. Callers need not establish `offset <= capacity`, that subtraction cannot underflow, or that `offset + length` fits U64 before calling it. These are validation outcomes, not caller preconditions. Comparisons use unsigned high-limb order followed by unsigned low-limb order when the high limbs are equal, as implemented by `Core.size_less`. `W.le_signed` is not suitable.
+
+The acceptance rule uses these ordered conditions:
+
+1. Reject when `offset > capacity`.
+2. Otherwise, accept exactly when `length <= capacity - offset`.
+
+Both comparisons are unsigned. The selected implementation expresses the conditions as a Boolean conjunction. Its subtraction is `W.add(capacity, W.neg(offset))`, computed modulo `2^64`. Once `offset <= capacity` holds, that result equals the mathematical difference and lies in `[0, 2^64 - 1]`. If the first condition fails, the checker rejects regardless of the wrapped difference. Correctness therefore does not depend on short-circuit evaluation. Validation never computes the machine sum `offset + length`.
+
+The mathematical contract to encode and prove is, for every `capacity`, `offset`, and `length` of type `W.U64`:
+
+```text
+Core.subrange_contains(capacity, offset, length) = True
+    if and only if
+V(offset) <= V(capacity)
+    and V(length) <= V(capacity) - V(offset).
+```
+
+The subtraction in this statement is interpreted under the preceding bound. Acceptance must imply `V(offset) + V(length) <= V(capacity) <= 2^64 - 1`, with addition over natural numbers. Thus the half-open byte range `[V(offset), V(offset) + V(length))` lies within `[0, V(capacity))`. An empty range still requires `offset <= capacity`. Zero capacity accepts only zero offset and zero length. An offset equal to capacity accepts only zero length. The value `W.U64{4294967295, 4294967295}` is the literal maximum value for this checker, even though `Core.whole_size()` returns the same bits. The checker does not interpret it as a sentinel for remaining bytes.
+
+For this numeric guarantee to protect an upload, callers must supply exact byte quantities for the same storage region and origin. Capacity must describe accessible storage that remains valid through the operation. Any source and destination ranges require separate checks against their respective capacities. Conversion and size calculation must preserve the intended values before validation. In particular, widening a U32 product after it wraps cannot recover its byte count. Values outside U64 must be rejected before conversion, and any whole-size sentinel must be resolved before this check.
+
+Acceptance establishes numeric containment only. A native operation may impose stricter limits or reject zero-length operations. Handle validity, source payload availability, alignment, binding offsets, synchronization, and resource lifetime remain separate obligations. This specification does not claim a new machine-checked theorem or production integration.
+
 ### Tasks
 
 - [x] Review existing arithmetic laws and select an existing checker if its contract is sufficient. Selected `Core.subrange_contains`; reuse its implementation and the existing arithmetic proofs [S38].
-- [ ] Specify the U64 representation and preconditions; use a check without unsafe addition, such as `offset <= capacity`, followed by `length <= capacity - offset`.
+- [x] Specify the U64 representation and preconditions; use a check without unsafe addition, such as `offset <= capacity`, followed by `length <= capacity - offset`. The [contract above](#u64-representation-and-preconditions) defines the full input domain, unsigned comparisons, empty ranges, maximum values, and upload caller obligations for the selected checker.
 - [ ] Prove the property for arbitrary accepted input, not only for the sizes of one scene.
 - [ ] Integrate this exact function into the production upload path; prevent the engine's ordinary API from bypassing the check.
 - [ ] Add ABI, boundary, and negative tests, including zero sizes and maximum values.
