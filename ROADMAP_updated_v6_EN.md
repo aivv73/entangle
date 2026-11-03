@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E2 completion, E3 upload enforcement, and dependency research
+**Revision:** 6 · November 3, 2026 · updated for E2 completion, E3 upload enforcement and mesh replacement, and dependency research
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification now pass [S40]. Remaining E3 work covers resource replacement and broader resource lifecycle. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification now pass [S40]. Both renderers now support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Broader resource-lifetime failure and retaining-reference coverage remain open. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -14,7 +14,7 @@
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
 
-**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. E3 resource replacement remains next; the stage order and alpha criteria are unchanged.
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. Broader E3 resource-lifetime verification remains next; the stage order and alpha criteria are unchanged.
 
 ## E1 progress, November 3, 2026
 

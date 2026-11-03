@@ -124,8 +124,9 @@ def record(renderer: WindowState, target: Indexed.Target, frame: Indexed.Frame, 
     probe:Diag.Probe <- V.Action.lift(Diag.Probe,Diag.span(probe,"render_fence_reset",start))
     start:Diag.Metric<&2,W.U64> <- V.Action.lift(Diag.Metric<&2,W.U64>,Diag.now(on))
     V.CommandBuffer.reset(command)
+    probe:Diag.Probe <- V.Action.lift(Diag.Probe,Diag.span(probe,"command_reset",start))
     V.Device.collect_retired(device)
-    V.Action.lift(Diag.Probe,Diag.span(probe,"command_reset",start))
+    return probe
 
 def acquired(outcome: V.AcquireOutcome, +renderer: WindowState, +target: Indexed.Target, camera: M.Mat4, +resident:G.Resident, items:List<&2,Draw.DrawItem>,+probe:Diag.Probe) -> V.Action(Bool & Diag.Probe):
   match outcome:
