@@ -1,4 +1,5 @@
 import Base
+import ./scene-buffer.bend as B
 import ./error.bend as Error
 import ./measurement-counters.bend as Count
 import ./scene-diagnostics.bend as Diag
@@ -32,16 +33,12 @@ def diagnostics(on:Bool,device:V.Device) -> V.Action(Diag.Probe):
     case False{}:V.Action.pure(Diag.Probe,Diag.Off{})
     case True{}:V.Action.lift(Diag.Probe,Diag.create(device))
 
-def uploaded(result:List<U32> & U32,+device:V.Device,memory:V.DeviceMemory,+probe:Diag.Probe,name:String) -> V.Action(Diag.Probe):
-  (bytes,count) = result
+def upload(device:V.Device,buffer:B.Buffer,bytes:List<&2,U32>,+probe:Diag.Probe,name:String) -> V.Action(Diag.Probe):
   do V.Action<Diag.Probe>:
     start:Diag.Metric<&2,W.U64> <- V.Action.lift(Diag.Metric<&2,W.U64>,Diag.now(Diag.enabled(probe)))
-    V.Device.write_memory(device,memory,W.zero(),bytes)
-    probe:Diag.Probe = Diag.upload(probe,U32.div(count,4))
+    count:U32 <- B.write(device,buffer,W.zero(),bytes)
+    probe:Diag.Probe = Diag.upload(probe,count)
     V.Action.lift(Diag.Probe,Diag.span(probe,name,start))
-
-def upload(device:V.Device,memory:V.DeviceMemory,bytes:List<U32>,probe:Diag.Probe,name:String) -> V.Action(Diag.Probe):
-  uploaded(R.payload_size(bytes),device,memory,probe,name)
 
 def render_span(probe:Diag.Probe,start:Diag.Metric<&2,W.U64>,end:Diag.Metric<&2,W.U64>) -> Diag.Probe:
   match probe:
@@ -54,10 +51,14 @@ def upload_geometry(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.De
     case []:V.Action.pure(Maybe<&2,R.Buffers> & Diag.Probe,(None{},probe))
     case +indices:
       do V.Action<Maybe<&2,R.Buffers> & Diag.Probe>:
-        +vb:R.Buffer <- R.buffer(instance,physical,device,W.of_u32(U32.mul(U32.from_nat(List.length(&2,Create.Vertex,vertices)),24)),vk.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT())
-        +ib:R.Buffer <- R.buffer(instance,physical,device,W.of_u32(U32.mul(U32.from_nat(List.length(&2,U32,indices)),4)),vk.VK_BUFFER_USAGE_INDEX_BUFFER_BIT())
-        probe:Diag.Probe <- upload(device,R.buffer_memory(vb),R.vertices_bytes(vertices),probe,"mesh_vertex_host_write")
-        probe:Diag.Probe <- upload(device,R.buffer_memory(ib),R.indices_bytes(indices),probe,"mesh_index_host_write")
+        +vbytes:List<&2,U32> = R.vertices_bytes(vertices)
+        +ibytes:List<&2,U32> = R.indices_bytes(indices)
+        vsize:W.U64 <- B.capacity_for(vbytes)
+        isize:W.U64 <- B.capacity_for(ibytes)
+        +vb:B.Buffer <- B.allocate(instance,physical,device,vsize,vk.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT())
+        +ib:B.Buffer <- B.allocate(instance,physical,device,isize,vk.VK_BUFFER_USAGE_INDEX_BUFFER_BIT())
+        probe:Diag.Probe <- upload(device,vb,vbytes,probe,"mesh_vertex_host_write")
+        probe:Diag.Probe <- upload(device,ib,ibytes,probe,"mesh_index_host_write")
         return (Some{R.Buffers{vb,ib}},probe)
 
 def create_uploaded(+context:Host.Context,ranges:List<&2,Create.Range>,pair:Maybe<&2,R.Buffers> & Diag.Probe) -> V.Action(Renderer):

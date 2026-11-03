@@ -11,6 +11,10 @@ import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
 import ./tools/component-consumer.bend as Consumer
 import ./examples/scene-seeds.bend as Seeds
 import Base
+import ./src/upload-size.bend as UploadSize
+import ./proofs/upload-range/spec.bend as UploadValue
+import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/nat.bend as UploadNat
+import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/lemmas/spec/numeric.bend as UploadNumeric
 import ./src/time.bend as Time
 import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/arith.bend as Arithmetic
 import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/misc.bend as Misc
@@ -361,3 +365,20 @@ def Laws.player_query_gate(H,modify,state,scope):{==}
 
 def Laws.upload_range_universal(c,o,l):
   UploadLaws.universal(c,o,l)
+
+def Laws.upload_transport_length(bytes):
+  match bytes:
+    case []:{==}
+    case _ <> rest:Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,U32,UploadSize.transport(rest)),UploadSize.byte_length(rest),Laws.upload_transport_length(rest))
+
+def upload_scale_zero(k:Nat) -> {UploadNumeric.scale_binary(k,0n) == 0n : Nat}:
+  match k:
+    case 0n:{==}
+    case 1n+p:Equal.cong(Nat,Nat,Nat.double,UploadNumeric.scale_binary(p,0n),0n,upload_scale_zero(p))
+
+def Laws.upload_conversion_exact(n,h):
+  Equal.trans(Nat,UploadValue.value(UploadSize.encode(n)),U32.to_nat(U32.from_nat(n)),n,
+    Equal.trans(Nat,UploadValue.value(UploadSize.encode(n)),Nat.add(U32.to_nat(U32.from_nat(n)),UploadNumeric.scale_binary(32n,0n)),U32.to_nat(U32.from_nat(n)),UploadLaws.value_limbs(U32.from_nat(n),0),
+      Equal.trans(Nat,Nat.add(U32.to_nat(U32.from_nat(n)),UploadNumeric.scale_binary(32n,0n)),Nat.add(U32.to_nat(U32.from_nat(n)),0n),U32.to_nat(U32.from_nat(n)),
+        Equal.cong(Nat,Nat,x => Nat.add(U32.to_nat(U32.from_nat(n)),x),UploadNumeric.scale_binary(32n,0n),0n,upload_scale_zero(32n)),UploadNat.add_zero(U32.to_nat(U32.from_nat(n))))),
+    UploadNat.eq_from_is_eq(U32.to_nat(U32.from_nat(n)),n,h))

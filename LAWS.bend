@@ -12,6 +12,8 @@ import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import ./examples/scene-seeds.bend as Seeds
 import Base
+import ./src/upload-size.bend as UploadSize
+
 import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
 import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
@@ -574,3 +576,12 @@ law upload_range_universal:
   for +o:UploadWord.U64
   for +l:UploadWord.U64
   {UploadCore.subrange_contains(c,o,l) == Bool.and(Nat.is_le(UploadValue.value(o),UploadValue.value(c)),Nat.is_le(Nat.add(UploadValue.value(o),UploadValue.value(l)),UploadValue.value(c))) : Bool}
+
+law upload_transport_length:
+  for +bytes:List<&2,U32>
+  {List.length(&1,U32,UploadSize.transport(bytes)) == UploadSize.byte_length(bytes) : Nat}
+
+law upload_conversion_exact:
+  for +n:Nat
+  for h:{UploadSize.exact(n) == True{} : Bool}
+  {UploadValue.value(UploadSize.encode(n)) == n : Nat}

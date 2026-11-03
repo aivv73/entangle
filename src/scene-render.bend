@@ -1,4 +1,5 @@
 import Base
+import ./scene-buffer.bend as B
 import ./error.bend as Error
 import ./measurement-counters.bend as Count
 import ./scene-diagnostics.bend as Diag
@@ -21,12 +22,10 @@ type InputError is Data:
   InvalidTransform{item:U32}
 type Attachment is Data:
   Attachment{image:V.ImageHandle,memory:V.DeviceMemory,view:V.ImageView}
-type Buffer is Data:
-  Buffer{buffer:V.Buffer,memory:V.DeviceMemory}
 type Buffers is Data:
-  Buffers{vertices:Buffer,indices:Buffer}
+  Buffers{vertices:B.Buffer,indices:B.Buffer}
 type Resources is Data:
-  Resources{device:V.Device,command:V.CommandBuffer,fence:V.Fence,framebuffer:V.Framebuffer,pipeline:V.GraphicsPipeline,color:Attachment,depth:Attachment,geometry:Maybe<&2,Buffers>,stage:Buffer}
+  Resources{device:V.Device,command:V.CommandBuffer,fence:V.Fence,framebuffer:V.Framebuffer,pipeline:V.GraphicsPipeline,color:Attachment,depth:Attachment,geometry:Maybe<&2,Buffers>,stage:B.Buffer}
 type Renderer is Type:
   Renderer{resources:Resources,config:Config,ranges:List<&2,Create.Range>,depth_offset:W.U64,used:Bool}
 
@@ -57,27 +56,27 @@ def preflight(+camera:M.Mat4,+ranges:List<&2,Create.Range>,items:List<&2,Draw.Dr
     case Draw.DrawItem{+t,C.MeshRef{+other}} <> rest:
       preflight_item(known(Create.resolve(ranges,other)),Create.transform_valid(t) && Create.matrix_finite(M.multiply(camera,M.model(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
 
-def word_bytes(+word:U32) -> List<U32>:
+def word_bytes(+word:U32) -> List<&2,U32>:
   [Core.word_byte(word,0),Core.word_byte(word,1),Core.word_byte(word,2),Core.word_byte(word,3)]
 
-def bytes(words:List<U32>) -> List<U32>:
+def bytes(words:List<U32>) -> List<&2,U32>:
   match words:
     case []:[]
-    case word <> rest:List.append(&1,U32,word_bytes(word),bytes(rest))
+    case word <> rest:List.append(&2,U32,word_bytes(word),bytes(rest))
 
 def vertex_words(v:Create.Vertex) -> List<U32>:
   Create.Vertex{C.Vec3{x,y,z},C.Vec3{r,g,b}} = v
   [F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(r),F32.bits(g),F32.bits(b)]
 
-def vertices_bytes(vertices:List<&2,Create.Vertex>) -> List<U32>:
+def vertices_bytes(vertices:List<&2,Create.Vertex>) -> List<&2,U32>:
   match vertices:
     case []:[]
-    case v <> rest:List.append(&1,U32,bytes(vertex_words(v)),vertices_bytes(rest))
+    case v <> rest:List.append(&2,U32,bytes(vertex_words(v)),vertices_bytes(rest))
 
-def indices_bytes(indices:List<&2,U32>) -> List<U32>:
+def indices_bytes(indices:List<&2,U32>) -> List<&2,U32>:
   match indices:
     case []:[]
-    case i <> rest:List.append(&1,U32,word_bytes(i),indices_bytes(rest))
+    case i <> rest:List.append(&2,U32,word_bytes(i),indices_bytes(rest))
 
 def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,requirements:V.MemoryRequirements,flags:U32) -> V.Action(V.DeviceMemory):
   V.MemoryRequirements{size,_,bits} = requirements
@@ -85,14 +84,6 @@ def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,re
     types : List<Core.MemoryType> <- V.Instance.get_physical_device_memory_properties(instance,physical)
     index : U32 <- choose(Core.find_memory_type(types,bits,flags),"No compatible memory")
     V.Device.allocate_memory(device,size,index)
-
-def buffer(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,size:W.U64,usage:U32) -> V.Action(Buffer):
-  do V.Action<Buffer>:
-    +buffer : V.Buffer <- V.Device.create_buffer(device,V.BufferCreateInfo{size,usage})
-    req : V.MemoryRequirements <- V.Device.get_buffer_memory_requirements(device,buffer)
-    +memory : V.DeviceMemory <- allocate(instance,physical,device,req,vk.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT())
-    V.Device.bind_buffer_memory(device,buffer,memory,W.zero())
-    return Buffer{buffer,memory}
 
 def attachment(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,+extent:V.Extent2D,+format:U32,+aspect:U32,+usage:U32) -> V.Action(Attachment):
   do V.Action<Attachment>:
@@ -108,10 +99,6 @@ def aligned(+size:U32,alignment:W.U64) -> W.U64:
   W.U64{+lo,+hi} = alignment
   W.of_u32(U32.mul(U32.div(U32.add(size,U32.sub(lo,1)),lo),lo))
 
-def buffer_memory(b:Buffer) -> V.DeviceMemory:
-  Buffer{_,m} = b
-  m
-
 def attachment_view(a:Attachment) -> V.ImageView:
   Attachment{_,_,v} = a
   v
@@ -121,22 +108,24 @@ def upload_geometry(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.De
     case []:V.Action.pure(Maybe<&2,Buffers>,None{})
     case +indices:
       do V.Action<Maybe<&2,Buffers>>:
-        +vb:Buffer <- buffer(instance,physical,device,W.of_u32(U32.mul(U32.from_nat(List.length(&2,Create.Vertex,vertices)),24)),vk.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT())
-        +ib:Buffer <- buffer(instance,physical,device,W.of_u32(U32.mul(U32.from_nat(List.length(&2,U32,indices)),4)),vk.VK_BUFFER_USAGE_INDEX_BUFFER_BIT())
-        V.Device.write_memory(device,buffer_memory(vb),W.zero(),vertices_bytes(vertices))
-        V.Device.write_memory(device,buffer_memory(ib),W.zero(),indices_bytes(indices))
+        vb:B.Buffer <- B.upload_new(instance,physical,device,vk.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT(),vertices_bytes(vertices))
+        ib:B.Buffer <- B.upload_new(instance,physical,device,vk.VK_BUFFER_USAGE_INDEX_BUFFER_BIT(),indices_bytes(indices))
         return Some{Buffers{vb,ib}}
 
 def geometry_barrier(command:V.CommandBuffer,buffers:Maybe<&2,Buffers>) -> V.Action(Unit):
   match buffers:
     case None{}:V.Action.pure(Unit,Unit{})
-    case Some{Buffers{Buffer{vb,_},Buffer{ib,_}}}:
+    case Some{Buffers{vertices,indices}}:
+      vb = B.handle(vertices)
+      ib = B.handle(indices)
       V.CommandBuffer.pipeline_barrier(command,vk.VK_PIPELINE_STAGE_HOST_BIT(),vk.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT(),[],[V.BufferMemoryBarrier{vb,W.zero(),Core.whole_size(),vk.VK_ACCESS_HOST_WRITE_BIT(),vk.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT()},V.BufferMemoryBarrier{ib,W.zero(),Core.whole_size(),vk.VK_ACCESS_HOST_WRITE_BIT(),vk.VK_ACCESS_INDEX_READ_BIT()}],[])
 
 def bind_geometry(+command:V.CommandBuffer,buffers:Maybe<&2,Buffers>) -> V.Action(Unit):
   match buffers:
     case None{}:V.Action.pure(Unit,Unit{})
-    case Some{Buffers{Buffer{vb,_},Buffer{ib,_}}}:
+    case Some{Buffers{vertices,indices}}:
+      vb = B.handle(vertices)
+      ib = B.handle(indices)
       do V.Action<Unit>:
         V.CommandBuffer.bind_vertex_buffer(command,0,vb,W.zero())
         V.CommandBuffer.bind_index_buffer(command,ib,W.zero(),vk.VK_INDEX_TYPE_UINT32())
@@ -155,7 +144,7 @@ def create_limited(+instance:V.Instance,+physical:V.PhysicalDevice,family:U32,li
     geometry : Maybe<&2,Buffers> <- upload_geometry(instance,physical,device,vertices,indices)
     +plane : U32 = U32.mul(U32.mul(width,height),4)
     +depth_offset : W.U64 = aligned(plane,alignment)
-    +stage : Buffer <- buffer(instance,physical,device,W.add(depth_offset,W.of_u32(plane)),vk.VK_BUFFER_USAGE_TRANSFER_DST_BIT())
+    +stage : B.Buffer <- B.allocate(instance,physical,device,W.add(depth_offset,W.of_u32(plane)),vk.VK_BUFFER_USAGE_TRANSFER_DST_BIT())
     +vertex : V.ShaderModule <- V.Device.create_shader_module(device,Shaders.vertex_words())
     +fragment : V.ShaderModule <- V.Device.create_shader_module(device,Shaders.fragment_words())
     +layout : V.PipelineLayout <- V.Device.create_pipeline_layout(device,V.PipelineLayoutCreateInfo{[],Some{V.PushConstantRange{vk.VK_SHADER_STAGE_VERTEX_BIT(),64}}})
@@ -237,8 +226,9 @@ def reusable(values:List<U32>) -> List<&2,U32>:
     case x <> rest:x <> reusable(rest)
 
 def frame(+r:Resources,+config:Config,+ranges:List<&2,Create.Range>,+depth_offset:W.U64,+used:Bool,items:List<&2,Draw.DrawItem>) -> V.Action(Readback):
-  Resources{+device,+command,+fence,framebuffer,pipeline,Attachment{+color,_,_},Attachment{+depth,_,_},+geometry,Buffer{+stage,+memory}} = r
+  Resources{+device,+command,+fence,framebuffer,pipeline,Attachment{+color,_,_},Attachment{+depth,_,_},+geometry,+readback} = r
   Config{+width,+height,camera} = config
+  +stage = B.handle(readback)
   +area : V.RenderArea = V.RenderArea{V.Offset2D{0,0},V.Extent2D{width,height}}
   +plane = U32.mul(U32.mul(width,height),4)
   +depth_stages = U32.or(vk.VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT(),vk.VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT())
@@ -266,8 +256,8 @@ def frame(+r:Resources,+config:Config,+ranges:List<&2,Create.Range>,+depth_offse
     V.Device.submit(device,command,fence)
     status : U32 <- V.Fence.wait(fence,Core.whole_size())
     Error.require(U32.is_zero(status),"Frame fence incomplete")
-    rgba : List<U32> <- V.Device.read_memory(device,memory,W.zero(),plane)
-    depth : List<U32> <- V.Device.read_memory(device,memory,depth_offset,plane)
+    rgba : List<U32> <- B.read(device,readback,W.zero(),plane)
+    depth : List<U32> <- B.read(device,readback,depth_offset,plane)
     V.CommandBuffer.reset(command)
     V.Fence.reset(fence)
     return Readback{width,height,reusable(rgba),reusable(depth)}
