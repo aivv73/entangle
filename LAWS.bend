@@ -276,3 +276,10 @@ law input_snapshot:
   for pending:List<Event>
   for camera:Maybe<Input.Camera>
   {Input.snapshot(A,rebuild,pending,camera) == (Input.events(pending,camera),rebuild([])) : Maybe<Input.Camera> & A}
+
+law module_initial_camera:
+  {Input.initial() == Input.Camera{0.65,0.45,7.0} : Input.Camera}
+
+law module_camera_reset:
+  for camera: Input.Camera
+  {Input.key(114,camera) == Input.initial() : Input.Camera}

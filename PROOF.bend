@@ -188,3 +188,9 @@ def Laws.input_drain(A,rebuild,pending):
 
 def Laws.input_snapshot(A,rebuild,pending,camera):
   {==}
+
+def Laws.module_initial_camera():
+  {==}
+
+def Laws.module_camera_reset(camera):
+  {==}

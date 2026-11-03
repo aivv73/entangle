@@ -1,4 +1,6 @@
 import Base
+import ../src/modules.bend as Modules
+import ./scene-window-modules.bend as Recipe
 import ./scene-window-app.bend as SceneApp
 import ../src/app.bend as Scope
 import ../src/time.bend as Time
@@ -85,16 +87,16 @@ def initialized(mode:Mode,state:SceneApp.State,now:Nat) -> V.Action(SceneApp.Sta
         SceneApp.replay_ready(state)
     case _:V.Action.pure(SceneApp.State,SceneApp.retain(state))
 
-def run(entry:V.Entry,+mode:Mode) -> V.Action(Unit):
+def run(modules:Modules.Registration<Scene.Application()>,entry:V.Entry,+mode:Mode) -> V.Action(Unit):
+  Modules.Registration{Modules.Core{start},Modules.Input{initial},Modules.Assets{load},Modules.Render{open}} = modules
   do V.Action<Unit>:
-    renderer : Win.Renderer <- Win.open(entry,"Entangle ECS scene",SceneApp.mesh())
+    renderer : Win.Renderer <- open(entry,load(Unit{}))
     renderer : Win.Renderer <- Input.enabled(is_replay(mode),renderer)
-    app : Scene.Application() <- V.Action.lift(Scene.Application(),Scene.create())
-    app : Scene.Application() <- V.Action.lift(Scene.Application(),Scene.tick(app))
+    app : Scene.Application() <- V.Action.lift(Scene.Application(),start(Unit{}))
     +now : Nat <- V.Action.lift(Nat,IO.now())
     state : SceneApp.State <- SceneApp.observed(Observe.snapshot(app,I.Fresh{}),[],1,Time.next_due(now,250n),Draw.DrawList{[]},[])
     state : SceneApp.State <- initialized(mode,state,now)
-    loop(U32.to_nat(4294967295),Some{Running{renderer,state,Camera.initial()}},mode)
+    loop(U32.to_nat(4294967295),Some{Running{renderer,state,initial(Unit{})}},mode)
 
 def mode(result:Result<&1,&1,U32 & String,String>) -> Mode:
   match result:
@@ -124,5 +126,5 @@ def main() -> IO(Unit):
     Input.bits()
     environment : Result<&1,&1,U32 & String,String> <- IO.get_env("ENTANGLE_WINDOW_MODE")
     +selected : Mode = mode(environment)
-    scoped : V.VkResult(Unit) & U32 <- Scope.with(Unit,entry => run(entry,selected))
+    scoped : V.VkResult(Unit) & U32 <- Scope.with(Unit,entry => run(Recipe.defaults(),entry,selected))
     finished(selected,scoped)

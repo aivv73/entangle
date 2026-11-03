@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E1 completion and E2 App extraction
+**Revision:** 6 · November 3, 2026 · updated for E1 completion, E2 App extraction, and static startup registration
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0 and E1 are complete [S24–S30]. E2 is in progress. Entangle renders 100 moving Bendvy entities through the public Vulkan API, with verified camera input, resizing, exit handling, and recorded CPU/GPU baseline measurements. App resource scope, startup/shutdown cleanup, time, input, and error handling are extracted in `912639e` on `main` [S31]. The second application and the remaining E2 tasks are still open. E3–E7 and R0–R4 remain planned.
+**Status:** E0 and E1 are complete [S24–S30]. E2 is in progress. Entangle renders 100 moving Bendvy entities through the public Vulkan API, with verified camera input, resizing, exit handling, and recorded CPU/GPU baseline measurements. App resource scope, startup/shutdown cleanup, time, input, and error handling are extracted in `912639e` on `main` [S31]. Source-fixed startup registration now supplies Core, Input, Assets, and Render through four typed callable slots. The second application and the remaining E2 tasks are still open. E3–E7 and R0–R4 remain planned.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -32,7 +32,7 @@
 
 - Extracted shared App resource scope, time policy, camera input, event draining, and Action error handling. Concrete scene state and verification live in `examples/scene-window-app.bend`. The interactive and measured loops remain explicit and retain their distinct input and reporting policies [S31].
 - Formal proofs, native/offscreen verification, and real-window checks passed. All 13 replay/control/resize/restore captures and the replay and terminal logs matched the pre-refactor evidence byte for byte. Measured live and replay runs preserved drawing digests and counters and left zero live Vulkan objects [S31].
-- This completes the extraction task only. Static module registration, a public application API, the sequential step contract, fixed-timestep catch-up policy, headless execution, and the second application remain open. The existing 250 ms due-time policy advances once when due and does not implement fixed-timestep catch-up.
+- App extraction and source-fixed startup registration are implemented. Registration supports startup only, with the existing mesh and concrete renderer. A public application API, the sequential step contract, fixed-timestep catch-up policy, headless execution, and the second application remain open. The existing 250 ms due-time policy advances once when due and does not implement fixed-timestep catch-up.
 
 ## History: what changed in revision 6 before E1
 
@@ -76,7 +76,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** add E2 static module registration for `Core`, `Input`, `Assets`, and `Render`, building on the verified App extraction [S31]. E1 is complete.
+**Next action:** define the E2 public application API and sequential step contract on top of App extraction and static startup registration. E1 is complete.
 
 ---
 
@@ -173,7 +173,7 @@ Reuse `bend-collections` for the required arithmetic/containers. Bring in math a
 | --- | --- | --- |
 | E0 | Library separated from `bend-voxel`; clean-checkout verifier and independent window example passed; README updated | Complete |
 | E1 | Bendvy manages 100 rendered objects with verified window behavior and recorded baseline measurements | Complete |
-| E2 | Two applications use the public API; a step contract and sequential reference are defined | In progress; App extraction complete |
+| E2 | Two applications use the public API; a step contract and sequential reference are defined | In progress; App extraction and static startup registration complete |
 | E3 | The production upload checker has a proven contract | First formal guarantee |
 | E4 | Models, textures, materials, and an interactive scene | Assets and scenes |
 | E5 | Persistent RenderScene, change-driven updates, reproducible alpha | `v0.1-alpha` |
@@ -323,7 +323,7 @@ This completes the offscreen public-API rendering task. The separate window inte
 ### Tasks
 
 - [x] Factor out `App`, startup/shutdown, time, input, and error handling. Implemented, verified, and merged into `main` at `912639e` [S31].
-- [ ] Add static module registration for `Core`, `Input`, `Assets`, and `Render`. Do not imitate Bevy's entire Rust API.
+- [x] Add static module registration for `Core`, `Input`, `Assets`, and `Render`. Four typed callable slots support source-fixed startup assembly with the existing camera, mesh, and renderer. No general plugin lifecycle or Bevy Rust API is implemented.
 - [ ] Define the order: input → fixed simulation → update → apply deferred changes → update global transforms → extraction → rendering → completion handling.
 - [ ] Use Bendvy schedules. Define when structural changes and removal events become visible.
 - [ ] Extract a small sequential `step` kernel from the existing movement logic. Specify tick inputs, state ownership, and output events; do not read I/O or real clocks inside the kernel.
@@ -731,13 +731,13 @@ Complete, E1. Entangle's dependency revisions, native toolchain, and project com
 
 ### 3. Run a second non-voxel application through App and RenderPlugin
 
-In progress, E2. App resource scope, time, input, and error handling are extracted and verified [S31]. Next, add static module registration and the public API, define headless runtime verification, and build a second scene. Specify the step contract, sequential movement reference, and state owner. The interface anticipates persistent render-scene storage, but its full implementation belongs to E5; parallel kernels are not yet required.
+In progress, E2. App resource scope, time, input, and error handling are extracted and verified [S31]. Static startup registration is implemented. Next, define the public API and headless runtime verification, and build a second scene. Specify the step contract, sequential movement reference, and state owner. The interface anticipates persistent render-scene storage, but its full implementation belongs to E5; parallel kernels are not yet required.
 
 ### First research issue after E2
 
 **Audit pinned Bend ownership and build a headless simulation reference (R0).** Check actual array/ownership operations and parallel calls, record an ADR, reuse the step from E2, and define a correctness/benchmark harness. Do not include VBD, a renderer rewrite, or a million objects in this issue's acceptance criteria.
 
-**Next action:** continue issue 3 / E2 with static module registration on top of the verified App extraction [S31]. Issues 1 / E0 and 2 / E1 are complete. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** continue issue 3 / E2 with the public application API and sequential step contract, using the App extraction [S31] and static startup registration. Issues 1 / E0 and 2 / E1 are complete. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
 
 ---
 
@@ -810,4 +810,4 @@ The R0–R4 architectural decisions are our design synthesis. External papers es
 
 - [S31] Entangle commit `912639e`, merged into `main` on November 3, 2026. The [merged change](https://entire.com/et/bend-engine/-/trails/7/changes/entangle/6) contains the extraction. Sources are the [App scope](src/app.bend), [time policy](src/time.bend), [input controller](src/input.bend), [Action errors](src/error.bend), and [concrete scene App](examples/scene-window-app.bend). The [verification record](docs/verification/2026-11-03-app/README.md), [native log](docs/verification/2026-11-03-app/native.log), and [byte-equivalence results](docs/verification/2026-11-03-app/equivalence.log) record passing proofs, native/offscreen and window checks, exact replay evidence, and zero-object cleanup. The [Bend comparator](tools/compare-window-evidence.bend) reruns the capture/log comparison. Both executable loops retain their ordering and the baseline retains its timing boundaries. This is structural extraction evidence, not a second application, fixed-timestep implementation, headless game API, or speedup claim.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. E1 is complete with verified native rendering and window behavior plus reviewed baseline measurements [S25–S30]. E2 has begun with the verified App extraction [S31]. The rest of E2, E3–E7, and R0–R4 remain incomplete.
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. E1 is complete with verified native rendering and window behavior plus reviewed baseline measurements [S25–S30]. E2 includes the verified App extraction [S31] and static startup registration. The remaining E2 tasks, E3–E7, and R0–R4 remain incomplete.

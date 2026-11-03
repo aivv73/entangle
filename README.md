@@ -338,3 +338,27 @@ and reporting policy.
 
 The [extraction verification record](docs/verification/2026-11-03-app/README.md)
 records the native checks and before/after replay comparison.
+
+`src/modules.bend` declares the four required startup slots in
+`Registration<A>`. `Core<A>` produces `IO(A)`, Input supplies the initial camera,
+Assets supplies the existing mesh, and Render opens the existing window renderer.
+The example assembles its defaults in `examples/scene-window-modules.bend`:
+
+```bend
+def defaults() -> Modules.Registration<Scene.Application()>:
+	Modules.Registration{Modules.Core{core_start},Modules.Input{input_start},Modules.Assets{asset_load},Modules.Render{render_open}}
+```
+
+Import `src/modules.bend` as `Modules` and supply your top-level operations through
+these constructors. The example adapters show the required signatures.
+Registration is fixed in source and supports startup only. Callback erasure by
+the compiler is not guaranteed. Assets produces the existing single mesh, with
+no new asset service. There is no lookup, installer, stage registry, or timing
+configuration.
+
+`examples/scene-window.bend` consumes each operation once in its existing startup
+order. Core groups `Scene.create()` and the first `Scene.tick()`. The registration
+never enters `Running` or the hot loop. Scope, concrete state, event handling,
+timing, observation, and loop ownership remain with the owners above.
+The [module synthesis record](docs/modules-registration.md) explains the selected
+contract and proof boundary.
