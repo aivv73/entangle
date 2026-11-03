@@ -68,6 +68,15 @@ def Laws.translation_replacement(old, translation, rotation, scale):
 def Laws.scene_step_adapter(state):
   {==}
 
+def Laws.scene_move_view_independent(H,modify,scope,handle,left,right,rest):
+  {==}
+
+def Laws.scene_move_current_component(H,modify,scope,handle,view,rest):
+  {==}
+
+def Laws.scene_move_query_refusal(H,modify,scope):
+  {==}
+
 def Laws.scene_translation(x,y,z,rotation,scale):
   {==}
 

@@ -23,6 +23,7 @@ import ./src/scene-draw.bend as Draw
 import ./src/scene-observe.bend as Observe
 import ./deps/bendvy/src/ecs/inspector.bend as Inspector
 import ./deps/bendvy/src/ecs/component.bend as Component
+import ./deps/bendvy/src/ecs/execution-query.bend as Query
 
 law scene_sync_boundary_pair:
   for +id:U32
@@ -104,6 +105,34 @@ law translation_replacement:
 law scene_step_adapter:
   for +state:C.Transform
   {Move.translate(state) == Step.step(Unit{},state) : C.Transform & Unit}
+
+law scene_move_view_independent:
+  for H:Type
+  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for left:Maybe<&2,C.Transform>
+  for right:Maybe<&2,C.Transform>
+  for rest:List<&2,Query.GeneralRow<SceneSchema.Schema,C.Transform>>
+  {Move.move_rows(~H,~modify,Query.GeneralRow{handle,left} <> rest,scope) ==
+    Move.move_rows(~H,~modify,Query.GeneralRow{handle,right} <> rest,scope) : H & (Unit & Sys.Completion<String,Unit>)}
+
+law scene_move_current_component:
+  for H:Type
+  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for view:Maybe<&2,C.Transform>
+  for rest:List<&2,Query.GeneralRow<SceneSchema.Schema,C.Transform>>
+  {Move.move_rows(~H,~modify,Query.GeneralRow{handle,view} <> rest,scope) ==
+    Move.edited(~H,Move.move_rows(~H,~modify,rest),modify(Unit,scope,handle,Move.translate)) : H & (Unit & Sys.Completion<String,Unit>)}
+
+law scene_move_query_refusal:
+  for H:Type
+  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  {Move.selected(~H,~modify,(scope,Query.SelectionRefused{})) ==
+    (scope,(Unit{},Sys.BodyError{"transform query refused",Unit{}})) : H & (Unit & Sys.Completion<String,Unit>)}
 
 law scene_translation:
   for +x:F32

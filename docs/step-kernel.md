@@ -31,6 +31,8 @@ nonfinite inputs. It adds no normalization or finite-value checks.
 ## State ownership and execution
 
 The ECS application remains the persistent owner of scene transforms.
+The [state ownership contract](state-ownership.md) defines the current write
+boundary and the required exclusive transfer for future simulation chunks.
 `scene-motion.translate` receives the current component through the registered
 writer, calls `Step.step`, and returns its result to that writer. The existing
 `move_rows` recursion processes selected entities sequentially. It does not

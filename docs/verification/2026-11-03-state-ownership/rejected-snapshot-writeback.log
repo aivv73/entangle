@@ -1,0 +1,17 @@
+SOME PROOFS FAIL
+Error:
+- expected : src/scene-motion.edited(H, src/scene-motion.move_rows(H, modify, rest), modify(Unit, scope, handle, _ => src/scene-motion.snapshot_step(left)))
+- observed : src/scene-motion.edited(H, src/scene-motion.move_rows(H, modify, rest), modify(Unit, scope, handle, _ => src/scene-motion.snapshot_step(right)))
+Context:
+- H      : Type
+- modify : @-Out:Type -> @_:H -> @_:deps/bendvy/src/ecs/world.Handle<SceneSchema.Schema> -> @_:(@_:C.Transform -> Sigma<&1, &1, C.Transform, _ => Out>) -> Sigma<&1, &1, H, _ => deps/bendvy/src/ecs/execution-query.GeneralEdit<C.Transform, Out>>
+- scope  : H
+- handle : deps/bendvy/src/ecs/world.Handle<SceneSchema.Schema>
+- left   : Maybe<&2, C.Transform>
+- right  : Maybe<&2, C.Transform>
+- rest   : List<&2, deps/bendvy/src/ecs/execution-query.GeneralRow<SceneSchema.Schema, C.Transform>>
+Location: Laws.scene_move_view_independent
+71 | def Laws.scene_move_view_independent(H,modify,scope,handle,left,right,rest):
+72>|   {==}
+   |   ^^^^
+73 | 

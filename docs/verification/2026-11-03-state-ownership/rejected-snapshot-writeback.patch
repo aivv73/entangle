@@ -1,0 +1,27 @@
+diff --git a/src/scene-motion.bend b/src/scene-motion.bend
+index 9520d66..4cf9daa 100644
+--- a/src/scene-motion.bend
++++ b/src/scene-motion.bend
+@@ -42,6 +42,11 @@ def kernel(~Permit:Data,~token:Permit,~F:(Type -> Type),~effects:Effects.Effects
+ 
+ def translate(value:Value.Transform) -> Value.Transform & Unit:Step.step(Unit{},value)
+ 
++def snapshot_step(view:Maybe<&2,Value.Transform>) -> Value.Transform & Unit:
++  match view:
++    case Some{value}:translate(value)
++    case None{}:translate(Value.Transform.identity())
++
+ def edited(~H:Type,next:H -> H & (Unit & Sys.Completion<String,Unit>),result:H & Q.GeneralEdit<Value.Transform,
+   Unit>) -> H & (Unit & Sys.Completion<String,Unit>):
+   match result:
+@@ -53,8 +58,8 @@ def move_rows(~H:Type,~modify:@-Out:Type -> H -> W.Handle<D.Schema> -> (Value.Tr
+   Unit>):
+   match values:
+     case []:(scope,(Unit{},Sys.Success{Unit{}}))
+-    case Q.GeneralRow{handle,_} <> rest:edited(~H,move_rows(~H,~modify,rest),modify(Unit,scope,handle,
+-      translate))
++    case Q.GeneralRow{handle,+view} <> rest:edited(~H,move_rows(~H,~modify,rest),modify(Unit,scope,handle,
++      _ => snapshot_step(view)))
+ 
+ def selected(~H:Type,~modify:@-Out:Type -> H -> W.Handle<D.Schema> -> (Value.Transform -> Value.Transform & Out) -> H & Q.GeneralEdit<Value.Transform,
+   Out>,result:H & Q.GeneralReport<D.Schema,Value.Transform>) -> H & (Unit & Sys.Completion<String,Unit>):

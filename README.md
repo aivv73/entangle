@@ -129,6 +129,9 @@ ECS ownership, sequential execution, and separate schedule reports.
 The [headless reference](docs/headless-reference.md) defines tick start,
 immediate numerical writes, explicit bootstrap publication, and final apply.
 It supplies checked evidence for future R0 work without completing R0.
+The [state ownership contract](docs/state-ownership.md) keeps the retained ECS
+world authoritative and specifies exclusive ownership transfer for future chunks.
+Detached snapshots and drawing data carry no write authority.
 
 The executable prints the empty initial population, then numerical and boundary
 evidence for each tick. The last tick and success line are:
