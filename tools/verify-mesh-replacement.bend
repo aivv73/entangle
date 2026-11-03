@@ -9,6 +9,7 @@ import ../src/components.bend as C
 import ../src/error.bend as Error
 import ../src/app.bend as Scope
 import ../examples/scene-render.bend as Existing
+import ./verify-buffer-retention.bend as Retention
 import ../deps/bend-vulkan/Vulkan.bend as V
 import ../deps/bend-vulkan/src/core.bend as Core
 import ../deps/bend-vulkan/src/constants.bend as vk
@@ -178,7 +179,9 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
   do V.Action<Unit>:
     +pool:V.CommandPool <- V.Device.create_command_pool(device)
     +extra:V.CommandBuffer <- V.Device.allocate_command_buffer(device,pool)
+    +recorded:V.CommandBuffer <- V.Device.allocate_command_buffer(device,pool)
     +wait:V.Fence <- V.Device.create_fence(device,False{})
+    +unused:V.Fence <- V.Device.create_fence(device,False{})
     +base:U32 <- V.debug_live_objects()
     V.CommandBuffer.begin(extra)
     V.CommandBuffer.bind_index_buffer(extra,B.handle(ib),W.zero(),vk.VK_INDEX_TYPE_UINT32())
@@ -193,11 +196,18 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
     V.CommandBuffer.bind_graphics_pipeline(extra,pipeline)
     R.bind_geometry(extra,G.buffers(resident))
     V.CommandBuffer.end(extra)
+    V.CommandBuffer.begin(recorded)
+    V.CommandBuffer.bind_graphics_pipeline(recorded,pipeline)
+    R.bind_geometry(recorded,G.buffers(resident))
+    V.CommandBuffer.end(recorded)
     V.Device.submit(device,extra,wait)
+    renderer:R.Renderer <- replace(renderer,green(),True{})
+    renderer:R.Renderer <- collect(renderer)
+    live(U32.add(base,4),"Unobserved submission retains both pairs")
+    Retention.reject(Unit,"Reset before completion observation",V.CommandBuffer.reset(extra))
+    Retention.reject(Unit,"Submit a recorded command after retirement",V.Device.submit(device,recorded,unused))
     completed:U32 <- V.Fence.wait(wait,Core.whole_size())
     Error.require(U32.is_zero(completed),"Retaining command did not complete")
-    renderer:R.Renderer <- replace(renderer,green(),True{})
-    live(U32.add(base,4),"Published before collection")
     renderer:R.Renderer <- collect(renderer)
     live(U32.add(base,4),"Completed executable command retains both pairs")
     alive(device,vb)
@@ -209,6 +219,11 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
     V.CommandBuffer.reset(extra)
     live(U32.add(base,4),"Reset releases references without implicit collection")
     renderer:R.Renderer <- collect(renderer)
+    live(U32.add(base,4),"Another unsubmitted command retains both pairs after reset")
+    alive(device,vb)
+    alive(device,ib)
+    V.CommandBuffer.reset(recorded)
+    renderer:R.Renderer <- collect(renderer)
     live(base,"Collection removes exactly two buffers and two memories")
     gone(device,vb)
     gone(device,ib)
@@ -217,7 +232,9 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
     live(base,"Repeated nonempty and empty replacement")
     V.Device.destroy_command_pool(device,pool)
     V.Device.destroy_fence(device,wait)
-    V.Action.lift(Unit,IO.print("Real recording rejection cleaned candidate; both old allocations readable. Completed executable command retained both old buffers and memories until reset plus collection. Changed ranges, removed IDs, repeated empty transitions and exact RGBA passed."))
+    V.Device.destroy_fence(device,unused)
+    Retention.verify(context)
+    V.Action.lift(Unit,IO.print("Real recording rejection cleaned candidate; both old allocations readable. Pending, completed and unsubmitted commands retained both old buffers and memories until every command reset plus collection. Changed ranges, removed IDs, repeated empty transitions and exact RGBA passed."))
 
 def invalid_checked(renderer:R.Renderer,+first:R.Readback) -> V.Action(Unit):
   R.Renderer{+resources,+config,+resident,+offset,+used} = renderer

@@ -89,4 +89,6 @@ def main() -> IO(Unit):
     command("bend",["examples/scene-render.bend","-o","build/scene-render.c"])
     command("clang",["-std=c11","-O2","build/scene-render.c","-lpthread","-lm","-ldl","-o","build/scene-render"])
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/scene-render","--threads","1","--gpu","off"],render_expected())
+    command("bend",["tools/verify-mesh-replacement.bend","-o","build/verify-mesh-replacement"])
+    command("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/verify-mesh-replacement","+RTS","--threads","1","--gpu","off"])
     IO.print("Pinned native toolchain and dependency compatibility verified.")

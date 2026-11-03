@@ -29,10 +29,23 @@ The transaction allocates and uploads the complete candidate before submitting b
 
 Successful retirement seals the old handles. The next effect returns the fresh resident and `Installed`; replacement performs no collection or other fallible native effect after sealing. A caller must retain the returned owner before any later collection. Sealed handles never become current again.
 
-`collect_geometry` scans native retired resources and returns `(owner,VkResult(Unit))`. Success does not imply destruction. A completed executable command still retains its recorded resources. Successful command reset releases those references. Normal frames collect at entry and after reset, including hidden, empty, and rejected-input frames. Window close collects after reset. Frame and close failures retain their existing terminal `V.Action` contract. Entry teardown remains the final cleanup authority.
+`collect_geometry` scans native retired resources and returns `(owner,VkResult(Unit))`. Success does not imply destruction. Collection requires a sealed buffer with no remaining native retaining references. Its paired memory must have been dedicated to that buffer when retirement succeeded. Sealing prevents new recording, submission, descriptor writes, or memory bindings from introducing uses of that allocation.
+
+The native registry accounts for the complete chain of owners:
+
+- Each command retains every recorded resource, including descriptors and earlier bindings superseded during recording. Unsubmitted and completed commands keep those references until successful reset or command pool destruction. Resetting one command does not release another command's references.
+- Pending and uncertain submissions prevent command reset or pool destruction. Observing completion releases submission associations but preserves recorded references. A fence wait or device idle therefore does not establish that an allocation can be reclaimed.
+- Each descriptor set retains the resources in every populated slot. Rewriting one slot preserves the others. References disappear after the corresponding slots are overwritten, the set is freed, or its pool is reset or destroyed. Recorded sets remain frozen until every referring command releases them.
+- Memory bindings retain allocations. Retirement rejects an allocation shared with another bound resource before sealing any pair. After successful retirement, new aliases are rejected.
+
+These edges compose: a command can retain a descriptor set that retains a buffer that retains memory. Collection waits for every retaining edge to the buffer to disappear. Copies of Bend handle values are lookup keys, not native retaining owners; they become stale after collection.
+
+Normal frames collect at entry and after reset, including hidden, empty, and rejected-input frames. Window close collects after reset. Frame and close failures retain their existing terminal `V.Action` contract. Entry teardown remains the final cleanup authority.
 
 ## Proof and native boundary
 
 The root laws prove the generic selection and complete paired-allocation enumeration in `scene-geometry-policy.bend`. The production transaction calls those helpers for both success and rejection. The pure module keeps foreign effects out of the root proof checker. These laws do not prove native Vulkan calls, allocation success, submission completion, or the C registry.
 
-The [verification recipe](../.agents/skills/verify-entangle/features/mesh-replacement.md) drives both public APIs with real Vulkan resources and X11 pixels. It checks exact offscreen coverage, RGBA and D32 preservation, range changes, removed identifiers, repeated empty transitions, deferred destruction after completed submission, and atomic recording-reference rejection with immediate candidate disposal. Actual allocation exhaustion, device loss, and cleanup failures require genuine failures and remain unexercised without fault injection. No engine retirement queue, per-entity asset lifecycle, new runtime parallelism, or performance claim is included.
+The [verification recipe](../.agents/skills/verify-entangle/features/mesh-replacement.md) drives both public APIs with real Vulkan resources and X11 pixels. The offscreen driver checks exact coverage, RGBA and D32 preservation, range changes, removed identifiers, repeated empty transitions, and atomic recording-reference rejection with immediate candidate disposal. It also executes multiple submissions, retains an unsubmitted command, rewrites descriptor array slots, frees sets, resets pools, and binds memory aliases. Exact live-object counts and stale-handle checks establish that collection waits for the last owner. The native gate runs this driver.
+
+Actual allocation exhaustion, uncertain submission failures, device loss, and failed reset or cleanup require genuine failures and remain unexercised without fault injection. Sampled-image descriptor retention is outside this buffer-retirement driver. No engine retirement queue, per-entity asset lifecycle, new runtime parallelism, or performance claim is included.

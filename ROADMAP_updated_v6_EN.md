@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E2 completion, E3 upload enforcement and mesh replacement, and dependency research
+**Revision:** 6 · November 3, 2026 · updated for E2 completion, E3 upload enforcement, mesh replacement and retaining references, and dependency research
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification now pass [S40]. Both renderers now support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Broader resource-lifetime failure and retaining-reference coverage remain open. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification now pass [S40]. Both renderers now support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Buffer-retention verification now covers recorded and unsubmitted commands, multiple submissions, uniform-descriptor slots and sets, and memory aliases [S49]. Native failure paths and sampled-image descriptor coverage remain open. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -14,7 +14,7 @@
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
 
-**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. Broader E3 resource-lifetime verification remains next; the stage order and alpha criteria are unchanged.
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. E3 native failure paths and sampled-image descriptor verification remain next; the stage order and alpha criteria are unchanged.
 
 ## E1 progress, November 3, 2026
 
@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** broaden resource-lifetime failure and retaining-reference coverage. [Whole-mesh replacement](docs/mesh-replacement.md) now works in both production renderers with deferred destruction and preservation on rejected candidates [S48]. The proven upload boundary and scoped ABI/transport checks remain integrated [S39, S40].
+**Next action:** verify native failure paths during recording, submission, reset, and partial preparation, and extend retention coverage to sampled-image descriptors. [Whole-mesh replacement](docs/mesh-replacement.md) works in both production renderers [S48]. The native gate now verifies buffer collection after the final retaining reference disappears [S49]. The proven upload boundary and scoped ABI/transport checks remain integrated [S39, S40].
 
 ---
 
@@ -204,7 +204,7 @@ For each selected module, preserve its input limits and translate its values int
 | E0 | Library separated from `bend-voxel`; clean-checkout verifier and independent window example passed; README updated | Complete |
 | E1 | Bendvy manages 100 rendered objects with verified window behavior and recorded baseline measurements | Complete |
 | E2 | Two applications use the public API; a step contract and sequential reference are defined | Complete; mesh playground, headless execution, and runtime evidence recorded |
-| E3 | The production upload checker has a proven contract | In progress; upload integration and mesh replacement complete; broader resource lifecycle open |
+| E3 | The production upload checker has a proven contract | In progress; upload integration, mesh replacement, and buffer retention verified; native failures and sampled-image descriptors open |
 | E4 | Models, textures, materials, and an interactive scene | Assets and scenes |
 | E5 | Persistent RenderScene, change-driven updates, reproducible alpha | `v0.1-alpha` |
 | E6 | Small render graph with verifiable pass ordering | After alpha |
@@ -430,11 +430,12 @@ Acceptance establishes numeric containment only. A native operation may impose s
 ### Resource lifecycle
 
 - [x] Add mesh replacement with deferred destruction of the old resource. Both production renderers share an owner-preserving transaction, paired atomic retirement, candidate rollback, and separate lifecycle collection. [Real Vulkan and X11 verification](docs/verification/2026-11-03-mesh-replacement/README.md) covers changed ranges/pixels, invalid preservation, completed-command retention, recording rejection, repeated empty transitions, and cleanup [S48].
-- [ ] Account for recorded commands, submissions, descriptors, and other retaining references, not just the completion of one GPU call.
-- [ ] Preserve native checks; check failures during recording, submission, reset, and partial preparation.
-- [x] Document the mesh lifetime contract and its [native trust boundary](docs/mesh-replacement.md) separately. Genuine OOM, partial preparation failure, cleanup failure, device loss, and broader descriptor-lifetime coverage remain open. A complete lifetime proof is not a hidden alpha requirement.
+- [x] Account for recorded commands, submissions, descriptors, and other retaining references, not just the completion of one GPU call. The existing registry tracks the complete ownership chain. [Real Vulkan verification](docs/verification/2026-11-03-mesh-replacement/README.md#retaining-references) now covers recorded and unsubmitted commands, two submissions, descriptor rebinding, independent uniform-descriptor sets and array slots, and memory aliases. Completion, device idle, or release of one owner does not reclaim an allocation while another reference remains. The default native gate checks final-reference release, collection, stale handles, and zero-object cleanup [S49].
+- [ ] Preserve native checks; check failures during recording, submission, reset, and partial preparation. Lifetime rejections pass [S49]; genuine allocation, uncertain-submission, device-loss, and native reset or cleanup failures remain unexercised.
+- [ ] Extend retaining-reference verification to sampled-image descriptors. The current driver covers uniform buffers and their bound memory [S49].
+- [x] Document the mesh lifetime contract and its [native trust boundary](docs/mesh-replacement.md) separately. The contract distinguishes submission completion, recorded references, descriptor slots and sets, memory bindings, and copied handle values. Native failure paths and sampled-image descriptor coverage remain open. A complete lifetime proof is not a hidden alpha requirement.
 
-The current backend distinguishes execution completion from releasing recorded-command references; this rule must survive the project split [S6].
+The current backend distinguishes execution completion from releasing retaining references [S6]. The expanded native gate verifies this distinction for buffer retirement without changing the renderer or dependency implementations [S49].
 
 Capacity pools such as `bend-kit-resources` do not track recorded commands, submissions, or descriptors [S47]. Their reservation laws cannot substitute for this resource-lifetime contract.
 
@@ -826,7 +827,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** broaden resource-lifetime failure and retaining-reference coverage. E0–E2 are complete. The universal proof, production upload enforcement, scoped ABI/transport checks, and whole-mesh replacement are complete within their documented trust limits [S39, S40, S48]. E3 remains open for broader resource-lifecycle work. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** verify native resource-lifecycle failure paths and sampled-image descriptor retention. E0–E2 are complete. The universal proof, production upload enforcement, scoped ABI/transport checks, whole-mesh replacement, and buffer-retention verification are complete within their documented trust limits [S39, S40, S48, S49]. E3 remains open for the remaining lifecycle checks. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
 
 ---
 
@@ -949,4 +950,8 @@ Reviewed November 3, 2026, using the installed Bend 2.0.39. The following are re
 
 - [S48] [Mesh replacement contract](docs/mesh-replacement.md), [production transaction](src/scene-geometry.bend), and [verification record](docs/verification/2026-11-03-mesh-replacement/README.md), November 3, 2026, based at `d258fe3`. Both production APIs replace complete geometry and return the owner on rejection. Real offscreen readbacks and X11 captures cover replacement, preservation, ranges, repeated empty transitions, atomic recording rejection, native deferred destruction after completed submission, collection after reset, measured writes, and zero-object cleanup. Pure production-helper laws pass the root standard checker. Native implementation correctness and genuine failure paths remain outside that proof. No dependency, runtime parallelism, or performance claim changes are included.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], and mesh replacement [S48] are complete under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. E3–E7 and R0–R4 remain incomplete.
+### Entangle E3 retaining references
+
+- [S49] Working-tree verification based on `b9ca656`, November 3, 2026. The [retention helper](tools/verify-buffer-retention.bend), [replacement driver](tools/verify-mesh-replacement.bend), [lifetime contract](docs/mesh-replacement.md), and [verification record](docs/verification/2026-11-03-mesh-replacement/README.md#retaining-references) establish buffer retention through multiple commands and submissions, descriptor rebinding, array slots, independent sets, and shared memory bindings. Collection waits for the last reference. Root proofs and the full native gate pass with Vulkan synchronization validation, no validation diagnostics, and zero final live objects. All 11 source-policy mutations reject with baseline and restored passes. Local evidence is in `build/verification/retaining-references-CO7wB8nW` and `build/verification/upload-mutations-qTreVUiQ`. Renderer and dependency implementations are unchanged. No new X11 run, native failure injection, sampled-image descriptor verification, or native lifetime proof is claimed.
+
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], mesh replacement [S48], and buffer-retention verification [S49] are complete under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. E3–E7 and R0–R4 remain incomplete.

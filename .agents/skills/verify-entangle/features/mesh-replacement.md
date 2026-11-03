@@ -5,7 +5,9 @@ Both renderers replace complete packed geometry without losing the owner on reje
 ## Sub-features
 
 - `replacement-offscreen` changes real RGBA coverage and range dispatch, rejects removed IDs, and preserves exact RGBA and D32 after invalid candidates.
-- `replacement-retention` submits and completes a real extra command retaining both old buffers. Collection preserves both pairs until reset, then removes exactly four native objects. Old handle lookup succeeds before collection and fails after it.
+- `replacement-retention` retires while a real submission is unobserved and another command remains executable but unsubmitted. Collection preserves both pairs through completion and the first reset, then removes exactly four native objects after the final reset. Old handle lookup succeeds before collection and fails after it. Submission of a sealed recording and reset before completion observation are rejected.
+- `replacement-descriptors` runs the imported `tools/verify-buffer-retention.bend` helper with real uniform buffers, descriptor arrays, two sets, and two submissions. Completion of one submission, device idle, and command pool destruction preserve remaining owners. Rebinding retains earlier recorded sets. Partial slot rewrites and independent sets retain buffers until the last reference is removed. Freeing a set, resetting a pool, and destroying a pool release their allocations for later collection. New recording and descriptor writes cannot introduce sealed resources.
+- `replacement-aliases` binds two real buffers to one allocation. Retirement rejects without sealing, and the bytes remain writable and readable. Destroying the alias permits retirement, which then rejects new aliases. Final collection restores the original live-object count.
 - `replacement-rejection` records a reference to only the old index buffer. Paired retirement rejects before sealing either old allocation. Both old byte payloads remain readable and render identically. Prepared candidate resources disappear immediately.
 - `replacement-window` captures changed X11 pixels, exact preserved and restored frames, repeated nonempty and empty replacements, hide/restore, and zero-object Close.
 - `replacement-collection` checks publication before collection, hidden frame collection without acquisition, empty residents, explicit owner-returning collection, and successful measured writes including rejected candidates.
@@ -37,7 +39,7 @@ printf '0\n' > "$replacement_evidence/run.status"
 printf 'Evidence: %s\n' "$replacement_evidence"
 ```
 
-Require `Mesh replacement offscreen and native retention verified; live Vulkan objects: 0` and no `Validation Error`, `SYNC-HAZARD`, or `VUID-`. Inspect the generated `build/replacement-*.ppm` files. The driver checks exact red and green full-square coverage, the changed half-square range, and the empty clear image. It checks the real renderer and native registry, with no substitute allocator or injected failure.
+Require `Mesh replacement offscreen and native retention verified; live Vulkan objects: 0` and no `Validation Error`, `SYNC-HAZARD`, or `VUID-`. Require the memory-alias, two-submission, and descriptor-array evidence lines. Inspect the generated `build/replacement-*.ppm` files. The driver checks exact red and green full-square coverage, the changed half-square range, and the empty clear image. It checks the real renderer and native registry, with no substitute allocator or injected failure. A submission described as unobserved remains pending in the registry until an explicit completion observation; this makes no assertion about how long the GPU is physically busy.
 
 ## X11 replacement verification
 
@@ -64,4 +66,4 @@ run doctor-after-replacement doctor
 
 The driver sends `i` for invalid preservation, `b` for real recording rejection, `g` for green replacement, `e` for empty replacement, and `r` for red replacement. It waits for each app acknowledgement before checking pixels. Repeated cycles restore the exact first red frame. The app verifies cumulative successful writes, including both writes before recording rejection. It checks hidden-frame collection against actual live-object counts before visible drawing. Close must report `Mesh replacement window closed; live Vulkan objects: 0` without validation diagnostics. Inspect red, green, empty, preserved, and restored captures.
 
-Run the existing offscreen/public-creation and mesh/cube-window regressions after renderer changes. Keep fixed-output gates sequential. Actual OOM, device loss, failed cleanup, broader descriptor retention, and other backends are unexercised. No performance claim follows.
+Run the existing offscreen/public-creation and mesh/cube-window regressions after renderer changes. Keep fixed-output gates sequential. Actual OOM, uncertain submission failures, device loss, failed reset or cleanup, sampled-image descriptor retention, and other backends are unexercised by this driver. No performance claim follows.
