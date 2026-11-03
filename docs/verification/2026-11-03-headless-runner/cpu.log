@@ -1,0 +1,52 @@
++ bend
+bend 2.0.39
++ clang
+clang version 23.1.4
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
++ clang
+x86_64-pc-linux-gnu
++ mkdir
+build examples/scene-headless.bend -> build/headless/scene-headless
++ bend
++ clang
++ env
+Headless scene completed 8 production ticks.
+build examples/scene.bend -> build/headless/scene
++ bend
++ clang
++ env
+before-tick entities=0 admitted=0
+tick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=1 start=0 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=2 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=3 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=4 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=5 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=6 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=7 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=8 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+Shared mesh scene verified across 8 ticks.
+build tools/verify-headless-scene.bend -> build/headless/verify-scene
++ bend
++ clang
++ env
+split=0+8 production=8 verified
+split=1+7 production=8 verified
+split=2+6 production=8 verified
+split=3+5 production=8 verified
+split=4+4 production=8 verified
+split=5+3 production=8 verified
+split=6+2 production=8 verified
+split=7+1 production=8 verified
+split=8+0 production=8 verified
+Headless production batching, zero, ownership, receipts, transform bits and detached retention verified.
+Pinned CPU-only native headless verification passed.
