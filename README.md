@@ -257,9 +257,30 @@ closed, consistently wound mesh with orientation-preserving model transforms.
 It does not promise arbitrary-mesh parity with the unculled offscreen renderer.
 The example uploads the existing cube faces once, without the dependency's floor.
 
+## Run game logic without graphics
+
+`src/headless.bend` advances an existing affine application by an explicit number
+of sequential ticks and returns it. The caller creates the scene and supplies
+its tick callback. Zero ticks returns the unchanged application.
+
+```sh
+mkdir -p build
+bend examples/scene-headless.bend -o build/scene-headless.c
+clang -std=c11 -O2 build/scene-headless.c -lpthread -lm -o build/scene-headless
+env -u DISPLAY -u WAYLAND_DISPLAY ./build/scene-headless +RTS --threads 1 --gpu off
+bend tools/verify-headless.bend
+```
+
+The example prints `Headless scene completed 8 production ticks.`
+The CPU gate rebuilds the example, the existing observed reference, and the
+production batching verifier with the pinned Bend and Clang versions.
+It requires no Vulkan checkout, headers, loader, display, or GPU.
+The [runner contract and isolated build evidence](docs/headless-reference.md)
+describe ownership, failure behavior, and verification limits.
+
 ## Verify the ECS window
 
-Run the headless gate and the separate native-window gate:
+Run the graphics-inclusive native gate and the separate native-window gate:
 
 ```sh
 bend PROOF.bend

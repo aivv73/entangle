@@ -2,7 +2,67 @@
 
 `examples/scene.bend` defines tick-start, numerical-update, and structural-commit
 semantics for the retained scene. It is the E2 reference for future R0 work.
-It does not complete R0 or introduce an ECS, a public runner, or a parallel runtime.
+It does not complete R0 or introduce an ECS or a parallel runtime.
+
+## Public bounded runner
+
+`src/headless.bend` imports only Base and exposes one operation.
+
+```bend
+def advance(~A:Type,~tick:A -> IO(A),remaining:Nat,state:A) -> IO(A)
+```
+
+The caller owns creation and passes its existing affine state as `A`.
+Zero returns that state without calling `tick`. A successor waits for one
+completed tick, then advances the returned state by the remaining count.
+The returned application can be inspected or advanced again.
+The closed template callback can be specialized repeatedly without copying
+an affine function value or application.
+
+`examples/scene-headless.bend` calls `Scene.create` explicitly and specializes
+`advance` with the real `Scene.tick`. Creation performs no ticks.
+The window's startup tick and existing window behavior remain unchanged.
+The runner supplies no clock, registration, retry, rollback, or error protocol.
+Failure follows the callback. A refused production scene tick exits nonzero,
+and earlier writes or bootstrap publication can already have happened.
+
+Design C was selected over A's additional startup operation because explicit
+creation keeps the tick budget visible at the consumer. Both designs retained
+one affine application and used closed callbacks. No production wrapper or
+second world is needed.
+
+## CPU verification
+
+`bend tools/verify-headless.bend` checks the pinned Bend and Clang versions and
+native target, emits fresh C, links with `-lpthread -lm`, and executes with
+one CPU thread and GPU dispatch disabled. It runs the direct production
+specialization, the unchanged `examples/scene.bend` observed reference, and
+`tools/verify-headless-scene.bend`. Exact stdout is checked for each.
+The reference output contract is shared with `tools/verify.bend`.
+The CPU gate imports neither the graphics gate nor aggregate proofs.
+
+The production verifier checks every split `a + b = 8` in a fresh sequential
+replay. Its verification-only record owns one real application, inspector,
+ordinal, and detached observations. Each evidence tick calls `Scene.tick`
+once and reuses the reference's numerical and full-handle oracles.
+It checks empty creation, first-tick publication, all eight transform recurrences
+by float bits, mesh identity, exhausted seeds, successful receipt identities,
+empty queues, drained unapplied systems, clock progress, and detached retention.
+Zero batches before bootstrap, at each split, and after tick eight preserve
+world clock, inspector key, retained inventory, and snapshot values.
+Each replay compares full handles against its own admitted baseline.
+Namespace IDs are not compared across fresh worlds.
+The ordinary tick verifier does not observe scheduler boundary events.
+The unchanged observed reference checks those events separately.
+
+`headless_scene_zero` and `headless_scene_successor` in `LAWS.bend` state the
+actual runner's scene-specialized IO unfolding equations. Their reflexivity
+proofs in `PROOF.bend` establish construction of the IO computation.
+They do not prove arbitrary IO equivalence or native runtime correctness.
+The aggregate proof command still requires the full dependency checkout.
+
+The [runner verification record](verification/2026-11-03-headless-runner/README.md)
+records the isolated fresh CPU build and the separate full verifier.
 
 ## Tick start
 

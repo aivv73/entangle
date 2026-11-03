@@ -332,7 +332,7 @@ This completes the offscreen public-API rendering task. The separate window inte
 - [x] Use a headless example to define consistent semantics for tick start, numerical updates, and structural commit. This is the reference for R0, not a new ECS or a mandatory parallel runtime. [Reference and verification](docs/headless-reference.md).
 - [x] Establish a single owner of mutable state: ECS data and future simulation chunks cannot be two independently writable versions of the same components. The [state ownership contract](docs/state-ownership.md) keeps ECS authoritative and requires future chunks to transfer exclusive access to owned storage. Formal adapter laws bind current movement to the writer's component value rather than copied query views. This completes the ownership decision and current-path verification only. Chunk storage transfer and partition enforcement remain R0–R1 work.
 - [x] Add a fixed timestep and an explicit limit on catch-up steps; do not promise bitwise determinism for numerical computations. The [fixed-timestep policy](docs/fixed-timestep.md) uses 250 ms steps, at most four per poll, drops excess whole steps, and preserves fractional time. [Formal and native-window evidence](docs/verification/2026-11-03-fixed-timestep/README.md) covers the clock and actual bounded catch-up.
-- [ ] Support running game logic headlessly without a window or GPU.
+- [x] Support running game logic headlessly without a window or GPU. [Runner and CPU verification](docs/headless-reference.md).
 - [ ] Introduce public operations for creating meshes, instances, a camera, and a basic material.
 - [ ] Create a second non-voxel application: for example, an interactive scene with different meshes and a controllable object.
 

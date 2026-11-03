@@ -255,3 +255,7 @@ def Laws.module_initial_camera():
 
 def Laws.module_camera_reset(camera):
   {==}
+
+def Laws.headless_scene_zero(app):{==}
+
+def Laws.headless_scene_successor(remaining,app):{==}

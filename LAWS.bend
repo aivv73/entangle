@@ -1,3 +1,5 @@
+import ./src/headless.bend as Headless
+import ./src/scene.bend as Scene
 import ./src/time.bend as Time
 import ./src/input.bend as Input
 import ./src/measurement-counters.bend as Counts
@@ -374,3 +376,15 @@ law module_initial_camera:
 law module_camera_reset:
   for camera: Input.Camera
   {Input.key(114,camera) == Input.initial() : Input.Camera}
+
+law headless_scene_zero:
+  for app:Scene.Application()
+  {Headless.advance(~Scene.Application(),~Scene.tick,0n,app) ==
+    IO.pure(Scene.Application(),app) : IO(Scene.Application())}
+
+law headless_scene_successor:
+  for remaining:Nat
+  for app:Scene.Application()
+  {Headless.advance(~Scene.Application(),~Scene.tick,1n+remaining,app) ==
+    IO.bind(Scene.Application(),Scene.Application(),Scene.tick(app),
+      next => Headless.advance(~Scene.Application(),~Scene.tick,remaining,next)) : IO(Scene.Application())}
