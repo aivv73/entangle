@@ -11,6 +11,9 @@ import ./src/scene-spawn.bend as Spawn
 import ./src/scene-schema.bend as SceneSchema
 import ./deps/bendvy/src/ecs/execution-command-removed.bend as Removed
 
+def Laws.scene_sync_boundary_pair(id,requested,remaining):
+  {==}
+
 def Laws.vec3_reconstruct(value):
   match value:
     case C.Vec3{x, y, z}: {==}

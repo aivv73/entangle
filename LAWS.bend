@@ -4,6 +4,7 @@ import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import Base
+import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
 import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
 import ./src/components.bend as C
@@ -22,6 +23,15 @@ import ./src/scene-draw.bend as Draw
 import ./src/scene-observe.bend as Observe
 import ./deps/bendvy/src/ecs/inspector.bend as Inspector
 import ./deps/bendvy/src/ecs/component.bend as Component
+
+law scene_sync_boundary_pair:
+  for +id:U32
+  for +requested:List<&2,U32>
+  for +remaining:List<&2,U32>
+  {Deferred.boundaries(Deferred.sync_returned(
+    Deferred.sync_entered(Deferred.On{[]},id,requested),id,remaining)) ==
+    [Deferred.ApplyEntered{Deferred.Sync{[id]},requested},
+     Deferred.ApplyReturned{Deferred.Sync{[id]},remaining}] : List<&2,Deferred.Boundary>}
 
 law vec3_reconstruct:
   for +value: C.Vec3

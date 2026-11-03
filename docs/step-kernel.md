@@ -47,6 +47,13 @@ ordered invocation observations, remain separate from the kernel's empty
 gameplay-event output. `Scene.tick` still checks for exactly two successful,
 distinct system invocations in IO.
 
+The [headless reference](headless-reference.md) checks actual tick entry,
+production apply boundaries, receipt identities, and per-handle numerical
+recurrence. Its example-local observed runner retains the same completion path.
+Final apply has empty structural work here; the explicit bootstrap sync publishes
+before movement. Numerical writes are immediate, and failures retain earlier
+writes and publication without rollback or retry.
+
 Query and write refusals stay in the ECS adapter. A refused write stops traversal;
 earlier writes are not rolled back. The extraction leaves those branches
 unchanged. The numerical kernel itself has no failure variant.

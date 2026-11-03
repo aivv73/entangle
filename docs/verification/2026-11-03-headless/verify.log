@@ -1,0 +1,83 @@
++ bend
+bend 2.0.39
++ clang
++ clang
+x86_64-pc-linux-gnu
++ uname
+Linux x86_64
++ git
+16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee
++ git
++ git
+a144f7dd4fb4835ca3d5ce17350fc850de049038
++ git
++ git
+bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c
++ git
++ mkdir
++ bend
+ALL PROOFS CHECK
+Use --verdict for mathematical validity.
++ bend
++ clang
++ env
+before-barrier=
+tick=1 health=5,5
+tick=2 health=2.5,1.25
+tick=3 health=1.25,0.3125
+tick=4 health=0.625,0.078125
+tick=5 health=0.3125,0.01953125
+tick=6 health=0.15625,0.0048828125
+untouched=30
+Host roundtrip and GPU buffer fill verified
+Bendvy + Vulkan native compatibility verified; live Vulkan objects: 0
++ bend
++ clang
++ env
+Project component fields and defaults verified.
++ bend
++ clang
++ env
+before-tick entities=0 admitted=0
+tick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=1 start=0 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=2 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=3 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=4 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=5 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=6 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=7 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=8 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+Shared mesh scene verified across 8 ticks.
++ bend
++ clang
++ env
+Scalar quaternion cross-product and independent coverage bound verified.
+index-order=near-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+index-order=far-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+Terminal Action cleanup verified.
+Public Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm
+Pinned native toolchain and dependency compatibility verified.

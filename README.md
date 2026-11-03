@@ -126,12 +126,16 @@ The writer calls the pure `step(Unit{}, transform)` in `src/scene-step.bend`.
 It returns the replacement transform and `Unit{}` for no gameplay events.
 The [step contract](docs/step-kernel.md) defines the per-transform tick input,
 ECS ownership, sequential execution, and separate schedule reports.
+The [headless reference](docs/headless-reference.md) defines tick start,
+immediate numerical writes, explicit bootstrap publication, and final apply.
+It supplies checked evidence for future R0 work without completing R0.
 
-The executable prints the empty initial population, then one verified line per
-tick. The last tick and success line are:
+The executable prints the empty initial population, then numerical and boundary
+evidence for each tick. The last tick and success line are:
 
 ```text
 tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=8 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
 Shared mesh scene verified across 8 ticks.
 ```
 

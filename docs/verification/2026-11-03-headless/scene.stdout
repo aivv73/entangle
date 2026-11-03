@@ -1,0 +1,18 @@
+before-tick entities=0 admitted=0
+tick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=1 start=0 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=2 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=3 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=4 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=5 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=6 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=7 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=8 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+Shared mesh scene verified across 8 ticks.
