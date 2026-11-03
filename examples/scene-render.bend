@@ -1,4 +1,5 @@
 import Base
+import ../src/error.bend as Error
 import ../src/scene-render.bend as R
 import ../src/scene-matrix.bend as M
 import ../src/components.bend as C
@@ -88,7 +89,7 @@ def frame(renderer:R.Renderer,list:Draw.DrawList) -> V.Action(R.Renderer & R.Rea
 def checked_frame(pair:R.Renderer & R.Readback,+tick:U32,populated:Bool) -> V.Action(R.Renderer & R.Readback):
   (renderer,+image) = pair
   do V.Action<R.Renderer & R.Readback>:
-    R.require(image_ok(image,tick,populated),"RGBA8/D32 oracle mismatch at tick " ++ U32.show(tick))
+    Error.require(image_ok(image,tick,populated),"RGBA8/D32 oracle mismatch at tick " ++ U32.show(tick))
     return (renderer,image)
 
 def verify_frame(renderer:R.Renderer,list:Draw.DrawList,tick:U32,populated:Bool) -> V.Action(R.Renderer & R.Readback):
@@ -103,7 +104,7 @@ def discard_image(pair:R.Renderer & R.Readback) -> R.Renderer:
 def repeated_checked(first:R.Readback,pair:R.Renderer & R.Readback) -> V.Action(R.Renderer):
   (renderer,second) = pair
   do V.Action<R.Renderer>:
-    R.require(image_equal(first,second),"Repeated frame differs")
+    Error.require(image_equal(first,second),"Repeated frame differs")
     return renderer
 
 def repeat_first(pair:R.Renderer & R.Readback,+list:Draw.DrawList) -> V.Action(R.Renderer):
@@ -121,7 +122,7 @@ def unknown_checked(pair:R.Renderer & Result<&2,&2,R.InputError,R.Readback>) -> 
   match pair:
     case (renderer,Fail{R.UnknownMesh{item,id}}):
       do V.Action<R.Renderer>:
-        R.require(U32.is_eq(item,0) && U32.is_eq(id,99),"Wrong unknown-mesh diagnostic")
+        Error.require(U32.is_eq(item,0) && U32.is_eq(id,99),"Wrong unknown-mesh diagnostic")
         return renderer
     case _:IO.pure(V.VkResult(R.Renderer),Fail{(1,"Unknown mesh accepted")})
 
@@ -134,7 +135,7 @@ def invalid_checked(pair:R.Renderer & Result<&2,&2,R.InputError,R.Readback>) -> 
   match pair:
     case (renderer,Fail{R.InvalidTransform{item}}):
       do V.Action<R.Renderer>:
-        R.require(U32.is_eq(item,1),"Wrong invalid-transform diagnostic")
+        Error.require(U32.is_eq(item,1),"Wrong invalid-transform diagnostic")
         return renderer
     case _:IO.pure(V.VkResult(R.Renderer),Fail{(1,"Invalid transform accepted")})
 
@@ -238,7 +239,7 @@ def finish_tick(next:R.Renderer -> Scene.Application() -> I.Instance<D.Schema> -
   +list : Draw.DrawList = list
   +first : Draw.DrawList = Bool.pick(Draw.DrawList,U32.is_eq(tick,1),list,retained)
   do V.Action<Unit>:
-    R.require(Nat.is_eq(draw_count(list),100n),"DrawList must contain all 100 entities")
+    Error.require(Nat.is_eq(draw_count(list),100n),"DrawList must contain all 100 entities")
     renderer : R.Renderer <- tick_frames(renderer,list,first,tick)
     V.Action.lift(Unit,IO.print("tick=" ++ U32.show(tick) ++ " all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected"))
     next(renderer,app,instance,first)
@@ -247,20 +248,20 @@ def initial_empty(renderer:R.Renderer,pair:Scene.Application() & (I.Instance<D.S
   (app,(instance,list)) = pair
   +list : Draw.DrawList = list
   do V.Action<Unit>:
-    R.require(Nat.is_eq(draw_count(list),0n),"Initial ECS DrawList must be empty")
+    Error.require(Nat.is_eq(draw_count(list),0n),"Initial ECS DrawList must be empty")
     image : R.Renderer & R.Readback <- verify_frame(renderer,list,0,False{})
     next(discard_image(image),app,instance)
 
 def observed_key(+prior:String,clock:String,app:Scene.Application(),pair:I.Instance<D.Schema> & String,+list:Draw.DrawList) -> V.Action(Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList)):
   (instance,key) = pair
   do V.Action<Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList)>:
-    R.require(String.eq(prior,key),"Drawing changed inspector cursor")
+    Error.require(String.eq(prior,key),"Drawing changed inspector cursor")
     return (app,(instance,list))
 
 def observed_clock(+before:String,prior:String,instance:I.Instance<D.Schema>,+list:Draw.DrawList,pair:Scene.Application() & Tick.Tick) -> V.Action(Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList)):
   (app,clock) = pair
   do V.Action<Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList)>:
-    R.require(String.eq(before,Nat.show(Tick.total(clock))),"Drawing changed application clock")
+    Error.require(String.eq(before,Nat.show(Tick.total(clock))),"Drawing changed application clock")
     observed_key(prior,before,app,Check.instance_key(instance),list)
 
 def observed(before:String,prior:String,pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> V.Action(Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList)):
@@ -308,7 +309,7 @@ def no_live() -> IO(Unit):
   do IO<Unit>:
     result : V.VkResult(U32) <- V.debug_live_objects()
     count : U32 <- V.or_exit(U32,result)
-    checked : V.VkResult(Unit) <- R.require(U32.is_zero(count),"Scope retained Vulkan objects")
+    checked : V.VkResult(Unit) <- Error.require(U32.is_zero(count),"Scope retained Vulkan objects")
     V.or_exit(Unit,checked)
 
 def terminal_expected(result:V.VkResult(Unit)) -> IO(Unit):
@@ -316,13 +317,13 @@ def terminal_expected(result:V.VkResult(Unit)) -> IO(Unit):
     case Fail{(code,message)}:
       do IO<Unit>:
         no_live()
-        checked : V.VkResult(Unit) <- R.require(U32.is_eq(code,1) && String.eq(message,"intentional scope termination"),"Unexpected scope failure")
+        checked : V.VkResult(Unit) <- Error.require(U32.is_eq(code,1) && String.eq(message,"intentional scope termination"),"Unexpected scope failure")
         V.or_exit(Unit,checked)
     case Done{_}:IO.die(Unit,1,"Terminal scope error was lost")
 
 def main() -> IO(Unit):
   do IO<Unit>:
-    verified : V.VkResult(Unit) <- R.require(F32.is_lt(coverage_margin(),0.25) && transform_check(C.Quat{0.18257418,0.36514837,0.5477226,0.73029673}) && transform_check(C.Quat{F32.neg(0.5),0.5,F32.neg(0.5),0.5}),"Independent transform or coverage bound failed")
+    verified : V.VkResult(Unit) <- Error.require(F32.is_lt(coverage_margin(),0.25) && transform_check(C.Quat{0.18257418,0.36514837,0.5477226,0.73029673}) && transform_check(C.Quat{F32.neg(0.5),0.5,F32.neg(0.5),0.5}),"Independent transform or coverage bound failed")
     V.or_exit(Unit,verified)
     IO.print("Scalar quaternion cross-product and independent coverage bound verified.")
     IO.print("index-order=near-first")
@@ -333,11 +334,11 @@ def main() -> IO(Unit):
     reverse : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(True{}),run)
     V.or_exit(Unit,reverse)
     no_live()
-    terminal : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(False{}),renderer => R.require(False{},"intentional scope termination"))
+    terminal : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(False{}),renderer => Error.require(False{},"intentional scope termination"))
     terminal_expected(terminal)
     IO.print("Terminal Action cleanup verified.")
     live : V.VkResult(U32) <- V.debug_live_objects()
     count : U32 <- V.or_exit(U32,live)
-    checked : V.VkResult(Unit) <- R.require(U32.is_zero(count),"Renderer leaked Vulkan objects")
+    checked : V.VkResult(Unit) <- Error.require(U32.is_zero(count),"Renderer leaked Vulkan objects")
     V.or_exit(Unit,checked)
     IO.print("Public Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm")

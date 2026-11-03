@@ -1,4 +1,5 @@
 import Base
+import ./error.bend as Error
 import ./measurement-counters.bend as Count
 import ./scene-diagnostics.bend as Diag
 import ./components.bend as C
@@ -30,11 +31,6 @@ type Resources is Data:
   Resources{device:V.Device,command:V.CommandBuffer,fence:V.Fence,framebuffer:V.Framebuffer,pipeline:V.GraphicsPipeline,color:Attachment,depth:Attachment,vertices:Buffer,indices:Buffer,stage:Buffer}
 type Renderer is Type:
   Renderer{resources:Resources,config:Config,mesh_id:U32,index_count:U32,depth_offset:W.U64,used:Bool}
-
-def require(ok:Bool,message:String) -> V.Action(Unit):
-  match ok:
-    case True{}:V.Action.pure(Unit,Unit{})
-    case False{}:IO.pure(V.VkResult(Unit),Fail{(1,message)})
 
 def choose(value:Maybe<U32>,message:String) -> V.Action(U32):
   match value:
@@ -156,8 +152,8 @@ def create_limited(+instance:V.Instance,+physical:V.PhysicalDevice,family:U32,li
   +vc = U32.from_nat(List.length(&2,Vertex,vertices))
   +ic = U32.from_nat(List.length(&2,U32,indices))
   do V.Action<Renderer>:
-    require(U32.is_le(width,dimension) && U32.is_le(height,dimension) && U32.is_le(width,fw) && U32.is_le(height,fh) && U32.is_ge(push,64) && U32.is_ge(attrs,2) && U32.is_ge(bindings,1) && U32.is_ge(offset,12) && U32.is_ge(stride,24),"Insufficient device limits")
-    require(U32.is_zero(ahi) && U32.is_gt(alo,0) && U32.is_le(alo,1048576),"Unsupported copy alignment")
+    Error.require(U32.is_le(width,dimension) && U32.is_le(height,dimension) && U32.is_le(width,fw) && U32.is_le(height,fh) && U32.is_ge(push,64) && U32.is_ge(attrs,2) && U32.is_ge(bindings,1) && U32.is_ge(offset,12) && U32.is_ge(stride,24),"Insufficient device limits")
+    Error.require(U32.is_zero(ahi) && U32.is_gt(alo,0) && U32.is_le(alo,1048576),"Unsupported copy alignment")
     +device : V.Device <- V.Instance.create_device(instance,physical,V.DeviceCreateInfo{family,[]})
     +color : Attachment <- attachment(instance,physical,device,V.Extent2D{width,height},vk.VK_FORMAT_R8G8B8A8_UNORM(),vk.VK_IMAGE_ASPECT_COLOR_BIT(),U32.or(vk.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT(),vk.VK_IMAGE_USAGE_TRANSFER_SRC_BIT()))
     +depth : Attachment <- attachment(instance,physical,device,V.Extent2D{width,height},vk.VK_FORMAT_D32_SFLOAT(),vk.VK_IMAGE_ASPECT_DEPTH_BIT(),U32.or(vk.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT(),vk.VK_IMAGE_USAGE_TRANSFER_SRC_BIT()))
@@ -187,8 +183,8 @@ def create(+entry:V.Entry,+config:Config,mesh:Mesh) -> V.Action(Renderer):
   +vc = U32.from_nat(List.length(&2,Vertex,vertices))
   +ic = U32.from_nat(List.length(&2,U32,indices))
   do V.Action<Renderer>:
-    require(U32.is_gt(width,0) && U32.is_gt(height,0) && U32.is_le(width,4096) && U32.is_le(height,4096) && U32.is_le(U32.mul(width,height),4194304) && matrix_finite(camera),"Invalid target or camera")
-    require(mesh_valid(Mesh{id,vertices,indices}),"Invalid mesh")
+    Error.require(U32.is_gt(width,0) && U32.is_gt(height,0) && U32.is_le(width,4096) && U32.is_le(height,4096) && U32.is_le(U32.mul(width,height),4194304) && matrix_finite(camera),"Invalid target or camera")
+    Error.require(mesh_valid(Mesh{id,vertices,indices}),"Invalid mesh")
     +instance : V.Instance <- V.Entry.create_instance(entry,V.InstanceCreateInfo.default())
     devices : List<V.PhysicalDevice> <- V.Instance.enumerate_physical_devices(instance)
     +physical : V.PhysicalDevice <- first(devices)
@@ -273,7 +269,7 @@ def frame(+r:Resources,+config:Config,+count:U32,+depth_offset:W.U64,+used:Bool,
     V.CommandBuffer.end(command)
     V.Device.submit(device,command,fence)
     status : U32 <- V.Fence.wait(fence,Core.whole_size())
-    require(U32.is_zero(status),"Frame fence incomplete")
+    Error.require(U32.is_zero(status),"Frame fence incomplete")
     rgba : List<U32> <- V.Device.read_memory(device,memory,W.zero(),plane)
     depth : List<U32> <- V.Device.read_memory(device,memory,depth_offset,plane)
     V.CommandBuffer.reset(command)

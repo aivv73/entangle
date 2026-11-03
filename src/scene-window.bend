@@ -1,4 +1,5 @@
 import Base
+import ./error.bend as Error
 import ./measurement-counters.bend as Count
 import ./scene-diagnostics.bend as Diag
 import ./scene-render.bend as R
@@ -24,7 +25,7 @@ def bound(buffer:R.Buffer) -> Mesh.BoundBuffer:
 
 def check_limits(limits:V.PhysicalDeviceLimits) -> V.Action(Unit):
   V.PhysicalDeviceLimits{dimension,fw,fh,colors,push,attrs,bindings,offset,stride,allocs,atom,alignment,row,granularity} = limits
-  R.require(U32.is_ge(push,64) && U32.is_ge(attrs,2) && U32.is_ge(bindings,1) && U32.is_ge(offset,12) && U32.is_ge(stride,24),"Insufficient mesh device limits")
+  Error.require(U32.is_ge(push,64) && U32.is_ge(attrs,2) && U32.is_ge(bindings,1) && U32.is_ge(offset,12) && U32.is_ge(stride,24),"Insufficient mesh device limits")
 
 def diagnostics(on:Bool,device:V.Device) -> V.Action(Diag.Probe):
   match on:
@@ -70,13 +71,13 @@ def create(+context:Host.Context,mesh:R.Mesh,+measured:Bool) -> V.Action(Rendere
 # The window pipeline culls back faces. Supply a closed, consistently wound mesh.
 def open(entry:V.Entry,title:String,+mesh:R.Mesh) -> V.Action(Renderer):
   do V.Action<Renderer>:
-    R.require(R.mesh_valid(mesh),"Invalid mesh")
+    Error.require(R.mesh_valid(mesh),"Invalid mesh")
     context : Host.Context <- Host.open(entry,title,False{})
     create(context,mesh,False{})
 
 def open_measured(entry:V.Entry,title:String,+mesh:R.Mesh) -> V.Action(Renderer):
   do V.Action<Renderer>:
-    R.require(R.mesh_valid(mesh),"Invalid mesh")
+    Error.require(R.mesh_valid(mesh),"Invalid mesh")
     context:Host.Context <- Host.open(entry,title,False{})
     create(context,mesh,True{})
 
@@ -121,7 +122,7 @@ def record(renderer: Indexed.Renderer, target: Indexed.Target, frame: Indexed.Fr
     probe:Diag.Probe <- V.Action.lift(Diag.Probe,Diag.span(probe,"submit",before_submit))
     start:Diag.Metric<&2,W.U64> <- V.Action.lift(Diag.Metric<&2,W.U64>,Diag.now(on))
     status:U32 <- V.Fence.wait(render,Core.whole_size())
-    R.require(U32.is_zero(status),"Window render fence did not complete")
+    Error.require(U32.is_zero(status),"Window render fence did not complete")
     +after_wait:Diag.Metric<&2,W.U64> <- V.Action.lift(Diag.Metric<&2,W.U64>,Diag.now(on))
     probe:Diag.Probe = render_span(probe,start,after_wait)
     start:Diag.Metric<&2,W.U64> <- V.Action.lift(Diag.Metric<&2,W.U64>,Diag.now(on))
@@ -301,9 +302,9 @@ def require_stable(renderer:Renderer,+accepted:U32) -> V.Action(Renderer):
   match target:
     case None{}:
       do V.Action<Renderer>:
-        R.require(U32.is_zero(accepted),"Baseline target retired; repeat invalid; partial counters unavailable")
+        Error.require(U32.is_zero(accepted),"Baseline target retired; repeat invalid; partial counters unavailable")
         return Renderer{window,None{},id,count,probe}
     case Some{+value}:
       do V.Action<Renderer>:
-        R.require(target_stable(Some{value},accepted),"Baseline target rebuilt; repeat invalid; partial counters unavailable")
+        Error.require(target_stable(Some{value},accepted),"Baseline target rebuilt; repeat invalid; partial counters unavailable")
         return Renderer{window,Some{value},id,count,probe}

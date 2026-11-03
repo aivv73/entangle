@@ -324,3 +324,17 @@ See [the measured baseline](docs/baseline-measurements.md) for actual results,
 exact timing and counter boundaries, provenance, limitations, raw evidence, native
 validation, and complete rerun commands. These instrumented values make no speedup
 claim. Push payload bytes are separate from host mesh writes and physical traffic.
+
+## Application ownership
+
+`examples/scene-window-app.bend` owns concrete scene state, mesh, camera projection,
+observation, drawing, retention, and verification. `examples/scene-window.bend`
+owns executable modes and the interactive loop. `src/app.bend` owns the Vulkan
+entry scope and post-scope live-object count. `src/time.bend` owns due-time
+construction and comparison. `src/input.bend` owns the camera controller and
+snapshot event draining. `src/error.bend` owns shared Action requirements and
+renderer input-error promotion. The baseline retains its instrumented execution
+and reporting policy.
+
+The [extraction verification record](docs/verification/2026-11-03-app/README.md)
+records the native checks and before/after replay comparison.

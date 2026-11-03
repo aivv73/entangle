@@ -1,7 +1,10 @@
 import Base
+import ../src/error.bend as Error
 import ../src/measurement-counters.bend as Count
 import ../src/baseline-output.bend as Out
-import ./scene-window.bend as App
+import ./scene-window-app.bend as SceneApp
+import ../src/app.bend as Scope
+import ../src/time.bend as Time
 import ./scene.bend as Check
 import ./scene-render.bend as Extract
 import ../src/scene-window.bend as Win
@@ -15,14 +18,14 @@ import ../deps/bendvy/src/ecs/inspector.bend as I
 import ../deps/bendvy/src/ecs/change-tick.bend as Tick
 import ../deps/bendvy/src/ecs/world.bend as World
 import ../deps/bend-vulkan/Vulkan.bend as V
-import ../deps/bend-vulkan/examples/window_scene.bend as Camera
+import ../src/input.bend as Camera
 import ../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W
 
-type Updated is Type:Updated{state:App.State,spans:List<&2,D.Span>}
+type Updated is Type:Updated{state:SceneApp.State,spans:List<&2,D.Span>}
 type Sample is Data:
   Sample{attempt:U32,phase:String,tick:U32,draw_tick:U32,digest:U32,retained_digest:U32,width:U32,height:U32,probe:D.Probe,spans:List<&2,D.Span>}
 type Run is Type:
-  Run{renderer:Win.Renderer,state:App.State,samples:List<&2,Sample>,attempt:U32,accepted:U32,steady_ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat}
+  Run{renderer:Win.Renderer,state:SceneApp.State,samples:List<&2,Sample>,attempt:U32,accepted:U32,steady_ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat}
 type Evidence is Data:
   Evidence{samples:List<&2,Sample>,startup:D.Metric<&2,W.U64>,attempts:U32,accepted:U32,ticks:U32,live_before_close:U32,device:V.PhysicalDeviceProperties,graphics:U32,present:U32}
 
@@ -40,8 +43,8 @@ def identities(baseline:List<&2,Check.Identity>,admitted:List<&2,World.Handle<Sc
 def extracted(pair:Scene.Application() & (I.Instance<Schema.Schema> & Draw.DrawList),baseline:List<&2,Check.Identity>,+rows:List<&2,Observe.Row>,tick:U32,due:Nat,retained:Draw.DrawList,saved:List<&2,Observe.Row>,spans:List<&2,D.Span>) -> V.Action(Updated):
   (app,(inspector,Draw.DrawList{+items})) = pair
   do V.Action<Updated>:
-    R.require(Check.drawing_equal(items,rows),"Baseline extraction changed ordered drawing bits")
-    return Updated{App.State{app,inspector,baseline,rows,Draw.DrawList{items},retained,saved,tick,due},spans}
+    Error.require(Check.drawing_equal(items,rows),"Baseline extraction changed ordered drawing bits")
+    return Updated{SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},retained,saved,tick,due},spans}
 
 def extraction_done(pair:Scene.Application() & (I.Instance<Schema.Schema> & Result<&2,&2,Unit,Draw.DrawList>),before:String,prior:String,baseline:List<&2,Check.Identity>,rows:List<&2,Observe.Row>,tick:U32,due:Nat,retained:Draw.DrawList,saved:List<&2,Observe.Row>,spans:List<&2,D.Span>,start:D.Metric<&2,W.U64>) -> V.Action(Updated):
   do V.Action<Updated>:
@@ -78,26 +81,26 @@ def ticked(app:Scene.Application(),inspector:I.Instance<Schema.Schema>,baseline:
     before:D.Metric<&2,W.U64> <- clock()
     observed(Observe.snapshot(app,inspector),baseline,tick,due,retained,saved,[span("simulation",start,end)],before)
 
-def advance(state:App.State,+now:Nat) -> V.Action(Updated):
-  App.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,due} = state
+def advance(state:SceneApp.State,+now:Nat) -> V.Action(Updated):
+  SceneApp.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,due} = state
   do V.Action<Updated>:
-    R.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline retained drawing changed")
+    Error.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline retained drawing changed")
     start:D.Metric<&2,W.U64> <- clock()
     app:Scene.Application() <- V.Action.lift(Scene.Application(),Scene.tick(app))
-    ticked(app,inspector,baseline,U32.inc(tick),Nat.add(now,250n),Draw.DrawList{held},saved,start)
+    ticked(app,inspector,baseline,U32.inc(tick),Time.next_due(now,250n),Draw.DrawList{held},saved,start)
 
 def missing_tick(replay:Bool) -> List<&2,D.Span>:
   +reason = Bool.pick(String,replay,"not executed in replay","not scheduled")
   [D.Span{"simulation",D.Unavailable{reason}},D.Span{"observation",D.Unavailable{reason}},D.Span{"extraction",D.Unavailable{reason}}]
 
-def update(ready:Bool,replay:Bool,state:App.State,now:Nat) -> V.Action(Updated):
+def update(ready:Bool,replay:Bool,state:SceneApp.State,now:Nat) -> V.Action(Updated):
   match ready replay:
     case True{} False{}:advance(state,now)
     case _ _:V.Action.pure(Updated,Updated{state,missing_tick(replay)})
 
-def scheduled(state:App.State,+now:Nat,replay:Bool) -> V.Action(Updated):
-  App.State{app,inspector,baseline,rows,draws,retained,saved,tick,+due} = state
-  update(Nat.is_ge(now,due),replay,App.State{app,inspector,baseline,rows,draws,retained,saved,tick,due},now)
+def scheduled(state:SceneApp.State,+now:Nat,replay:Bool) -> V.Action(Updated):
+  SceneApp.State{app,inspector,baseline,rows,draws,retained,saved,tick,+due} = state
+  update(Time.ready(now,due),replay,SceneApp.State{app,inspector,baseline,rows,draws,retained,saved,tick,due},now)
 
 def eligible(probe:D.Probe,width:U32,height:U32) -> Bool:
   match probe:
@@ -120,9 +123,6 @@ def startup(old:D.Metric<&2,W.U64>,accepted:U32,start:D.Metric<&2,W.U64>,end:D.M
     case 0 True{}:D.elapsed(start,end)
     case _ _:old
 
-def returned(pair:Win.Renderer & Result<&2,&2,Win.InputError,Unit>) -> V.Action(Win.Renderer):
-  App.rendered(pair)
-
 def buffer_spans(samples:List<&2,Sample>,checks:D.Span,loop:D.Span) -> List<&2,Sample>:
   match samples:
     case []:[]
@@ -134,29 +134,29 @@ def buffered(run:Run,start:D.Metric<&2,W.U64>,loop_start:D.Metric<&2,W.U64>) -> 
     +end:D.Metric<&2,W.U64> <- clock()
     return Run{renderer,state,buffer_spans(samples,span("evidence_checks_digest_initial_buffer",start,end),span("loop_through_initial_buffer",loop_start,end)),attempt,accepted,ticks,origin,startup,deadline}
 
-def record_sample(renderer:Win.Renderer,state:App.State,+samples:List<&2,Sample>,+attempt:U32,+accepted:U32,+ticks:U32,+start:D.Metric<&2,W.U64>,old_startup:D.Metric<&2,W.U64>,deadline:Nat,+replay:Bool,+spans:List<&2,D.Span>,render_start:D.Metric<&2,W.U64>,+loop_start:D.Metric<&2,W.U64>,+width:U32,+height:U32) -> V.Action(Run):
+def record_sample(renderer:Win.Renderer,state:SceneApp.State,+samples:List<&2,Sample>,+attempt:U32,+accepted:U32,+ticks:U32,+start:D.Metric<&2,W.U64>,old_startup:D.Metric<&2,W.U64>,deadline:Nat,+replay:Bool,+spans:List<&2,D.Span>,render_start:D.Metric<&2,W.U64>,+loop_start:D.Metric<&2,W.U64>,+width:U32,+height:U32) -> V.Action(Run):
   Win.Renderer{window,target,id,count,+probe} = renderer
-  App.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,due} = state
+  SceneApp.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,due} = state
   +ok = eligible(probe,width,height)
   do V.Action<Run>:
     +end:D.Metric<&2,W.U64> <- clock()
-    R.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline frame changed exact ordered drawing bits")
-    +sample:Sample = Sample{attempt,phase(accepted),tick,Bool.pick(U32,replay,1,tick),App.digest(Bool.pick(List<&2,Draw.DrawItem>,replay,held,items),2166136261),App.digest(held,2166136261),width,height,probe,span("render_call_wall",render_start,end) <> span("loop_service_before_buffer",loop_start,end) <> spans}
-    buffered(Run{Win.Renderer{window,target,id,count,probe},App.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,due},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.to_u32(ok && U32.is_gt(accepted,30) && has_tick(spans))),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
+    Error.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline frame changed exact ordered drawing bits")
+    +sample:Sample = Sample{attempt,phase(accepted),tick,Bool.pick(U32,replay,1,tick),SceneApp.digest(Bool.pick(List<&2,Draw.DrawItem>,replay,held,items),2166136261),SceneApp.digest(held,2166136261),width,height,probe,span("render_call_wall",render_start,end) <> span("loop_service_before_buffer",loop_start,end) <> spans}
+    buffered(Run{Win.Renderer{window,target,id,count,probe},SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,due},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.to_u32(ok && U32.is_gt(accepted,30) && has_tick(spans))),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
 
 def render(updated:Updated,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+replay:Bool,samples:List<&2,Sample>,attempt:U32,+accepted:U32,ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat,poll:D.Span,loop_start:D.Metric<&2,W.U64>) -> V.Action(Run):
-  Updated{App.State{app,inspector,baseline,+rows,+draws,+held,+saved,tick,due},spans} = updated
+  Updated{SceneApp.State{app,inspector,baseline,+rows,+draws,+held,+saved,tick,due},spans} = updated
   V.WindowSnapshot{+width,+height,mapped,focused,captured,events} = snapshot
   do V.Action<Run>:
     renderer:Win.Renderer <- Win.require_stable(renderer,accepted)
-    R.require(U32.is_eq(width,640) && U32.is_eq(height,480),"Baseline resized; repeat invalid; partial counters unavailable")
-    R.require(App.unchanged(draws,rows) && App.unchanged(held,saved),"Baseline pre-render drawing changed")
+    Error.require(U32.is_eq(width,640) && U32.is_eq(height,480),"Baseline resized; repeat invalid; partial counters unavailable")
+    Error.require(SceneApp.unchanged(draws,rows) && SceneApp.unchanged(held,saved),"Baseline pre-render drawing changed")
     before:D.Metric<&2,W.U64> <- clock()
-    pair:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,V.WindowSnapshot{width,height,mapped,focused,captured,[]},w => h => App.view(Camera.initial(),w,h),Bool.pick(Draw.DrawList,replay,held,draws))
-    renderer:Win.Renderer <- returned(pair)
-    record_sample(renderer,App.State{app,inspector,baseline,rows,draws,held,saved,tick,due},samples,attempt,accepted,ticks,start,startup,deadline,replay,poll <> spans,before,loop_start,width,height)
+    pair:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,Camera.drain(V.WindowSnapshot,pending => V.WindowSnapshot{width,height,mapped,focused,captured,pending},events),w => h => SceneApp.view(Camera.initial(),w,h),Bool.pick(Draw.DrawList,replay,held,draws))
+    renderer:Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,pair,"Window drawing rejected")
+    record_sample(renderer,SceneApp.State{app,inspector,baseline,rows,draws,held,saved,tick,due},samples,attempt,accepted,ticks,start,startup,deadline,replay,poll <> spans,before,loop_start,width,height)
 
-def polled(pair:Win.Renderer & V.WindowSnapshot,state:App.State,+replay:Bool,samples:List<&2,Sample>,attempt:U32,+accepted:U32,ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat,poll_start:D.Metric<&2,W.U64>,loop_start:D.Metric<&2,W.U64>) -> V.Action(Run):
+def polled(pair:Win.Renderer & V.WindowSnapshot,state:SceneApp.State,+replay:Bool,samples:List<&2,Sample>,attempt:U32,+accepted:U32,ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat,poll_start:D.Metric<&2,W.U64>,loop_start:D.Metric<&2,W.U64>) -> V.Action(Run):
   (renderer,snapshot) = pair
   do V.Action<Run>:
     +end:D.Metric<&2,W.U64> <- clock()
@@ -212,28 +212,28 @@ def loop(remaining:Nat,run:Run,+replay:Bool) -> V.Action(Evidence):
       Run{renderer,state,samples,attempt,+accepted,+ticks,start,startup,+deadline} = run
       do V.Action<Evidence>:
         +now:Nat <- V.Action.lift(Nat,IO.now())
-        R.require(Nat.is_lt(now,deadline),"baseline deadline exceeded; partial counters unavailable; repeat invalid")
+        Error.require(Nat.is_lt(now,deadline),"baseline deadline exceeded; partial counters unavailable; repeat invalid")
         continue(quota_met(accepted,ticks,replay),Run{renderer,state,samples,attempt,accepted,ticks,start,startup,deadline},replay,next => loop(rest,next,replay))
 
-def validate_replay(state:App.State) -> V.Action(App.State):
-  App.State{app,inspector,baseline,+rows,+draws,+held,+saved,+tick,due} = state
-  do V.Action<App.State>:
-    R.require(U32.is_eq(tick,2) && App.unchanged(draws,rows) && App.unchanged(held,saved),"Replay must retain tick one while world reaches tick two")
-    return App.State{app,inspector,baseline,rows,draws,held,saved,tick,due}
+def validate_replay(state:SceneApp.State) -> V.Action(SceneApp.State):
+  SceneApp.State{app,inspector,baseline,+rows,+draws,+held,+saved,+tick,due} = state
+  do V.Action<SceneApp.State>:
+    Error.require(U32.is_eq(tick,2) && SceneApp.unchanged(draws,rows) && SceneApp.unchanged(held,saved),"Replay must retain tick one while world reaches tick two")
+    return SceneApp.State{app,inspector,baseline,rows,draws,held,saved,tick,due}
 
 def advanced_replay(updated:Updated) -> V.Action(Updated):
   Updated{state,spans} = updated
   do V.Action<Updated>:
-    state:App.State <- validate_replay(state)
+    state:SceneApp.State <- validate_replay(state)
     return Updated{state,spans}
 
 
-def initialize_mode(replay:Bool,state:App.State,now:Nat) -> V.Action(Updated):
+def initialize_mode(replay:Bool,state:SceneApp.State,now:Nat) -> V.Action(Updated):
   match replay:
-    case False{}:V.Action.pure(Updated,Updated{App.retain(state),[]})
+    case False{}:V.Action.pure(Updated,Updated{SceneApp.retain(state),[]})
     case True{}:
       do V.Action<Updated>:
-        updated:Updated <- advance(App.retain(state),now)
+        updated:Updated <- advance(SceneApp.retain(state),now)
         advanced_replay(updated)
 
 def replay_initial_spans(values:List<&2,D.Span>) -> List<&2,D.Span>:
@@ -267,14 +267,14 @@ def setup(pair:Win.Renderer & List<&2,D.Span>,+replay:Bool,+start:D.Metric<&2,W.
     end_tick:D.Metric<&2,W.U64> <- clock()
     +tick_now:Nat <- V.Action.lift(Nat,IO.now())
     obs_start:D.Metric<&2,W.U64> <- clock()
-    updated:Updated <- observed(Observe.snapshot(app,I.Fresh{}),[],1,Nat.add(tick_now,250n),Draw.DrawList{[]},[],[span("simulation",created,end_tick)],obs_start)
+    updated:Updated <- observed(Observe.snapshot(app,I.Fresh{}),[],1,Time.next_due(tick_now,250n),Draw.DrawList{[]},[],[span("simulation",created,end_tick)],obs_start)
     initialized(add_spans(updated,span("open_window_device_mesh",start,setup_end) <> span("world_create",before,created) <> spans),renderer,replay,start,Nat.add(now,60000n),tick_now)
 
 def run(+entry:V.Entry,+replay:Bool) -> V.Action(Evidence):
   do V.Action<Evidence>:
     +start:D.Metric<&2,W.U64> <- clock()
     +now:Nat <- V.Action.lift(Nat,IO.now())
-    renderer:Win.Renderer <- Win.open_measured(entry,"Entangle baseline",App.mesh())
+    renderer:Win.Renderer <- Win.open_measured(entry,"Entangle baseline",SceneApp.mesh())
     +end:D.Metric<&2,W.U64> <- clock()
     setup(Win.setup_spans(renderer),replay,start,now,end)
 
@@ -393,13 +393,20 @@ def emitted(result:V.VkResult(Evidence),+live:U32) -> IO(Unit):
         IO.print("{\"schema\":1,\"kind\":\"terminal\",\"status\":\"complete\",\"attempts\":" ++ U32.show(attempts) ++ ",\"completed_presentations\":" ++ U32.show(accepted) ++ ",\"steady_actual_ticks\":" ++ U32.show(ticks) ++ ",\"startup_through_first_completed_frame_ns\":" ++ Out.ns(startup) ++ ",\"live_before_close\":" ++ U32.show(before) ++ ",\"live_after_cleanup\":" ++ U32.show(live) ++ "}")
         IO.pass(Unit,assert_clean(live))
 
+def finished(pair:V.VkResult(Evidence) & U32) -> IO(Unit):
+  (result,live) = pair
+  emitted(result,live)
+
+def replay_mode(result:Result<&1,&1,U32 & String,String>) -> Bool:
+  match result:
+    case Done{"replay"}:True{}
+    case _:False{}
+
 def main() -> IO(Unit):
   do IO<Unit>:
     environment:Result<&1,&1,U32 & String,String> <- IO.get_env("ENTANGLE_WINDOW_MODE")
-    +replay:Bool = App.is_replay(App.mode(environment))
+    +replay:Bool = replay_mode(environment)
     workers:U32 <- IO.thread_count()
     IO.print("{\"schema\":1,\"kind\":\"config\",\"mode\":" ++ Out.quote(Bool.pick(String,replay,"replay","live")) ++ ",\"workers\":" ++ U32.show(workers) ++ ",\"warmup_completed\":30,\"minimum_steady_completed\":120,\"minimum_live_steady_ticks\":8,\"max_attempts\":3000,\"deadline_ms\":60000,\"frame_slots\":1,\"present_mode\":\"FIFO\",\"initial_camera\":\"Camera.initial\",\"extent\":[640,480]}")
-    result:V.VkResult(Evidence) <- V.Entry.with(Evidence,entry => run(entry,replay))
-    live_result:V.VkResult(U32) <- V.debug_live_objects()
-    live:U32 <- V.or_exit(U32,live_result)
-    emitted(result,live)
+    scoped:V.VkResult(Evidence) & U32 <- Scope.with(Evidence,entry => run(entry,replay))
+    finished(scoped)

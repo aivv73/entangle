@@ -166,3 +166,25 @@ def Laws.measurement_push_preserves_draws(c,bytes):
 def Laws.measurement_draw_preserves_pushes(c):
   match c:
     case Counts.Counters{w,b,p,pb,d,s}:{==}
+
+def Laws.time_ready(now,due):
+  {==}
+
+def Laws.time_next_due(now,interval):
+  {==}
+
+def Laws.input_close(rest,camera):
+  match camera:
+    case None{}:{==}
+    case Some{value}:{==}
+
+def Laws.input_escape(rest,camera):
+  match camera:
+    case None{}:{==}
+    case Some{value}:{==}
+
+def Laws.input_drain(A,rebuild,pending):
+  {==}
+
+def Laws.input_snapshot(A,rebuild,pending,camera):
+  {==}

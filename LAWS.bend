@@ -1,3 +1,5 @@
+import ./src/time.bend as Time
+import ./src/input.bend as Input
 import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
@@ -240,3 +242,37 @@ law measurement_push_preserves_draws:
 law measurement_draw_preserves_pushes:
   for c: Counts.Counters
   {Counts.push_count(Counts.draw(c)) == Counts.push_count(c) : U32}
+
+
+law time_ready:
+  for now:Nat
+  for due:Nat
+  {Time.ready(now,due) == Nat.is_ge(now,due) : Bool}
+
+law time_next_due:
+  for now:Nat
+  for interval:Nat
+  {Time.next_due(now,interval) == Nat.add(now,interval) : Nat}
+
+law input_close:
+  for rest:List<Event>
+  for camera:Maybe<Input.Camera>
+  {Input.events(Close{} <> rest,camera) == None{} : Maybe<Input.Camera>}
+
+law input_escape:
+  for rest:List<Event>
+  for camera:Maybe<Input.Camera>
+  {Input.events(Key{27,True{}} <> rest,camera) == None{} : Maybe<Input.Camera>}
+
+law input_drain:
+  for -A:Type
+  for rebuild:List<Event> -> A
+  for pending:List<Event>
+  {Input.drain(A,rebuild,pending) == rebuild([]) : A}
+
+law input_snapshot:
+  for -A:Type
+  for rebuild:List<Event> -> A
+  for pending:List<Event>
+  for camera:Maybe<Input.Camera>
+  {Input.snapshot(A,rebuild,pending,camera) == (Input.events(pending,camera),rebuild([])) : Maybe<Input.Camera> & A}
