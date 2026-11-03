@@ -331,6 +331,11 @@ The [frame-order contract](docs/frame-order.md) defines the E2 phase sequence an
 distinguishes it from the current demonstration loop. Fixed-timestep scheduling
 and global-transform propagation remain unimplemented.
 
+The [schedule-visibility reference](docs/schedule-visibility.md) defines when
+Bendvy publishes structural commands and how removal notices reach readers and
+expire. It distinguishes dependency semantics from the current scene, which has
+no removal producer or reader.
+
 `examples/scene-window-app.bend` owns concrete scene state, mesh, camera projection,
 observation, drawing, retention, and verification. `examples/scene-window.bend`
 owns executable modes and the interactive loop. `src/app.bend` owns the Vulkan

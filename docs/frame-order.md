@@ -25,8 +25,9 @@ without producing a drawable frame.
 4. **Apply deferred changes.** Apply outstanding structural changes from the
    simulation and update work before global transforms or extraction read the
    world. This is the final required boundary, not a prohibition on earlier
-   dependency-required Bendvy barriers. Detailed removal-event visibility and
-   retention belong to the schedule-visibility task.
+   dependency-required Bendvy barriers. The [schedule-visibility contract](schedule-visibility.md)
+   defines publication, removal notices, and retention. A removal consumer sees
+   published notices when its invocation starts after the relevant barrier.
 5. **Update global transforms.** Resolve world-space transforms from the committed
    component and hierarchy state. Finish propagation before extraction, so drawing
    data cannot combine a new local transform with a stale ancestor transform.
@@ -112,8 +113,10 @@ The current implementation has one frame in flight.
 
 This definition completes only the frame-order item in the
 [E2 roadmap](../ROADMAP_updated_v6_EN.md#e2--app-plugins-and-the-game-loop).
-Schedule and removal-event semantics, the sequential step kernel, fixed-timestep
-policy, headless execution, and the second application remain separate tasks.
+The [schedule-visibility contract](schedule-visibility.md) separately defines
+structural publication and removal-notice semantics. The sequential step kernel,
+fixed-timestep policy, headless execution, and the second application remain
+separate tasks.
 The [static module slots](../src/modules.bend) remain startup-only.
 
 The current-path descriptions were checked against the linked source files.

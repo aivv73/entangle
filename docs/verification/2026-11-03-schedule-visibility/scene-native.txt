@@ -1,0 +1,10 @@
+before-tick entities=0 admitted=0
+tick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+Shared mesh scene verified across 8 ticks.
