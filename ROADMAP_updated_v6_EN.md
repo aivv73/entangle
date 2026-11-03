@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E2 completion and the interactive mesh playground
+**Revision:** 6 · November 3, 2026 · updated for E2 completion and E3 checker selection
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3, the production upload-range guarantee, is next. E3–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is in progress. The existing upload-range checker is selected; its universal range proof and integration into Entangle's upload paths remain open [S38]. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -83,7 +83,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** start E3 by auditing the existing upload-range checker and arithmetic laws. Select the exact production function, define its U64 preconditions, and prove that every accepted range lies within the buffer without arithmetic overflow.
+**Next action:** formalize the U64 contract for the selected `Core.subrange_contains` and prove containment for arbitrary accepted inputs. Reuse the existing arithmetic proofs, then connect this exact checker to Entangle's production upload paths [S38].
 
 ---
 
@@ -181,7 +181,7 @@ Reuse `bend-collections` for the required arithmetic/containers. Bring in math a
 | E0 | Library separated from `bend-voxel`; clean-checkout verifier and independent window example passed; README updated | Complete |
 | E1 | Bendvy manages 100 rendered objects with verified window behavior and recorded baseline measurements | Complete |
 | E2 | Two applications use the public API; a step contract and sequential reference are defined | Complete; mesh playground, headless execution, and runtime evidence recorded |
-| E3 | The production upload checker has a proven contract | Next; first practical upload guarantee |
+| E3 | The production upload checker has a proven contract | In progress; checker selected, universal proof and engine integration open |
 | E4 | Models, textures, materials, and an interactive scene | Assets and scenes |
 | E5 | Persistent RenderScene, change-driven updates, reproducible alpha | `v0.1-alpha` |
 | E6 | Small render graph with verifiable pass ordering | After alpha |
@@ -357,9 +357,19 @@ This completes the offscreen public-API rendering task. The separate window inte
 
 For any accepted `offset`, `length`, and `capacity`, the mathematical range `[offset, offset + length)` lies within the buffer. Machine-arithmetic overflow cannot turn invalid input into valid input.
 
+### Checker selection, November 3, 2026
+
+Reuse [`Core.subrange_contains(capacity, offset, length)`](deps/bend-vulkan/src/core.bend). Its unsigned comparisons implement `offset <= capacity` and `length <= capacity - offset`. The difference uses wrapping addition and negation. When the first condition holds, the difference is exact. The checker does not compute `offset + length` during validation. No replacement checker is needed [S38].
+
+`W.U64{lo, hi}` denotes `lo + 2^32 * hi`. All limb pairs are valid unsigned values. Acceptance must establish the range bounds without a caller-supplied no-overflow assumption. An actual upload also requires an accurate capacity for the target storage. The formal contract remains to be written.
+
+The existing arithmetic proofs establish modular addition and negation and provide packed-word comparison lemmas. The four upload-range laws prove concrete boundary cases. The missing universal proof must connect unsigned `Core.size_less`, exact subtraction under the accepted bound, and containment for this checker [S38].
+
+The dependency's [staging API](deps/bend-vulkan/src/upload.bend) already checks source and destination ranges with this function. Entangle's [offscreen](src/scene-render.bend) and [window](src/scene-window.bend) uploads call `Device.write_memory` directly. Those paths also multiply sizes in U32 before widening to U64. Integration must address that earlier truncation risk and prevent ordinary API bypass. Native bounds checks remain a separate safeguard [S38].
+
 ### Tasks
 
-- [ ] Review existing arithmetic laws and select an existing checker if its contract is sufficient. Do not duplicate a proven function just to satisfy a new milestone.
+- [x] Review existing arithmetic laws and select an existing checker if its contract is sufficient. Selected `Core.subrange_contains`; reuse its implementation and the existing arithmetic proofs [S38].
 - [ ] Specify the U64 representation and preconditions; use a check without unsafe addition, such as `offset <= capacity`, followed by `length <= capacity - offset`.
 - [ ] Prove the property for arbitrary accepted input, not only for the sizes of one scene.
 - [ ] Integrate this exact function into the production upload path; prevent the engine's ordinary API from bypassing the check.
@@ -746,13 +756,13 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** begin E3 with the production upload-range checker and its existing arithmetic laws. E0–E2 are complete. E3 must connect an arbitrary-input range proof to the actual upload path and demonstrate rejection of a controlled contract violation. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** specify and prove the arbitrary-input range contract for the selected `Core.subrange_contains`, then integrate it into Entangle's uploads [S38]. E0–E2 are complete. E3 still requires production enforcement, boundary and ABI verification, rejection of a controlled contract violation, and the resource-lifecycle work listed above. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
 
 ---
 
 ## Sources and bases for decisions
 
-S1–S13 and the historical E0 evidence are carried forward from revision 3: its statuses are based on the logs/commits listed there. New sources S14–S22 were checked for revision 4, dated November 2, 2026. In revision 5, the independent window example's status was confirmed through the published README/repository page [S23]; there was no independent local run or clean-checkout gate at that time. Revision 6 adds the results of the actual clean-checkout gate and window verifier [S24]. The E1 updates record the native dependency baseline, scene extraction, rendering, window behavior, and measurements [S25–S30]. E2 evidence covers App extraction through the second application [S31–S37]. This update reconciles committed sources and recorded results through `2faa879`; it does not claim fresh runtime execution. External sources S1–S23 were not rechecked.
+S1–S13 and the historical E0 evidence are carried forward from revision 3: its statuses are based on the logs/commits listed there. New sources S14–S22 were checked for revision 4, dated November 2, 2026. In revision 5, the independent window example's status was confirmed through the published README/repository page [S23]; there was no independent local run or clean-checkout gate at that time. Revision 6 adds the results of the actual clean-checkout gate and window verifier [S24]. The E1 updates record the native dependency baseline, scene extraction, rendering, window behavior, and measurements [S25–S30]. E2 evidence covers App extraction through the second application [S31–S37]. E0–E2 status reflects committed sources and recorded results through `2faa879`. The E3 review adds source inspection and standard proof checks at `7043fa6` [S38], without fresh native runtime execution. External sources S1–S23 were not rechecked.
 
 The R0–R4 architectural decisions are our design synthesis. External papers establish the methods described in the table within their own environments, not the compatibility, correctness, or speed of a Bend implementation. Sources on mutable branches require a commit/hash at implementation time; an access date does not replace a pin. Third-party speedup figures have not been imported into our engine's criteria.
 
@@ -841,4 +851,8 @@ The R0–R4 architectural decisions are our design synthesis. External papers es
 
 - [S37] Commit `45fc1de` adds the [mesh playground executable](examples/mesh-playground.bend), [content](examples/mesh-playground-content.bend), [retained ECS application](src/mesh-playground.bend), and [control logic](src/mesh-control.bend). The [verification record](docs/verification/2026-11-03-mesh-playground/README.md), [proof log](docs/verification/2026-11-03-mesh-playground/proof.log), [real ECS results](docs/verification/2026-11-03-mesh-playground/ecs.log), [window results](docs/verification/2026-11-03-mesh-playground/window.log), and [input replay](docs/verification/2026-11-03-mesh-playground/replay-live.log) establish selective player movement, preserved static state, reset, bounded catch-up, focus clearing, camera controls, resizing, and clean exit. Ordinary untraced window runs and the original consumers' checks also passed. Evidence is for the available Linux X11/Vulkan runtime, using synthetic input delivered to the real X11 server. It does not establish other GPU backends, concurrency, or speedup. Commit `2faa879` adds the recorded demo to the README.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 is next; E3–E7 and R0–R4 remain incomplete.
+### Entangle E3 checker review
+
+- [S38] Read-only source review and proof checks on November 3, 2026, at Entangle `7043fa6b76edb50b43a7f9a81e5f5116ecdea235`, bend-vulkan `a144f7dd4fb4835ca3d5ce17350fc850de049038`, and bend-collections `bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c`. Sources are the [existing checker](deps/bend-vulkan/src/core.bend), [staging callers](deps/bend-vulkan/src/upload.bend), [range laws](deps/bend-vulkan/LAWS.bend), [range proofs](deps/bend-vulkan/PROOF.bend), [U64 specification](deps/bend-vulkan/deps/bend-collections/spec/math/u64.bend), [arithmetic lemmas](deps/bend-vulkan/deps/bend-collections/proofs/math/u64/u64.bend), and [arithmetic contract proofs](deps/bend-vulkan/deps/bend-collections/proofs/math/proof.bend). `bend PROOF.bend` passed from both the Entangle and bend-vulkan roots. From the bend-collections root, `bend proofs/math/u64/u64.bend` and `bend proofs/math/proof.bend` also passed. Each command exited with code `0` and reported `ALL PROOFS CHECK`. These were standard checks without `--verdict`. The review selected an existing implementation without code changes. It did not add the universal accepted-range theorem, integrate the checker into Entangle, or rerun native uploads.
+
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection is complete [S38]. E3–E7 and R0–R4 remain incomplete.
