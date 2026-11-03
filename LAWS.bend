@@ -1,3 +1,4 @@
+import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import Base
@@ -229,3 +230,13 @@ law render_word_matrix_layout:
 law render_float_roundtrip:
   for +value:F32
   {Render.float_word(Render.float_bits(value)) == value : F32}
+
+
+law measurement_push_preserves_draws:
+  for c: Counts.Counters
+  for bytes: U32
+  {Counts.draw_count(Counts.push(c,bytes)) == Counts.draw_count(c) : U32}
+
+law measurement_draw_preserves_pushes:
+  for c: Counts.Counters
+  {Counts.push_count(Counts.draw(c)) == Counts.push_count(c) : U32}

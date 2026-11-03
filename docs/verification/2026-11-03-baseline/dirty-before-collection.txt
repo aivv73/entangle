@@ -1,0 +1,10 @@
+ M LAWS.bend
+ M PROOF.bend
+ M src/scene-render.bend
+ M src/scene-window.bend
+?? docs/verification/2026-11-03-baseline/
+?? examples/scene-window-baseline.bend
+?? src/baseline-output.bend
+?? src/measurement-counters.bend
+?? src/scene-diagnostics.bend
+?? tools/baseline-collect.bend

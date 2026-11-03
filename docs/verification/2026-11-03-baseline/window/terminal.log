@@ -1,0 +1,10 @@
+Native float-word bits verified including signed zero, subnormal, infinity and NaN payloads
+Validation Warning: [ VALIDATION-SETTINGS ] | MessageID = 0x7f1922d7
+vkCreateInstance(): Information with the layer settings provided:
+- Application is using deprecated "enables" (VK_LAYER_ENABLES) layer settings.
+  Deprecated settings and new settings cannot be mixed, and deprecated ones take precedence. Consider only using the new settings:
+  Deprecated: VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT | New: "validate_sync" (VK_LAYER_VALIDATE_SYNC=1)
+
+
+window-tick=1 draws=100 ordered-bits=956920501 world/inspector=preserved
+Window terminal Action cleanup verified; live Vulkan objects: 0

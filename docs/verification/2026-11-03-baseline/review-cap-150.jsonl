@@ -1,0 +1,2 @@
+{"schema":1,"kind":"config","mode":"replay","workers":1,"warmup_completed":30,"minimum_steady_completed":120,"minimum_live_steady_ticks":8,"max_attempts":3000,"deadline_ms":60000,"frame_slots":1,"present_mode":"FIFO","initial_camera":"Camera.initial","extent":[640,480]}
+{"schema":1,"kind":"terminal","status":"invalid","partial_counters":null,"reason":"baseline attempt capacity exhausted; partial counters unavailable; repeat invalid","live_after_cleanup":0}

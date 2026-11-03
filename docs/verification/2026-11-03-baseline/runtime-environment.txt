@@ -1,0 +1,4 @@
+XDG_SESSION_TYPE=wayland
+WAYLAND_DISPLAY=wayland-1
+DISPLAY=:1
+LD_LIBRARY_PATH=/opt/t3code-nightly-bin/usr/lib

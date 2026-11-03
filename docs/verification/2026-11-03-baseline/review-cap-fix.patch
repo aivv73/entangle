@@ -1,0 +1,34 @@
+diff --git a/docs/verification/2026-11-03-baseline/measured-collector.bend b/examples/scene-window-baseline.bend
+index 6440131..9cb1a65 100644
+--- a/docs/verification/2026-11-03-baseline/measured-collector.bend
++++ b/examples/scene-window-baseline.bend
+@@ -193,15 +193,27 @@ def continue(done:Bool,run:Run,replay:Bool,next:Run -> V.Action(Evidence)) -> V.
+         run:Run <- step(run,replay)
+         next(run)
+ 
++def capacity_result(done:Bool,run:Run) -> V.Action(Evidence):
++  match done:
++    case True{}:
++      Run{renderer,state,samples,attempt,accepted,ticks,start,startup,deadline} = run
++      finish(renderer,samples,startup,attempt,accepted,ticks)
++    case False{}:IO.pure(V.VkResult(Evidence),Fail{(1,"baseline attempt capacity exhausted; partial counters unavailable; repeat invalid")})
++
++def quota_met(accepted:U32,ticks:U32,replay:Bool) -> Bool:
++  U32.is_ge(accepted,151) && (replay || U32.is_ge(ticks,8))
++
+ def loop(remaining:Nat,run:Run,+replay:Bool) -> V.Action(Evidence):
+   match remaining:
+-    case 0n:IO.pure(V.VkResult(Evidence),Fail{(1,"baseline attempt capacity exhausted; partial counters unavailable; repeat invalid")})
++    case 0n:
++      Run{renderer,state,samples,attempt,+accepted,+ticks,start,startup,deadline} = run
++      capacity_result(quota_met(accepted,ticks,replay),Run{renderer,state,samples,attempt,accepted,ticks,start,startup,deadline})
+     case 1n+rest:
+       Run{renderer,state,samples,attempt,+accepted,+ticks,start,startup,+deadline} = run
+       do V.Action<Evidence>:
+         +now:Nat <- V.Action.lift(Nat,IO.now())
+         R.require(Nat.is_lt(now,deadline),"baseline deadline exceeded; partial counters unavailable; repeat invalid")
+-        continue(U32.is_ge(accepted,151) && (replay || U32.is_ge(ticks,8)),Run{renderer,state,samples,attempt,accepted,ticks,start,startup,deadline},replay,next => loop(rest,next,replay))
++        continue(quota_met(accepted,ticks,replay),Run{renderer,state,samples,attempt,accepted,ticks,start,startup,deadline},replay,next => loop(rest,next,replay))
+ 
+ def validate_replay(state:App.State) -> V.Action(App.State):
+   App.State{app,inspector,baseline,+rows,+draws,+held,+saved,+tick,due} = state

@@ -1,0 +1,32 @@
+{
+  "repeats": 10,
+  "complete": 10,
+  "zero_live_objects": 10,
+  "live_objects_before_close": [
+    36
+  ],
+  "steady_ticks": [
+    8,
+    8,
+    8,
+    8,
+    8,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "attempts": [
+    294,
+    304,
+    297,
+    288,
+    299,
+    151,
+    151,
+    151,
+    151,
+    151
+  ]
+}

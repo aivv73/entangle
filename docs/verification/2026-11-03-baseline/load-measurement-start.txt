@@ -1,0 +1,20 @@
+ 07:29:24 up 12:43,  1 user,  load average: 0.38, 1.18, 1.40
+12
+    PID COMMAND         %CPU %MEM
+   2922 helium          19.6  1.7
+  19179 vesktop         15.7  0.8
+   2382 niri            11.9  0.8
+   2874 helium          11.7  1.6
+ 303327 helium          10.0  1.7
+  90023 t3code           5.0  1.1
+  19993 helium           5.0  1.8
+  89971 t3code           3.9  1.0
+   2533 ThroneCore       2.3  0.3
+ 302101 codex            2.2  1.4
+  90060 t3code           2.1  1.0
+  19231 vesktop          1.8  0.9
+   7198 Telegram         1.2  2.9
+  89924 t3code           1.1  0.8
+  19274 vesktop          1.1  1.8
+   2443 noctalia         1.1  1.0
+   2436 Throne           0.6  0.3

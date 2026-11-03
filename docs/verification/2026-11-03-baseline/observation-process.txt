@@ -1,0 +1,369 @@
+2026-11-03T03:19:11.920367560Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00  0.0 R<   -                                    scene-window-ba
+5595029 0 15
+rchar: 392753
+wchar: 478
+syscr: 107
+syscw: 13
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.029796636Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 83.3 R<   -                                    scene-window-ba
+112632987 12436 108
+rchar: 960688
+wchar: 970
+syscr: 916
+syscw: 46
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.142710973Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 91.3 R<l  -                                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+219946192 29880 130
+rchar: 960987
+wchar: 1197
+syscr: 917
+syscw: 61
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.250525169Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 70.5 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+258732513 59609 184
+rchar: 972959
+wchar: 2709
+syscr: 921
+syscw: 86
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.360664527Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 62.2 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+283484503 59609 215
+rchar: 972959
+wchar: 4269
+syscr: 921
+syscw: 101
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.470848796Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 55.3 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+320998737 74860 243
+rchar: 972959
+wchar: 5725
+syscr: 921
+syscw: 115
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.584574134Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 50.7 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+343507531 74860 275
+rchar: 972959
+wchar: 7389
+syscr: 921
+syscw: 131
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.697780504Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 50.0 R<l  -                                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+397451131 137259 300
+rchar: 972959
+wchar: 8637
+syscr: 921
+syscw: 143
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.807857418Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:00 00:00:00 47.1 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+421155270 219887 333
+rchar: 972959
+wchar: 10301
+syscr: 921
+syscw: 159
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:12.921678867Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 45.5 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+470753616 219887 359
+rchar: 972959
+wchar: 11653
+syscr: 921
+syscw: 172
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.035155338Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 43.7 R<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:00 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:00 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:00 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:00 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+496174240 219887 391
+rchar: 972959
+wchar: 13317
+syscr: 921
+syscw: 188
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.148241500Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 43.0 R<l  -                                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+544067999 274720 414
+rchar: 972959
+wchar: 14461
+syscr: 921
+syscw: 199
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.260878681Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 41.4 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+571508103 274720 445
+rchar: 972959
+wchar: 16125
+syscr: 921
+syscw: 215
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.371378592Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 40.4 R<l  -                                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+599250272 302121 478
+rchar: 972959
+wchar: 17685
+syscr: 921
+syscw: 230
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.483691540Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 40.1 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+642945361 311769 504
+rchar: 972959
+wchar: 19037
+syscr: 921
+syscw: 243
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.591563921Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 39.2 R<l  -                                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+664993118 311769 536
+rchar: 972959
+wchar: 20701
+syscr: 921
+syscw: 259
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.701819644Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 39.6 R<l  -                                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+719737972 332569 561
+rchar: 972959
+wchar: 21949
+syscr: 921
+syscw: 271
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.813139009Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:01 00:00:00 38.4 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+740942067 361458 593
+rchar: 972959
+wchar: 23613
+syscr: 921
+syscw: 287
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:13.924906516Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 39.3 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+793059199 361458 616
+rchar: 972959
+wchar: 24757
+syscr: 921
+syscw: 298
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:14.032822900Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 38.2 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:01 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:01 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:01 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:01 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+819794930 361458 649
+rchar: 972959
+wchar: 26525
+syscr: 921
+syscw: 315
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:14.144953756Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 38.1 R<l  -                                    scene-window-ba
+ 318867  318882       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:02 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:02 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:02 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+859120773 382104 674
+rchar: 972959
+wchar: 27773
+syscr: 921
+syscw: 327
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:14.255168339Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 37.1 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:02 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:02 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:02 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+878924541 382104 709
+rchar: 972959
+wchar: 29645
+syscr: 921
+syscw: 345
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:14.366173040Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 36.3 S<l  x64_sys_poll.cold                    scene-window-ba
+ 318867  318882       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+ 318867  318883       00:02 00:00:00  0.0 S<l  futex_wait                           [vkcf] Analysis
+ 318867  318885       00:02 00:00:00  0.0 S<l  futex_wait                           [vkrt] Analysis
+ 318867  318886       00:02 00:00:00  0.0 S<l  futex_wait                           [vkps] Update
+ 318867  318888       00:02 00:00:00  0.0 S<l  futex_wait                           scene-window-ba
+903236590 382104 741
+rchar: 972959
+wchar: 31309
+syscr: 921
+syscw: 361
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+2026-11-03T03:19:14.479355732Z
+    PID     TID     ELAPSED     TIME %CPU STAT WCHAN                                COMMAND
+ 318867  318867       00:02 00:00:00 38.5 R<   -                                    scene-window-ba
+1000519611 766330 845
+rchar: 972959
+wchar: 132682
+syscr: 921
+syscw: 393
+read_bytes: 0
+write_bytes: 94208
+cancelled_write_bytes: 0

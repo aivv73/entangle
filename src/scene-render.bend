@@ -1,4 +1,6 @@
 import Base
+import ./measurement-counters.bend as Count
+import ./scene-diagnostics.bend as Diag
 import ./components.bend as C
 import ./scene-draw.bend as Draw
 import ./scene-matrix.bend as M
@@ -203,14 +205,38 @@ def with(config:Config,mesh:Mesh,body:Renderer -> V.Action(Unit)) -> V.Action(Un
 def transition(+command:V.CommandBuffer,image:V.ImageHandle,aspect:U32,old:U32,new:U32,src_stage:U32,dst_stage:U32,src:U32,dst:U32) -> V.Action(Unit):
   V.CommandBuffer.pipeline_barrier(command,src_stage,dst_stage,[],[],[V.ImageMemoryBarrier{image,V.ImageSubresourceRange{aspect,0,1,0,1},old,new,src,dst}])
 
-def draw_items(+command:V.CommandBuffer,+camera:M.Mat4,+count:U32,items:List<&2,Draw.DrawItem>) -> V.Action(Unit):
+def sized_word(word:U32,pair:List<U32> & U32) -> List<U32> & U32:
+  (rest,bytes) = pair
+  (word <> rest,U32.add(bytes,4))
+
+def payload_size(words:List<U32>) -> List<U32> & U32:
+  match words:
+    case []:([],0)
+    case word <> rest:
+      sized_word(word,payload_size(rest))
+
+def draw_item(+command:V.CommandBuffer,+count:U32,+on:Bool,+counters:Count.Counters,pair:List<U32> & U32) -> V.Action(Count.Counters):
+  (payload,bytes) = pair
+  do V.Action<Count.Counters>:
+    V.CommandBuffer.push_constants(command,payload)
+    +counters:Count.Counters = Bool.pick(Count.Counters,on,Count.push(counters,bytes),counters)
+    V.CommandBuffer.draw_indexed(command,V.IndexedDraw{count,1,0,V.BaseVertex{0},0})
+    +counters:Count.Counters = Bool.pick(Count.Counters,on,Count.draw(counters),counters)
+    return counters
+
+def draw_items_counted(+command:V.CommandBuffer,+camera:M.Mat4,+count:U32,items:List<&2,Draw.DrawItem>,+on:Bool,+counters:Count.Counters) -> V.Action(Count.Counters):
   match items:
-    case []:V.Action.pure(Unit,Unit{})
+    case []:V.Action.pure(Count.Counters,counters)
     case Draw.DrawItem{t,_} <> rest:
-      do V.Action<Unit>:
-        V.CommandBuffer.push_constants(command,M.matrix_words(M.multiply(camera,M.model(t))))
-        V.CommandBuffer.draw_indexed(command,V.IndexedDraw{count,1,0,V.BaseVertex{0},0})
-        draw_items(command,camera,count,rest)
+      do V.Action<Count.Counters>:
+        counters:Count.Counters <- draw_item(command,count,on,counters,payload_size(M.matrix_words(M.multiply(camera,M.model(t)))))
+        draw_items_counted(command,camera,count,rest,on,counters)
+
+
+def draw_items(command:V.CommandBuffer,camera:M.Mat4,count:U32,items:List<&2,Draw.DrawItem>) -> V.Action(Unit):
+  do V.Action<Unit>:
+    counters:Count.Counters <- draw_items_counted(command,camera,count,items,False{},Count.zero())
+    return Unit{}
 
 def reusable(values:List<U32>) -> List<&2,U32>:
   match values:

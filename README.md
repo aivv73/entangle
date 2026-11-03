@@ -292,5 +292,35 @@ Action error after a frame to verify scope cleanup. Both are verification modes
 of the same executable and rendering path.
 
 See [the window verification record](docs/window-verification.md) for the
-verified environment, API contract, proof scope, and limitations. Timings and
-performance counters remain a separate E1 task.
+verified environment, API contract, proof scope, and limitations.
+
+
+## Record the native window baseline
+
+The separate bounded collector uses the same renderer and indexed-draw traversal.
+It records exact CPU spans, GPU timestamps, successful host mesh writes, accepted
+push payloads, indexed draws, and submissions. The normal window API and controls
+remain available with diagnostics off.
+
+```sh
+bend examples/scene-window-baseline.bend -o build/scene-window-baseline
+bend tools/baseline-collect.bend -o build/baseline-collect
+DISPLAY=":$window_display_number" timeout --signal=TERM --kill-after=5s 600s \
+  ./build/baseline-collect +RTS --threads 1 --gpu off
+```
+
+Use the owned rootful Xwayland setup above and stop it after collection. Preserve
+`docs/verification/2026-11-03-baseline` before rerunning because the driver writes
+its named output files there. It runs five fresh live and five fresh replay
+processes in alternating order. Each process has an external watchdog. A failed
+repeat stops collection and retains its output and status.
+
+The live collector preserves the 250 ms ECS schedule and extends steady collection
+until eight actual live ticks complete. Replay retains tick-one drawing while the
+real world is at tick two. Both use 30 completed warm-up frames, at least 120 steady
+frames, a fixed initial camera, a 640 by 480 window, and one frame slot.
+
+See [the measured baseline](docs/baseline-measurements.md) for actual results,
+exact timing and counter boundaries, provenance, limitations, raw evidence, native
+validation, and complete rerun commands. These instrumented values make no speedup
+claim. Push payload bytes are separate from host mesh writes and physical traffic.

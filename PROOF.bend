@@ -1,3 +1,4 @@
+import ./src/measurement-counters.bend as Counts
 import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import ./deps/bend-vulkan/PROOF.bend as Vulkan
@@ -156,3 +157,12 @@ def Laws.render_word_matrix_layout(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p):
 def Laws.render_float_roundtrip(value):
   match value:
     case F32{bits}:{==}
+
+
+def Laws.measurement_push_preserves_draws(c,bytes):
+  match c:
+    case Counts.Counters{w,b,p,pb,d,s}:{==}
+
+def Laws.measurement_draw_preserves_pushes(c):
+  match c:
+    case Counts.Counters{w,b,p,pb,d,s}:{==}

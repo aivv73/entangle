@@ -1,0 +1,16 @@
+{
+  "attempts": 755,
+  "world_ticks": [
+    2
+  ],
+  "draw_ticks": [
+    1
+  ],
+  "drawing_digests": [
+    956920501
+  ],
+  "retained_digests": [
+    956920501
+  ],
+  "all_retained_equal": true
+}

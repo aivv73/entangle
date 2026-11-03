@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "claim": "Instrumented bounded native-window baseline on this host; no speedup claim",
+  "revision": "f4aea1fa7e18e06812fd5fbcef935bf08cc107e3",
+  "provenance": "uncommitted source; source.sha256 and tracked-source.patch; dependency pins unchanged",
+  "build": {"bend": "2.0.39", "clang": "23.1.4", "target": "x86_64-pc-linux-gnu", "optimization": "Bend native default -O3", "flags_evidence": "observed-clang-command.txt", "bend_gpu": "off", "threads": 1},
+  "workloads": {"live": "100 genuine ECS objects; initial tick one; original 250 ms schedule", "replay": "retained exact tick-one DrawList while genuine World is at tick two"},
+  "window": {"width": 640, "height": 480, "camera": "Camera.initial and App.tick_one_framing", "frame_slots": 1, "present_mode": "FIFO", "display": "owned rootful Xwayland 1280x1024 under niri Wayland; display 2"},
+  "limits": {"startup_completed": 1, "warmup_completed": 30, "minimum_steady_completed": 120, "minimum_live_steady_actual_ticks": 8, "max_total_attempts": 3000, "internal_deadline_ms": 60000, "external_timeout_seconds": 70, "external_kill_after_seconds": 5, "repeats_per_mode": 5, "order": "live1,replay1,live2,replay2,live3,replay3,live4,replay4,live5,replay5"},
+  "validation": "off in measured processes; separate native UI verification and measured-renderer replay with Khronos synchronization validation",
+  "instrumentation": {"cpu": "exact monotonic U64 clocks; available/unavailable metrics", "gpu": "two timestamps per completed command buffer; reset plus TOP before barriers and BOTTOM after present transition; read before command reset", "counters": "successful Entangle write_memory, push_constants, draw_indexed, submit_synced calls only", "overhead": null, "overhead_reason": "not measured against diagnostics-off executable; these are instrumented timings"},
+  "statistics": {"cpu": "exact integer nanoseconds", "gpu_raw": "raw U64 counter limbs, availability, valid bits, F32 period and duration bits, independent CPU completion bound", "gpu_summary": "F32 duration truncated to integer nanoseconds", "median": "middle order statistic, midpoint for even count", "p95": "nearest rank ceil(0.95*N)", "repeat_range": "median and min/max of the five repeat medians; no pooled primary comparison"},
+  "unavailable": {"change_collection": "not applicable; no separate collector", "RenderScene_update": "not applicable; no retained RenderScene", "visibility": "not applicable; no visibility pass", "packing_upload_preparation": "not separately measured; matrix packing in recording, mesh serialization in startup setup", "physical_upload_traffic": "not measured", "driver_internal_commands": "not measured", "physical_display_latency": "not measured", "GPU_parallel_compute": "not applicable; Bend GPU dispatch off", "memory_peak": "not measured; live object counts are snapshots"}
+}

@@ -1,0 +1,17 @@
+bend guide
+entire agent-help
+bend PROOF.bend
+bend tools/verify.bend
+bend tools/verify-window.bend -o build/verify-window
+Xwayland -displayfd 3 -geometry 1280x1024 -nolisten tcp 3>build/baseline-evidence/display >build/baseline-evidence/xwayland.log 2>&1
+DISPLAY=:2 timeout --signal=TERM --kill-after=5s 240s ./build/verify-window
+bend examples/scene-window-baseline.bend -o build/scene-window-baseline
+bend tools/baseline-collect.bend -o build/baseline-collect
+DISPLAY=:2 env -u VK_LAYER_ENABLES VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation VK_LAYER_VALIDATE_SYNC=1 ENTANGLE_WINDOW_MODE=replay timeout --signal=TERM --kill-after=5s 70s ./build/scene-window-baseline +RTS --threads 1 --gpu off
+DISPLAY=:2 timeout --signal=TERM --kill-after=5s 600s ./build/baseline-collect +RTS --threads 1 --gpu off
+
+Excluded system observation launched the live binary with the same RTS arguments and environment, sampling ps -L, /proc/PID/schedstat, /proc/PID/io every 100 ms, vmstat every second, and nvidia-smi every 200 ms.
+No perf or strace executable was available. No profiler ran during the ten reported repeats.
+
+All commands ran from /home/aivv/Документы/projects/entangle.
+The original successful collection used one startup attempt plus 3000 loop fuel. It is retained in exploratory-cap-boundary, excluded after the total-cap correction to 2999 loop fuel plus startup.
