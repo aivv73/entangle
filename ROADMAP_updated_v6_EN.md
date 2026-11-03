@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** implement mesh replacement with deferred destruction. The [proven upload boundary](docs/upload-range.md) is integrated into both production renderers [S39]. Native ABI, zero/max boundary, and exact transport-limit verification now pass within the recorded scope [S40].
+**Next action:** broaden resource-lifetime failure and retaining-reference coverage. [Whole-mesh replacement](docs/mesh-replacement.md) now works in both production renderers with deferred destruction and preservation on rejected candidates [S48]. The proven upload boundary and scoped ABI/transport checks remain integrated [S39, S40].
 
 ---
 
@@ -204,7 +204,7 @@ For each selected module, preserve its input limits and translate its values int
 | E0 | Library separated from `bend-voxel`; clean-checkout verifier and independent window example passed; README updated | Complete |
 | E1 | Bendvy manages 100 rendered objects with verified window behavior and recorded baseline measurements | Complete |
 | E2 | Two applications use the public API; a step contract and sequential reference are defined | Complete; mesh playground, headless execution, and runtime evidence recorded |
-| E3 | The production upload checker has a proven contract | In progress; universal proof and engine integration complete; remaining verification and resource lifecycle open |
+| E3 | The production upload checker has a proven contract | In progress; upload integration and mesh replacement complete; broader resource lifecycle open |
 | E4 | Models, textures, materials, and an interactive scene | Assets and scenes |
 | E5 | Persistent RenderScene, change-driven updates, reproducible alpha | `v0.1-alpha` |
 | E6 | Small render graph with verifiable pass ordering | After alpha |
@@ -429,10 +429,10 @@ Acceptance establishes numeric containment only. A native operation may impose s
 
 ### Resource lifecycle
 
-- [ ] Add mesh replacement with deferred destruction of the old resource.
+- [x] Add mesh replacement with deferred destruction of the old resource. Both production renderers share an owner-preserving transaction, paired atomic retirement, candidate rollback, and separate lifecycle collection. [Real Vulkan and X11 verification](docs/verification/2026-11-03-mesh-replacement/README.md) covers changed ranges/pixels, invalid preservation, completed-command retention, recording rejection, repeated empty transitions, and cleanup [S48].
 - [ ] Account for recorded commands, submissions, descriptors, and other retaining references, not just the completion of one GPU call.
 - [ ] Preserve native checks; check failures during recording, submission, reset, and partial preparation.
-- [ ] Document the next lifetime contract separately. A complete lifetime proof is not a hidden alpha requirement.
+- [x] Document the mesh lifetime contract and its [native trust boundary](docs/mesh-replacement.md) separately. Genuine OOM, partial preparation failure, cleanup failure, device loss, and broader descriptor-lifetime coverage remain open. A complete lifetime proof is not a hidden alpha requirement.
 
 The current backend distinguishes execution completion from releasing recorded-command references; this rule must survive the project split [S6].
 
@@ -826,7 +826,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** implement mesh replacement with deferred destruction. E0–E2 are complete. The universal proof, production upload enforcement, and scoped ABI/transport-boundary verification are complete within the [documented trust limits](docs/upload-range.md) [S39, S40]. E3 remains open for resource replacement and broader resource-lifecycle work. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** broaden resource-lifetime failure and retaining-reference coverage. E0–E2 are complete. The universal proof, production upload enforcement, scoped ABI/transport checks, and whole-mesh replacement are complete within their documented trust limits [S39, S40, S48]. E3 remains open for broader resource-lifecycle work. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
 
 ---
 
@@ -945,4 +945,8 @@ Reviewed November 3, 2026, using the installed Bend 2.0.39. The following are re
 - [S46] [`bend-parallel@0.1.0.0`](https://hub.bend-lang.com/0xeef3a8486d410ea6f25709aac90dbf40), hash `0xeef3a8486d410ea6f25709aac90dbf40`, files `scan.bend`, `histogram.bend`, and `sort.bend`. The local `sort.bend` import check exited with code `1`, reporting dependencies on unsafe code. The sources document `Array.fork` sharing outside the checker model, wrapping U32 scan sums, last-bucket clamping, and scratch buffers controlled by fork depth and bucket count. No native algorithm run or speedup was established here.
 - [S47] Deferred candidates: [Gralha image representation](https://hub.bend-lang.com/0x2c63b99c875a43494881cedcbf2f440f), [bolt 1.27.0.0](https://hub.bend-lang.com/0xe80b84e038766a5c0c16cf84a1d6b0cf), [cache 0.3.0.0](https://hub.bend-lang.com/0x1afe27789226a57428f7ceb2621e112e), [resources 0.1.0.0](https://hub.bend-lang.com/0x8ef64648a1ae4481382be5e5ce2a9fc8), [archive 0.5.1.0](https://hub.bend-lang.com/0xb03a6159aa2131a6271ae6f2503d02f4), and [storage 0.1.0.0](https://hub.bend-lang.com/0x50c218b3c125011f70b36a9eb33129ac). Published source and the corresponding [bend-kit documentation](https://github.com/paymog/bend-kit) were inspected for ownership and native dependencies. No Entangle integration, native library qualification, or resource-lifetime guarantee follows from that inspection.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], and scoped ABI/transport verification [S40] are complete under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. E3–E7 and R0–R4 remain incomplete.
+### Entangle E3 mesh replacement
+
+- [S48] [Mesh replacement contract](docs/mesh-replacement.md), [production transaction](src/scene-geometry.bend), and [verification record](docs/verification/2026-11-03-mesh-replacement/README.md), November 3, 2026, based at `d258fe3`. Both production APIs replace complete geometry and return the owner on rejection. Real offscreen readbacks and X11 captures cover replacement, preservation, ranges, repeated empty transitions, atomic recording rejection, native deferred destruction after completed submission, collection after reset, measured writes, and zero-object cleanup. Pure production-helper laws pass the root standard checker. Native implementation correctness and genuine failure paths remain outside that proof. No dependency, runtime parallelism, or performance claim changes are included.
+
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], and mesh replacement [S48] are complete under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. E3–E7 and R0–R4 remain incomplete.

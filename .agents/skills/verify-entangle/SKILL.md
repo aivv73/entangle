@@ -39,6 +39,7 @@ cleanup() {
     "$entangle_runtime/build/indexed-window" \
     "$entangle_runtime/build/window-evidence" \
     "$entangle_runtime/build/public-creation-window.log" \
+    "$entangle_runtime/build/replacement-window.log" \
     "$entangle_runtime/docs/verification/2026-11-03-mesh-playground" \
     "$entangle_runtime/docs/verification/2026-11-03-public-creation"; do
     if [ -e "$entangle_file" ] || [ -L "$entangle_file" ]; then
@@ -91,7 +92,7 @@ sha256sum "$entangle_evidence"/bin/* > "$entangle_evidence/binaries.sha256"
 cp "$entangle_evidence/bin/mesh-playground" "$entangle_runtime/build/indexed-window"
 ln -s "$entangle_evidence/mesh" "$entangle_runtime/build/window-evidence"
 ln -s "$entangle_evidence/mesh" "$entangle_runtime/docs/verification/2026-11-03-mesh-playground"
-Xwayland -displayfd 3 -geometry 1280x1024 -listen tcp -ac \
+Xwayland -noreset -displayfd 3 -geometry 1280x1024 -listen tcp -ac \
   3>"$entangle_evidence/display" >"$entangle_evidence/xwayland.log" 2>&1 &
 entangle_xwayland_pid=$!
 printf '%s\n' "$entangle_xwayland_pid" > "$entangle_evidence/display.pid"

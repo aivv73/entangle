@@ -20,7 +20,10 @@ def validate(frame:Pixels.Frame) -> IO(Unit):
 def main() -> IO(Unit):
   do IO<Unit>:
     +display:String <- IO.try(String,IO.get_env("DISPLAY"))
-    +pid:U32 <- IO.try(U32,Host.start("build/public-creation-window.log",True{}))
+    layers:String <- IO.try(String,IO.get_env("VK_INSTANCE_LAYERS"))
+    sync:String <- IO.try(String,IO.get_env("VK_LAYER_VALIDATE_SYNC"))
+    Check.assert(String.contains(layers,"VK_LAYER_KHRONOS_validation") && String.eq(sync,"1"),"Creation gate requires Khronos and synchronization validation")
+    +pid:U32 <- IO.try(U32,Host.start("build/public-creation-window.log",False{}))
     +id:U32 <- Existing.wait_window(300n,pid)
     IO.try(Unit,Host.control(id,2,0,0))
     +frame:Pixels.Frame <- WindowCheck.wait(pid,id,WindowCheck.Populated{640,480})

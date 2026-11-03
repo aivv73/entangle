@@ -36,9 +36,9 @@ cp "$entangle_evidence/bin/cube-window" "$entangle_runtime/build/indexed-window"
 rm "$entangle_runtime/build/window-evidence"
 ln -s "$entangle_evidence/cube" "$entangle_runtime/build/window-evidence"
 cd "$entangle_runtime"
-run cube-live timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=live "$entangle_evidence/bin/verify-window" live validation
-run cube-replay timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=replay "$entangle_evidence/bin/verify-window" replay validation
-run cube-terminal timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=terminal "$entangle_evidence/bin/verify-window" terminal validation
+run cube-live timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=live "$entangle_evidence/bin/verify-window" live plain
+run cube-replay timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=replay "$entangle_evidence/bin/verify-window" replay plain
+run cube-terminal timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=terminal "$entangle_evidence/bin/verify-window" terminal plain
 cp "$entangle_evidence/bin/mesh-playground" "$entangle_runtime/build/indexed-window"
 rm "$entangle_runtime/build/window-evidence"
 ln -s "$entangle_evidence/mesh" "$entangle_runtime/build/window-evidence"
@@ -46,6 +46,8 @@ run doctor-after-cube doctor
 ```
 
 - **Observe the cube results.** `cube-live.log` must report successive geometry movement, hidden ticks, and hidden Close. `cube-replay.log` must report exact camera resets, repeated resize, restored presentation, and Escape. The application log `cube/replay.log` must contain `replay-tick=1 world-tick=2 retained=exact` and `renderer recovered`. `cube/terminal.log` must report terminal Action cleanup with zero live objects. Keep the PPM files under `cube`.
+
+Here `plain` only prevents the helper from injecting deprecated `VK_LAYER_ENABLES`. The launch shell's `VK_INSTANCE_LAYERS` and `VK_LAYER_VALIDATE_SYNC=1` still enable Khronos validation and sync validation. Keep both inherited settings; do not run this recipe without them.
 
 ## Gotchas
 

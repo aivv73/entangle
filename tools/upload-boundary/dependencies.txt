@@ -45,6 +45,7 @@ deps/bend-vulkan/Vulkan.bend Device.allocate_command_buffer
 deps/bend-vulkan/Vulkan.bend Device.allocate_memory
 deps/bend-vulkan/Vulkan.bend Device.bind_buffer_memory
 deps/bend-vulkan/Vulkan.bend Device.bind_image_memory
+deps/bend-vulkan/Vulkan.bend Device.collect_retired
 deps/bend-vulkan/Vulkan.bend Device.create_buffer
 deps/bend-vulkan/Vulkan.bend Device.create_command_pool
 deps/bend-vulkan/Vulkan.bend Device.create_fence
@@ -58,6 +59,8 @@ deps/bend-vulkan/Vulkan.bend Device.create_semaphore
 deps/bend-vulkan/Vulkan.bend Device.create_shader_module
 deps/bend-vulkan/Vulkan.bend Device.create_timestamp_pool
 deps/bend-vulkan/Vulkan.bend Device.destroy_buffer
+deps/bend-vulkan/Vulkan.bend Device.destroy_command_pool
+deps/bend-vulkan/Vulkan.bend Device.destroy_fence
 deps/bend-vulkan/Vulkan.bend Device.destroy_query_pool
 deps/bend-vulkan/Vulkan.bend Device.destroy_shader_module
 deps/bend-vulkan/Vulkan.bend Device.free_memory

@@ -141,7 +141,7 @@ def canonical(imports:List<&2,Import>,+from:String,+files:List<&2,String>,+polic
         return Import{alias,target} <> tail
 
 def public() -> List<&2,String>:
-  ["Buffer","byte_length","capacity_for","capacity","handle","allocate","write","read","upload_new","retire","discard"]
+  ["Buffer","byte_length","capacity_for","capacity","handle","allocation","allocate","write","read","upload_new","retire","discard"]
 
 def approved(applies:Bool,+name:String,+next:String,+previous:String,+alias:String,+path:String,+policy:List<&2,String>,+from:String) -> IO(Unit):
   match applies:

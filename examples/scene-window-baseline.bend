@@ -161,14 +161,14 @@ def buffered(run:Run,start:D.Metric<&2,W.U64>,loop_start:D.Metric<&2,W.U64>) -> 
     return Run{renderer,state,buffer_spans(samples,span("evidence_checks_digest_initial_buffer",start,end),span("loop_through_initial_buffer",loop_start,end)),attempt,accepted,ticks,origin,startup,deadline}
 
 def record_sample(renderer:Win.Renderer,state:SceneApp.State,+samples:List<&2,Sample>,+attempt:U32,+accepted:U32,+ticks:U32,+start:D.Metric<&2,W.U64>,old_startup:D.Metric<&2,W.U64>,deadline:Nat,+replay:Bool,+spans:List<&2,D.Span>,render_start:D.Metric<&2,W.U64>,+loop_start:D.Metric<&2,W.U64>,+width:U32,+height:U32,+steps:Nat,dropped:Nat) -> V.Action(Run):
-  Win.Renderer{window,target,ranges,+probe} = renderer
+  Win.Renderer{window,target,resident,+probe} = renderer
   SceneApp.State{app,inspector,baseline,+rows,Draw.DrawList{+items},Draw.DrawList{+held},+saved,+tick,fixed} = state
   +ok = eligible(probe,width,height)
   do V.Action<Run>:
     +end:D.Metric<&2,W.U64> <- clock()
     Error.require(Check.drawing_equal(items,rows) && Check.drawing_equal(held,saved),"Baseline frame changed exact ordered drawing bits")
     +sample:Sample = Sample{attempt,phase(accepted),tick,Bool.pick(U32,replay,1,tick),SceneApp.digest(Bool.pick(List<&2,Draw.DrawItem>,replay,held,items),2166136261),SceneApp.digest(held,2166136261),width,height,probe,span("render_call_wall",render_start,end) <> span("loop_service_before_buffer",loop_start,end) <> spans,steps,dropped}
-    buffered(Run{Win.Renderer{window,target,ranges,probe},SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,fixed},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.pick(U32,ok && U32.is_gt(accepted,30),U32.from_nat(steps),0)),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
+    buffered(Run{Win.Renderer{window,target,resident,probe},SceneApp.State{app,inspector,baseline,rows,Draw.DrawList{items},Draw.DrawList{held},saved,tick,fixed},sample <> samples,U32.inc(attempt),U32.add(accepted,Bool.to_u32(ok)),U32.add(ticks,Bool.pick(U32,ok && U32.is_gt(accepted,30),U32.from_nat(steps),0)),start,startup(old_startup,accepted,start,end,ok),deadline},end,loop_start)
 
 def render(updated:Updated,renderer:Win.Renderer,snapshot:V.WindowSnapshot,+replay:Bool,samples:List<&2,Sample>,attempt:U32,+accepted:U32,ticks:U32,start:D.Metric<&2,W.U64>,startup:D.Metric<&2,W.U64>,deadline:Nat,poll:D.Span,loop_start:D.Metric<&2,W.U64>) -> V.Action(Run):
   Updated{SceneApp.State{app,inspector,baseline,+rows,+draws,+held,+saved,tick,fixed},spans,steps,dropped} = updated

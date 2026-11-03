@@ -83,6 +83,9 @@ ticks without opening a window. On success, it prints
 `Public instances completed two production ECS ticks.` See the
 [scene creation reference](docs/public-creation.md) for the API and its current limits.
 
+Both production renderers support [whole-mesh replacement](docs/mesh-replacement.md).
+Replacement returns the owner on rejection and defers old buffer destruction until native command references are released.
+
 ## Simulate without rendering
 
 Entangle can advance the same ECS world without a graphics stack. This lets you

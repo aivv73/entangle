@@ -382,3 +382,9 @@ def Laws.upload_conversion_exact(n,h):
       Equal.trans(Nat,Nat.add(U32.to_nat(U32.from_nat(n)),UploadNumeric.scale_binary(32n,0n)),Nat.add(U32.to_nat(U32.from_nat(n)),0n),U32.to_nat(U32.from_nat(n)),
         Equal.cong(Nat,Nat,x => Nat.add(U32.to_nat(U32.from_nat(n)),x),UploadNumeric.scale_binary(32n,0n),0n,upload_scale_zero(32n)),UploadNat.add_zero(U32.to_nat(U32.from_nat(n))))),
     UploadNat.eq_from_is_eq(U32.to_nat(U32.from_nat(n)),n,h))
+
+
+def Laws.geometry_install_accept(A,old,fresh):{==}
+def Laws.geometry_install_reject(A,old,fresh):{==}
+def Laws.geometry_pair_allocations(A,vertices,indices):{==}
+def Laws.geometry_empty_allocations(A):{==}

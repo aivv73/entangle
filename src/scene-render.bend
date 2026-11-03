@@ -1,5 +1,6 @@
 import Base
 import ./scene-buffer.bend as B
+import ./scene-geometry.bend as G
 import ./error.bend as Error
 import ./measurement-counters.bend as Count
 import ./scene-diagnostics.bend as Diag
@@ -22,12 +23,10 @@ type InputError is Data:
   InvalidTransform{item:U32}
 type Attachment is Data:
   Attachment{image:V.ImageHandle,memory:V.DeviceMemory,view:V.ImageView}
-type Buffers is Data:
-  Buffers{vertices:B.Buffer,indices:B.Buffer}
 type Resources is Data:
-  Resources{device:V.Device,command:V.CommandBuffer,fence:V.Fence,framebuffer:V.Framebuffer,pipeline:V.GraphicsPipeline,color:Attachment,depth:Attachment,geometry:Maybe<&2,Buffers>,stage:B.Buffer}
+  Resources{context:G.Context,command:V.CommandBuffer,fence:V.Fence,framebuffer:V.Framebuffer,pipeline:V.GraphicsPipeline,color:Attachment,depth:Attachment,stage:B.Buffer}
 type Renderer is Type:
-  Renderer{resources:Resources,config:Config,ranges:List<&2,Create.Range>,depth_offset:W.U64,used:Bool}
+  Renderer{resources:Resources,config:Config,resident:G.Resident,depth_offset:W.U64,used:Bool}
 
 def choose(value:Maybe<U32>,message:String) -> V.Action(U32):
   match value:
@@ -56,28 +55,6 @@ def preflight(+camera:M.Mat4,+ranges:List<&2,Create.Range>,items:List<&2,Draw.Dr
     case Draw.DrawItem{+t,C.MeshRef{+other}} <> rest:
       preflight_item(known(Create.resolve(ranges,other)),Create.transform_valid(t) && Create.matrix_finite(M.multiply(camera,M.model(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
 
-def word_bytes(+word:U32) -> List<&2,U32>:
-  [Core.word_byte(word,0),Core.word_byte(word,1),Core.word_byte(word,2),Core.word_byte(word,3)]
-
-def bytes(words:List<U32>) -> List<&2,U32>:
-  match words:
-    case []:[]
-    case word <> rest:List.append(&2,U32,word_bytes(word),bytes(rest))
-
-def vertex_words(v:Create.Vertex) -> List<U32>:
-  Create.Vertex{C.Vec3{x,y,z},C.Vec3{r,g,b}} = v
-  [F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(r),F32.bits(g),F32.bits(b)]
-
-def vertices_bytes(vertices:List<&2,Create.Vertex>) -> List<&2,U32>:
-  match vertices:
-    case []:[]
-    case v <> rest:List.append(&2,U32,bytes(vertex_words(v)),vertices_bytes(rest))
-
-def indices_bytes(indices:List<&2,U32>) -> List<&2,U32>:
-  match indices:
-    case []:[]
-    case i <> rest:List.append(&2,U32,word_bytes(i),indices_bytes(rest))
-
 def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,requirements:V.MemoryRequirements,flags:U32) -> V.Action(V.DeviceMemory):
   V.MemoryRequirements{size,_,bits} = requirements
   do V.Action<V.DeviceMemory>:
@@ -103,27 +80,18 @@ def attachment_view(a:Attachment) -> V.ImageView:
   Attachment{_,_,v} = a
   v
 
-def upload_geometry(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,+vertices:List<&2,Create.Vertex>,indices:List<&2,U32>) -> V.Action(Maybe<&2,Buffers>):
-  match indices:
-    case []:V.Action.pure(Maybe<&2,Buffers>,None{})
-    case +indices:
-      do V.Action<Maybe<&2,Buffers>>:
-        vb:B.Buffer <- B.upload_new(instance,physical,device,vk.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT(),vertices_bytes(vertices))
-        ib:B.Buffer <- B.upload_new(instance,physical,device,vk.VK_BUFFER_USAGE_INDEX_BUFFER_BIT(),indices_bytes(indices))
-        return Some{Buffers{vb,ib}}
-
-def geometry_barrier(command:V.CommandBuffer,buffers:Maybe<&2,Buffers>) -> V.Action(Unit):
+def geometry_barrier(command:V.CommandBuffer,buffers:Maybe<&2,G.Buffers>) -> V.Action(Unit):
   match buffers:
     case None{}:V.Action.pure(Unit,Unit{})
-    case Some{Buffers{vertices,indices}}:
+    case Some{G.Buffers{vertices,indices}}:
       vb = B.handle(vertices)
       ib = B.handle(indices)
       V.CommandBuffer.pipeline_barrier(command,vk.VK_PIPELINE_STAGE_HOST_BIT(),vk.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT(),[],[V.BufferMemoryBarrier{vb,W.zero(),Core.whole_size(),vk.VK_ACCESS_HOST_WRITE_BIT(),vk.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT()},V.BufferMemoryBarrier{ib,W.zero(),Core.whole_size(),vk.VK_ACCESS_HOST_WRITE_BIT(),vk.VK_ACCESS_INDEX_READ_BIT()}],[])
 
-def bind_geometry(+command:V.CommandBuffer,buffers:Maybe<&2,Buffers>) -> V.Action(Unit):
+def bind_geometry(+command:V.CommandBuffer,buffers:Maybe<&2,G.Buffers>) -> V.Action(Unit):
   match buffers:
     case None{}:V.Action.pure(Unit,Unit{})
-    case Some{Buffers{vertices,indices}}:
+    case Some{G.Buffers{vertices,indices}}:
       vb = B.handle(vertices)
       ib = B.handle(indices)
       do V.Action<Unit>:
@@ -141,7 +109,8 @@ def create_limited(+instance:V.Instance,+physical:V.PhysicalDevice,family:U32,li
     +device : V.Device <- V.Instance.create_device(instance,physical,V.DeviceCreateInfo{family,[]})
     +color : Attachment <- attachment(instance,physical,device,V.Extent2D{width,height},vk.VK_FORMAT_R8G8B8A8_UNORM(),vk.VK_IMAGE_ASPECT_COLOR_BIT(),U32.or(vk.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT(),vk.VK_IMAGE_USAGE_TRANSFER_SRC_BIT()))
     +depth : Attachment <- attachment(instance,physical,device,V.Extent2D{width,height},vk.VK_FORMAT_D32_SFLOAT(),vk.VK_IMAGE_ASPECT_DEPTH_BIT(),U32.or(vk.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT(),vk.VK_IMAGE_USAGE_TRANSFER_SRC_BIT()))
-    geometry : Maybe<&2,Buffers> <- upload_geometry(instance,physical,device,vertices,indices)
+    pair: G.Resident & Diag.Probe <- G.create(G.Context{instance,physical,device},Create.Geometry{vertices,indices,ranges},Diag.Off{})
+    resident:G.Resident = Pair.fst(G.Resident,Diag.Probe,pair)
     +plane : U32 = U32.mul(U32.mul(width,height),4)
     +depth_offset : W.U64 = aligned(plane,alignment)
     +stage : B.Buffer <- B.allocate(instance,physical,device,W.add(depth_offset,W.of_u32(plane)),vk.VK_BUFFER_USAGE_TRANSFER_DST_BIT())
@@ -156,7 +125,7 @@ def create_limited(+instance:V.Instance,+physical:V.PhysicalDevice,family:U32,li
     +pool : V.CommandPool <- V.Device.create_command_pool(device)
     command : V.CommandBuffer <- V.Device.allocate_command_buffer(device,pool)
     fence : V.Fence <- V.Device.create_fence(device,False{})
-    return Renderer{Resources{device,command,fence,framebuffer,pipeline,color,depth,geometry,stage},config,ranges,depth_offset,False{}}
+    return Renderer{Resources{G.Context{instance,physical,device},command,fence,framebuffer,pipeline,color,depth,stage},config,resident,depth_offset,False{}}
 
 def create(+entry:V.Entry,+config:Config,mesh:Create.Geometry) -> V.Action(Renderer):
   Config{+width,+height,+camera} = config
@@ -225,8 +194,8 @@ def reusable(values:List<U32>) -> List<&2,U32>:
     case []:[]
     case x <> rest:x <> reusable(rest)
 
-def frame(+r:Resources,+config:Config,+ranges:List<&2,Create.Range>,+depth_offset:W.U64,+used:Bool,items:List<&2,Draw.DrawItem>) -> V.Action(Readback):
-  Resources{+device,+command,+fence,framebuffer,pipeline,Attachment{+color,_,_},Attachment{+depth,_,_},+geometry,+readback} = r
+def frame(+r:Resources,+config:Config,+resident:G.Resident,+depth_offset:W.U64,+used:Bool,items:List<&2,Draw.DrawItem>) -> V.Action(Readback):
+  Resources{G.Context{_,_,+device},+command,+fence,framebuffer,pipeline,Attachment{+color,_,_},Attachment{+depth,_,_},+readback} = r
   Config{+width,+height,camera} = config
   +stage = B.handle(readback)
   +area : V.RenderArea = V.RenderArea{V.Offset2D{0,0},V.Extent2D{width,height}}
@@ -237,15 +206,15 @@ def frame(+r:Resources,+config:Config,+ranges:List<&2,Create.Range>,+depth_offse
   +source_access = Bool.pick(U32,used,vk.VK_ACCESS_TRANSFER_READ_BIT(),0)
   do V.Action<Readback>:
     V.CommandBuffer.begin(command)
-    geometry_barrier(command,geometry)
+    geometry_barrier(command,G.buffers(resident))
     transition(command,color,vk.VK_IMAGE_ASPECT_COLOR_BIT(),source_layout,vk.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL(),source_stage,vk.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT(),source_access,vk.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT())
     transition(command,depth,vk.VK_IMAGE_ASPECT_DEPTH_BIT(),source_layout,vk.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL(),source_stage,depth_stages,source_access,U32.or(vk.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT(),vk.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT()))
     V.CommandBuffer.begin_render_pass(command,framebuffer,area,[V.ColorClear{V.ClearColor{0.0,0.0,1.0,1.0}},V.DepthClear{1.0}])
     V.CommandBuffer.bind_graphics_pipeline(command,pipeline)
     V.CommandBuffer.set_viewport(command,V.Viewport{0.0,0.0,U32.to_f32(width),U32.to_f32(height),0.0,1.0})
     V.CommandBuffer.set_scissor(command,area)
-    bind_geometry(command,geometry)
-    draw_items(command,camera,ranges,items)
+    bind_geometry(command,G.buffers(resident))
+    draw_items(command,camera,G.ranges(resident),items)
     V.CommandBuffer.end_render_pass(command)
     transition(command,color,vk.VK_IMAGE_ASPECT_COLOR_BIT(),vk.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL(),vk.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL(),vk.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT(),vk.VK_PIPELINE_STAGE_TRANSFER_BIT(),vk.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT(),vk.VK_ACCESS_TRANSFER_READ_BIT())
     transition(command,depth,vk.VK_IMAGE_ASPECT_DEPTH_BIT(),vk.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL(),vk.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL(),depth_stages,vk.VK_PIPELINE_STAGE_TRANSFER_BIT(),vk.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT(),vk.VK_ACCESS_TRANSFER_READ_BIT())
@@ -259,22 +228,45 @@ def frame(+r:Resources,+config:Config,+ranges:List<&2,Create.Range>,+depth_offse
     rgba : List<U32> <- B.read(device,readback,W.zero(),plane)
     depth : List<U32> <- B.read(device,readback,depth_offset,plane)
     V.CommandBuffer.reset(command)
+    V.Device.collect_retired(device)
     V.Fence.reset(fence)
     return Readback{width,height,reusable(rgba),reusable(depth)}
 
-def render_checked(+resources:Resources,+config:Config,+ranges:List<&2,Create.Range>,+offset:W.U64,+used:Bool,items:List<&2,Draw.DrawItem>,result:Result<&2,&2,InputError,Unit>) -> V.Action(Renderer & Result<&2,&2,InputError,Readback>):
+def render_checked(+resources:Resources,+config:Config,+resident:G.Resident,+offset:W.U64,+used:Bool,items:List<&2,Draw.DrawItem>,result:Result<&2,&2,InputError,Unit>) -> V.Action(Renderer & Result<&2,&2,InputError,Readback>):
   match result:
-    case Fail{error}:V.Action.pure(Renderer & Result<&2,&2,InputError,Readback>,(Renderer{resources,config,ranges,offset,used},Fail{error}))
+    case Fail{error}:V.Action.pure(Renderer & Result<&2,&2,InputError,Readback>,(Renderer{resources,config,resident,offset,used},Fail{error}))
     case Done{_}:
       do V.Action<Renderer & Result<&2,&2,InputError,Readback>>:
-        image : Readback <- frame(resources,config,ranges,offset,used,items)
-        return (Renderer{resources,config,ranges,offset,True{}},Done{image})
+        image : Readback <- frame(resources,config,resident,offset,used,items)
+        return (Renderer{resources,config,resident,offset,True{}},Done{image})
 
 def config_camera(config:Config) -> M.Mat4:
   Config{_,_,camera} = config
   camera
 
 def render(renderer:Renderer,draws:Draw.DrawList) -> V.Action(Renderer & Result<&2,&2,InputError,Readback>):
-  Renderer{+resources,+config,+ranges,+offset,+used} = renderer
+  Renderer{+resources,+config,+resident,+offset,+used} = renderer
+  Resources{G.Context{_,_,device},command,fence,framebuffer,pipeline,color,depth,stage} = resources
   Draw.DrawList{+items} = draws
-  render_checked(resources,config,ranges,offset,used,items,preflight(config_camera(config),ranges,items,0))
+  do V.Action<Renderer & Result<&2,&2,InputError,Readback>>:
+    V.Device.collect_retired(device)
+    render_checked(resources,config,resident,offset,used,items,preflight(config_camera(config),G.ranges(resident),items,0))
+
+
+def replaced(resources:Resources,config:Config,offset:W.U64,used:Bool,pair:G.Resident & (G.ReplaceStatus & Diag.Probe)) -> Renderer & G.ReplaceStatus:
+  (resident,(status,probe)) = pair
+  (Renderer{resources,config,resident,offset,used},status)
+
+def replace_geometry(renderer:Renderer,mesh:Create.Geometry) -> IO(Renderer & G.ReplaceStatus):
+  Renderer{+resources,config,resident,offset,used} = renderer
+  Resources{+context,command,fence,framebuffer,pipeline,color,depth,stage} = resources
+  do IO<Renderer & G.ReplaceStatus>:
+    pair:G.Resident & (G.ReplaceStatus & Diag.Probe) <- G.replace(context,resident,mesh,Diag.Off{})
+    return replaced(resources,config,offset,used,pair)
+
+def collect_geometry(renderer:Renderer) -> IO(Renderer & V.VkResult(Unit)):
+  Renderer{+resources,config,resident,offset,used} = renderer
+  Resources{G.Context{_,_,device},command,fence,framebuffer,pipeline,color,depth,stage} = resources
+  do IO<Renderer & V.VkResult(Unit)>:
+    result:V.VkResult(Unit) <- V.Device.collect_retired(device)
+    return (Renderer{resources,config,resident,offset,used},result)

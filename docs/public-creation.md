@@ -85,9 +85,10 @@ creation example imports no Vulkan module and handles no Vulkan values.
 
 ## Scope
 
-Creation supplies startup entities and immutable renderer geometry. Runtime
-insertion, resource deletion, textures, lighting, transparency, persistent GPU
-scene storage, and the roadmap's second interactive application remain separate
+Creation supplies startup entities and packed renderer geometry. Both renderers
+support [whole-mesh replacement](mesh-replacement.md), including deferred destruction
+and preservation on rejected candidates. Runtime entity insertion, per-asset deletion,
+textures, lighting, transparency, and persistent GPU scene storage remain separate
 work. Packing uses sequential structural lookup for small startup scenes. No
 performance or cross-backend bitwise determinism claim is made.
 

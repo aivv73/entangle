@@ -26,6 +26,10 @@ def handle(buffer:Buffer) -> V.Buffer:
   Buffer{b,_,_} = buffer
   b
 
+def allocation(buffer:Buffer) -> V.Buffer & V.DeviceMemory:
+  Buffer{b,m,_} = buffer
+  (b,m)
+
 def memory_type(found:Maybe<U32>) -> V.Action(U32):
   match found:
     case None{}:IO.pure(V.VkResult(U32),Fail{(1,"No compatible upload memory")})

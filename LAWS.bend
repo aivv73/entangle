@@ -13,6 +13,7 @@ import ./src/scene-matrix.bend as Render
 import ./examples/scene-seeds.bend as Seeds
 import Base
 import ./src/upload-size.bend as UploadSize
+import ./src/scene-geometry-policy.bend as Geometry
 
 import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
@@ -585,3 +586,25 @@ law upload_conversion_exact:
   for +n:Nat
   for h:{UploadSize.exact(n) == True{} : Bool}
   {UploadValue.value(UploadSize.encode(n)) == n : Nat}
+
+law geometry_install_accept:
+  for -A:Data
+  for old:A
+  for +fresh:A
+  {Geometry.select(A,old,fresh,True{}) == fresh : A}
+
+law geometry_install_reject:
+  for -A:Data
+  for +old:A
+  for fresh:A
+  {Geometry.select(A,old,fresh,False{}) == old : A}
+
+law geometry_pair_allocations:
+  for -A:Type
+  for vertices:A
+  for indices:A
+  {Geometry.allocations(A,Some{(vertices,indices)}) == [vertices,indices] : List<A>}
+
+law geometry_empty_allocations:
+  for -A:Type
+  {Geometry.allocations(A,None{}) == [] : List<A>}

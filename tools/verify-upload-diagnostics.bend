@@ -22,10 +22,10 @@ def check(on:Bool,probe:D.Probe) -> V.Action(Unit):
     case _ _:Error.require(False{},"Wrong diagnostic mode")
 
 def opened(renderer:Win.Renderer,on:Bool) -> V.Action(Unit):
-  Win.Renderer{window,target,ranges,+probe} = renderer
+  Win.Renderer{window,target,resident,+probe} = renderer
   do V.Action<Unit>:
     check(on,probe)
-    Win.close(Win.Renderer{window,target,ranges,probe})
+    Win.close(Win.Renderer{window,target,resident,probe})
 
 def run(+entry:V.Entry,+on:Bool) -> V.Action(Unit):
   do V.Action<Unit>:
