@@ -1,0 +1,6 @@
++ bend
++ ./build/verify-mesh-playground
+Actual meshes: closed opposite edge incidence, distinct nondegenerate outward faces, connected vertices.
+Mesh real ECS bootstrap=4 complete; retained handle movement=selective; static identities/transforms=preserved; release=stable
+Actual retained mesh rendering replayed exact pixels after selective ECS motion; later world remained bit-exact; live Vulkan objects=0.
+Real ECS per-tick invariants and deterministic replay passed: held, repeat, release, opposites on all axes, zero-step pending reset, one-shot reset, focus clear, bounds, static transforms/identities/mesh and player rotation/scale.

@@ -1,0 +1,21 @@
+player-axis=105 held=moved release=stable Space=exact
+player-axis=107 held=moved release=stable Space=exact
+player-axis=106 held=moved release=stable Space=exact
+player-axis=108 held=moved release=stable Space=exact
+player-axis=117 held=moved release=stable Space=exact
+player-axis=111 held=moved release=stable Space=exact
+key-97 640x480 geometry-pixels=5319
+key=97 geometry-moved=true R=exact
+key-100 640x480 geometry-pixels=5155
+key=100 geometry-moved=true R=exact
+key-119 640x480 geometry-pixels=5465
+key=119 geometry-moved=true R=exact
+key-115 640x480 geometry-pixels=4972
+key=115 geometry-moved=true R=exact
+key-113 640x480 geometry-pixels=5865
+key=113 geometry-moved=true R=exact
+key-101 640x480 geometry-pixels=4687
+key=101 geometry-moved=true R=exact
++ kill
++ kill
+Queued focus loss replayed stale stopped time or held input

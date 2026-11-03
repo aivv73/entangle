@@ -4,6 +4,27 @@ Entangle's native dependency baseline uses Bendvy and bend-vulkan on Linux x86-6
 The pins and compiler requirements are in [toolchain.bend](toolchain.bend).
 Git submodules retain the exact dependency revisions.
 
+## Run the mesh playground
+
+Build and open the separate native mesh app:
+
+```sh
+mkdir -p build
+bend examples/mesh-playground.bend -o build/mesh-playground
+./build/mesh-playground
+```
+
+Hold I/K and J/L to move the orange octahedron across the platform. Hold U/O to
+move it up/down. Space restores its initial position and clears movement.
+Opposing keys cancel. WASD orbit the camera, QE zoom, R restores the camera,
+and Escape or the window close button exits. Focus loss and unmap clear held
+movement. The cyan tetrahedron, magenta triangular prism, and gray platform
+stay fixed. The existing scene app keeps its original behavior.
+
+Run `bend tools/verify-mesh-playground.bend` for actual mesh topology, real ECS
+replay, and retained rendering checks. The [mesh verification record](docs/verification/2026-11-03-mesh-playground/README.md)
+contains native X11 verification commands, captures, and limitations.
+
 ## Create a scene
 
 Use immutable `Vertex`, `Mesh`, `Basic`, `Instance`, and `Camera` values from

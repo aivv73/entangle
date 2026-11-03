@@ -1,3 +1,4 @@
+import ./src/mesh-control.bend as Player
 import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/u32.bend as U32Proof
 import ./src/creation.bend as Create
 import ./src/measurement-counters.bend as Counts
@@ -298,3 +299,60 @@ def Laws.creation_bundle_count(seeds):
     case []:{==}
     case Create.Seed{transform,mesh} <> +rest:
       Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(rest)),List.length(&2,Create.Seed,rest),Laws.creation_bundle_count(rest))
+
+def Laws.player_key_106_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_key_108_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_key_105_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_key_107_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_key_117_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_key_111_last_state(a,b,keys):
+  match keys:
+    case Player.Keys{l,r,f,k,u,d}:{==}
+
+def Laws.player_opposing_axis(down):
+  match down:
+    case False{}:{==}
+    case True{}:{==}
+
+def Laws.player_clear_idempotent(state):
+  match state:
+    case Player.Boot{}:{==}
+    case Player.PlayerReady{h,k,t,p}:{==}
+
+def Laws.player_reset_intent(handle,keys,initial,pending):{==}
+
+def Laws.player_release_keeps_reset(handle,keys,initial):
+  match keys:
+    case Player.Keys{l,r,f,b,u,d}:{==}
+
+def Laws.player_clear_keeps_reset(handle,keys,initial,pending):{==}
+
+def Laws.player_translation_preserves_pose(current,d):
+  match current d:
+    case C.Transform{C.Vec3{x,y,z},r,s} C.Vec3{dx,dy,dz}:{==}
+
+def Laws.player_boot_no_write(H,modify,scope):{==}
+def Laws.player_idle_no_write(H,modify,scope,h,keys,initial):{==}
+def Laws.player_writer_retained_handle(H,modify,scope,h,keys,initial):{==}
+def Laws.player_reset_writer(H,modify,scope,h,keys,initial):{==}
+
+def Laws.player_inactive_clock_anchor(clock,now):{==}
+def Laws.player_active_clock_policy(clock,now):{==}
+def Laws.player_native_focus_boundary(rest):{==}
+
+def Laws.player_query_gate(H,modify,state,scope):{==}

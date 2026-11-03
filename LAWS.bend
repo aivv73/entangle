@@ -1,3 +1,4 @@
+import ./src/mesh-control.bend as Player
 import ./src/creation.bend as Create
 import ./src/headless.bend as Headless
 import ./src/scene.bend as Scene
@@ -441,3 +442,126 @@ law creation_white_mesh:
 law creation_bundle_count:
   for +seeds:List<&2,Create.Seed>
   {List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(seeds)) == List.length(&2,Create.Seed,seeds) : Nat}
+
+law player_key_106_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(106,b,Player.key(106,a,keys)) == Player.key(106,b,keys) : Player.Keys}
+
+law player_key_108_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(108,b,Player.key(108,a,keys)) == Player.key(108,b,keys) : Player.Keys}
+
+law player_key_105_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(105,b,Player.key(105,a,keys)) == Player.key(105,b,keys) : Player.Keys}
+
+law player_key_107_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(107,b,Player.key(107,a,keys)) == Player.key(107,b,keys) : Player.Keys}
+
+law player_key_117_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(117,b,Player.key(117,a,keys)) == Player.key(117,b,keys) : Player.Keys}
+
+law player_key_111_last_state:
+  for a:Bool
+  for b:Bool
+  for keys:Player.Keys
+  {Player.key(111,b,Player.key(111,a,keys)) == Player.key(111,b,keys) : Player.Keys}
+
+law player_opposing_axis:
+  for +down:Bool
+  {Player.axis(down,down) == 0.0 : F32}
+
+law player_clear_idempotent:
+  for state:Player.Control
+  {Player.clear(Player.clear(state)) == Player.clear(state) : Player.Control}
+
+law player_reset_intent:
+  for handle:Player.Handle()
+  for keys:Player.Keys
+  for initial:C.Transform
+  for pending:Bool
+  {Player.intent(32,True{},Player.PlayerReady{handle,keys,initial,pending}) == Player.PlayerReady{handle,Player.empty(),initial,True{}} : Player.Control}
+
+law player_release_keeps_reset:
+  for handle:Player.Handle()
+  for keys:Player.Keys
+  for initial:C.Transform
+  {Player.intent(32,False{},Player.PlayerReady{handle,keys,initial,True{}}) == Player.PlayerReady{handle,keys,initial,True{}} : Player.Control}
+
+law player_clear_keeps_reset:
+  for handle:Player.Handle()
+  for keys:Player.Keys
+  for initial:C.Transform
+  for pending:Bool
+  {Player.clear(Player.PlayerReady{handle,keys,initial,pending}) == Player.PlayerReady{handle,Player.empty(),initial,pending} : Player.Control}
+
+law player_translation_preserves_pose:
+  for current:C.Transform
+  for d:C.Vec3
+  {Player.pose_fields(Player.shifted(current,d)) == Player.pose_fields((current,Unit{})) : C.Quat & C.Vec3}
+
+law player_boot_no_write:
+  for ~H:Type
+  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  {Player.control(~H,~modify,scope,Player.Boot{}) == (scope,(Player.Boot{},Sys.Success{Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+
+law player_idle_no_write:
+  for ~H:Type
+  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  for +h:Player.Handle()
+  for +keys:Player.Keys
+  for +initial:C.Transform
+  {Player.moving(~H,~modify,scope,h,keys,initial,True{}) == (scope,(Player.PlayerReady{h,keys,initial,False{}},Sys.Success{Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+
+law player_writer_retained_handle:
+  for ~H:Type
+  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  for +h:Player.Handle()
+  for +keys:Player.Keys
+  for +initial:C.Transform
+  {Player.moving(~H,~modify,scope,h,keys,initial,False{}) == Player.edited(~H,Player.PlayerReady{h,keys,initial,False{}},modify(Unit,scope,h,Player.translate(keys))) : H & (Player.Control & Sys.Completion<String,Unit>)}
+
+law player_reset_writer:
+  for ~H:Type
+  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for scope:H
+  for +h:Player.Handle()
+  for keys:Player.Keys
+  for +initial:C.Transform
+  {Player.control(~H,~modify,scope,Player.PlayerReady{h,keys,initial,True{}}) == Player.edited(~H,Player.PlayerReady{h,Player.empty(),initial,False{}},modify(Unit,scope,h,_ => (initial,Unit{}))) : H & (Player.Control & Sys.Completion<String,Unit>)}
+
+law player_inactive_clock_anchor:
+  for clock:Time.Clock
+  for +now:Nat
+  {Player.clock_batch(False{},clock,now) == Time.Batch{Time.start(now),0n,0n} : Time.Batch}
+
+law player_active_clock_policy:
+  for clock:Time.Clock
+  for now:Nat
+  {Player.clock_batch(True{},clock,now) == Time.poll(Time.Config{15n,3n},clock,now) : Time.Batch}
+
+law player_native_focus_boundary:
+  for rest:List<Event>
+  {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest,True{}) : List<Event> & Bool}
+
+law player_query_gate:
+  for ~H:Type
+  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for state:Player.Control
+  for scope:H
+  {Player.selected(~H,~modify,state,(scope,Query.SelectionRefused{})) == (scope,(state,Sys.BodyError{"player transform query refused",Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}

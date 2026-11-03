@@ -1,0 +1,31 @@
+player-axis=105 held=moved release=stable Space=exact
+player-axis=107 held=moved release=stable Space=exact
+player-axis=106 held=moved release=stable Space=exact
+player-axis=108 held=moved release=stable Space=exact
+player-axis=117 held=moved release=stable Space=exact
+player-axis=111 held=moved release=stable Space=exact
++ kill
++ kill
+key-97 640x480 geometry-pixels=5319
+key=97 geometry-moved=true R=exact
+key-100 640x480 geometry-pixels=5155
+key=100 geometry-moved=true R=exact
+key-119 640x480 geometry-pixels=5465
+key=119 geometry-moved=true R=exact
+key-115 640x480 geometry-pixels=4972
+key=115 geometry-moved=true R=exact
+key-113 640x480 geometry-pixels=5865
+key=113 geometry-moved=true R=exact
+key-101 640x480 geometry-pixels=4687
+key=101 geometry-moved=true R=exact
++ kill
++ kill
+Queued FocusOut/FocusIn stopped held movement; post-resume pixels stayed stable.
+resize-800x600 800x600 geometry-pixels=8163
+resize-480x640 480x640 geometry-pixels=9291
+resize-640x480 640x480 geometry-pixels=5231
+resize-800x600 800x600 geometry-pixels=8163
+resize-640x480 640x480 geometry-pixels=5231
+Traced queued focus-loss batches executed zero steps and preserved authoritative ECS state.
+Native held/repeat/opposite/release/reset, six camera controls, real focus loss, unmap/restore, repeated resize and unfocused Escape passed.
+Hidden native Close passed; both exits have clean validation and zero live Vulkan objects.
