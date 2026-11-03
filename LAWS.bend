@@ -198,3 +198,34 @@ law render_indices_order:
   for +count:U32
   {Mesh.indices_valid(List.append(&2,U32,left,right),count) ==
     Mesh.indices_valid(List.append(&2,U32,right,left),count) : Bool}
+
+law render_float_word_bits:
+  for +word:U32
+  {Render.float_bits(Render.float_word(word)) == word : U32}
+
+law render_matrix_word_roundtrip:
+  for +matrix:Render.Mat4
+  {Render.from_words(Render.matrix_words(matrix)) == Some{matrix} : Maybe<Render.Mat4>}
+
+law render_word_matrix_layout:
+  for +a:U32
+  for +b:U32
+  for +c:U32
+  for +d:U32
+  for +e:U32
+  for +f:U32
+  for +g:U32
+  for +h:U32
+  for +i:U32
+  for +j:U32
+  for +k:U32
+  for +l:U32
+  for +m:U32
+  for +n:U32
+  for +o:U32
+  for +p:U32
+  {Maybe.map(&1,Render.Mat4,List<U32>,Render.matrix_words,Render.from_words([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])) == Some{[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p]} : Maybe<List<U32>>}
+
+law render_float_roundtrip:
+  for +value:F32
+  {Render.float_word(Render.float_bits(value)) == value : F32}

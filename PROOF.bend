@@ -140,3 +140,19 @@ def Laws.render_indices_order(left,right,count):
         Mesh.indices_valid(List.append(&2,U32,right,left),count),
         Bool.and(Mesh.indices_valid(right,count),Mesh.indices_valid(left,count)),
         Laws.render_indices_append(right,left,count))))
+
+def Laws.render_float_word_bits(word):
+  match word:
+    case U32{bits}:{==}
+
+def Laws.render_matrix_word_roundtrip(matrix):
+  match matrix:
+    case Render.Mat4{Render.Vec4{F32{a},F32{b},F32{c},F32{d}},Render.Vec4{F32{e},F32{f},F32{g},F32{h}},Render.Vec4{F32{i},F32{j},F32{k},F32{l}},Render.Vec4{F32{m},F32{n},F32{o},F32{p}}}:{==}
+
+def Laws.render_word_matrix_layout(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p):
+  match a b c d e f g h i j k l m n o p:
+    case U32{a} U32{b} U32{c} U32{d} U32{e} U32{f} U32{g} U32{h} U32{i} U32{j} U32{k} U32{l} U32{m} U32{n} U32{o} U32{p}:{==}
+
+def Laws.render_float_roundtrip(value):
+  match value:
+    case F32{bits}:{==}

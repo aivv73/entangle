@@ -103,6 +103,12 @@ def vertices_valid(vertices:List<&2,Vertex>) -> Bool:
     case []:True{}
     case Vertex{p,c} <> rest:vec_finite(p) && vec_finite(c) && vertices_valid(rest)
 
+def mesh_valid(mesh:Mesh) -> Bool:
+  Mesh{_,+vertices,+indices} = mesh
+  +vc = U32.from_nat(List.length(&2,Vertex,vertices))
+  +ic = U32.from_nat(List.length(&2,U32,indices))
+  U32.is_gt(vc,0) && U32.is_gt(ic,0) && U32.is_zero(U32.mod(ic,3)) && Nat.is_le(List.length(&2,Vertex,vertices),U32.to_nat(U32.div(16777216,24))) && Nat.is_le(List.length(&2,U32,indices),3000000n) && vertices_valid(vertices) && Mesh.indices_valid(indices,vc)
+
 def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,requirements:V.MemoryRequirements,flags:U32) -> V.Action(V.DeviceMemory):
   V.MemoryRequirements{size,_,bits} = requirements
   do V.Action<V.DeviceMemory>:
@@ -180,7 +186,7 @@ def create(+entry:V.Entry,+config:Config,mesh:Mesh) -> V.Action(Renderer):
   +ic = U32.from_nat(List.length(&2,U32,indices))
   do V.Action<Renderer>:
     require(U32.is_gt(width,0) && U32.is_gt(height,0) && U32.is_le(width,4096) && U32.is_le(height,4096) && U32.is_le(U32.mul(width,height),4194304) && matrix_finite(camera),"Invalid target or camera")
-    require(U32.is_gt(vc,0) && U32.is_gt(ic,0) && U32.is_zero(U32.mod(ic,3)) && Nat.is_le(List.length(&2,Vertex,vertices),U32.to_nat(U32.div(16777216,24))) && Nat.is_le(List.length(&2,U32,indices),3000000n) && vertices_valid(vertices) && Mesh.indices_valid(indices,vc),"Invalid mesh")
+    require(mesh_valid(Mesh{id,vertices,indices}),"Invalid mesh")
     +instance : V.Instance <- V.Entry.create_instance(entry,V.InstanceCreateInfo.default())
     devices : List<V.PhysicalDevice> <- V.Instance.enumerate_physical_devices(instance)
     +physical : V.PhysicalDevice <- first(devices)
