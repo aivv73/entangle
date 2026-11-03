@@ -114,9 +114,10 @@ The current implementation has one frame in flight.
 This definition completes only the frame-order item in the
 [E2 roadmap](../ROADMAP_updated_v6_EN.md#e2--app-plugins-and-the-game-loop).
 The [schedule-visibility contract](schedule-visibility.md) separately defines
-structural publication and removal-notice semantics. The sequential step kernel,
-fixed-timestep policy, headless execution, and the second application remain
-separate tasks.
+structural publication and removal-notice semantics. The
+[sequential movement kernel](step-kernel.md) now exposes the per-transform
+numerical update. Fixed-timestep policy, headless execution, and the second
+application remain separate tasks.
 The [static module slots](../src/modules.bend) remain startup-only.
 
 The current-path descriptions were checked against the linked source files.

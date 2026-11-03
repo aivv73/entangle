@@ -62,6 +62,9 @@ def Laws.zero():
 def Laws.translation_replacement(old, translation, rotation, scale):
   {==}
 
+def Laws.scene_step_adapter(state):
+  {==}
+
 def Laws.scene_translation(x,y,z,rotation,scale):
   {==}
 

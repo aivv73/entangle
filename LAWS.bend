@@ -8,6 +8,7 @@ import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
 import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
 import ./src/components.bend as C
 import ./tools/component-consumer.bend as Consumer
+import ./src/scene-step.bend as Step
 import ./src/scene-motion.bend as Move
 import ./src/scene-spawn.bend as Spawn
 import ./src/scene-schema.bend as SceneSchema
@@ -90,20 +91,24 @@ law translation_replacement:
   for +scale: C.Vec3
   {Consumer.replace_translation(C.Transform{old, rotation, scale}, translation) == C.Transform{translation, rotation, scale} : C.Transform}
 
+law scene_step_adapter:
+  for +state:C.Transform
+  {Move.translate(state) == Step.step(Unit{},state) : C.Transform & Unit}
+
 law scene_translation:
   for +x:F32
   for +y:F32
   for +z:F32
   for +rotation:C.Quat
   for +scale:C.Vec3
-  {Move.advance(C.Transform{C.Vec3{x,y,z},rotation,scale}) == C.Transform{C.Vec3{F32.add(x,1.0),F32.add(y,0.5),F32.sub(z,2.0)},rotation,scale} : C.Transform}
+  {Step.step(Unit{},C.Transform{C.Vec3{x,y,z},rotation,scale}) == (C.Transform{C.Vec3{F32.add(x,1.0),F32.add(y,0.5),F32.sub(z,2.0)},rotation,scale},Unit{}) : C.Transform & Unit}
 
 law scene_rotation_scale:
   for +position:C.Vec3
   for +rotation:C.Quat
   for +scale:C.Vec3
   exs moved:C.Vec3
-  {Move.advance(C.Transform{position,rotation,scale}) == C.Transform{moved,rotation,scale} : C.Transform}
+  {Step.step(Unit{},C.Transform{position,rotation,scale}) == (C.Transform{moved,rotation,scale},Unit{}) : C.Transform & Unit}
 
 law scene_seed:
   for +index:U32

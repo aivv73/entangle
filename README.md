@@ -122,6 +122,11 @@ entities, publishes them before movement, and translates each once by
 has a Transform and the same logical `MeshRef{7}`. A registered writer changes
 only Transform translation and preserves rotation and scale.
 
+The writer calls the pure `step(Unit{}, transform)` in `src/scene-step.bend`.
+It returns the replacement transform and `Unit{}` for no gameplay events.
+The [step contract](docs/step-kernel.md) defines the per-transform tick input,
+ECS ownership, sequential execution, and separate schedule reports.
+
 The executable prints the empty initial population, then one verified line per
 tick. The last tick and success line are:
 

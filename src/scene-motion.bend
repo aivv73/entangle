@@ -2,6 +2,7 @@ import ../deps/bendvy/src/ecs/execution-effects.bend as Effects
 import Base
 import ./scene-schema.bend as D
 import ./components.bend as Value
+import ./scene-step.bend as Step
 import ../deps/bendvy/src/ecs/world.bend as W
 import ../deps/bendvy/src/ecs/execution-composer-layout.bend as L
 import ../deps/bendvy/src/ecs/execution-builder.bend as Build
@@ -39,13 +40,7 @@ def kernel(~Permit:Data,~token:Permit,~F:(Type -> Type),~effects:Effects.Effects
   F,H):Build.framework_program(~D.Schema,~D.Columns(),~C(),~R(),~Ops,~program,~Permit,~token,~F,~effects,
   ~request,~H,~B,~builder,book)
 
-def advance(value:Value.Transform) -> Value.Transform:
-  match value:
-    case Value.Transform{Value.Vec3{x,y,z},rotation,scale}:
-      moved : Value.Vec3 = Value.Vec3{F32.add(x,1.0),F32.add(y,0.5),F32.sub(z,2.0)}
-      Value.Transform{moved,rotation,scale}
-
-def translate(value:Value.Transform) -> Value.Transform & Unit:(advance(value),Unit{})
+def translate(value:Value.Transform) -> Value.Transform & Unit:Step.step(Unit{},value)
 
 def edited(~H:Type,next:H -> H & (Unit & Sys.Completion<String,Unit>),result:H & Q.GeneralEdit<Value.Transform,
   Unit>) -> H & (Unit & Sys.Completion<String,Unit>):
