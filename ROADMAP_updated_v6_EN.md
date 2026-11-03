@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 3, 2026 · updated for E2 completion and E3 upload enforcement
+**Revision:** 6 · November 3, 2026 · updated for E2 completion, E3 upload enforcement, and dependency research
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
@@ -13,6 +13,8 @@
 **Initial platform:** Linux x86-64, using the existing X11/Vulkan path.
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
+
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. E3 resource replacement remains next; the stage order and alpha criteria are unchanged.
 
 ## E1 progress, November 3, 2026
 
@@ -170,7 +172,28 @@ Start with the toolchain already validated by the user, not an automatically sel
 
 Use Bendvy through public interfaces. If difficulties arise, prepare a minimal example and discuss it with the author rather than immediately writing a custom ECS. Do not build a second general-purpose scheduler on top of Bendvy.
 
-Reuse `bend-collections` for the required arithmetic/containers. Bring in math and decoders from Jonlib or other packages one verified module at a time. Ankra/SDL and a change of windowing layer are not mandatory alpha tasks. Compatibility with all of BendHub is not a milestone.
+Reuse `bend-collections` for the required arithmetic and containers. Bring in math and decoders from Jonlib or other packages one verified module at a time. Ankra/SDL and a change of windowing layer are not mandatory alpha tasks. Compatibility with all of BendHub is not a milestone.
+
+BendHub packages are immutable by content hash; named versions also identify fixed content [S42]. Record the resolved hash and imported entry with each dependency decision. Hub publication and Bend Crater's compiler checks do not establish runtime correctness, GPU execution, or performance. Audit transitive imports and licenses before adoption. Jonmath, for example, imports separately licensed LGPL numerical modules [S41].
+
+### Package candidates, November 3, 2026
+
+These are reviewed candidates, not new dependency pins. Source revisions, local checks, and their limits are recorded in S41–S47.
+
+| Candidate | Intended use | Selection boundary |
+| --- | --- | --- |
+| Jonlib at `5e49707e346453f7d36c27d5ca0cb286e431973d` [S41] | E4: PNG or QOI decoding, OBJ parsing, selected math and collision queries | Import or adapt narrow modules behind engine APIs. Keep Bendvy and bend-vulkan authoritative for the world and rendering. Full `jonlib.bend` needs compiler-overlay effects absent from the current toolchain. |
+| `emerging-ezimg@1.3.0.0` [S43] | E4: alternative PNG decoder and image export | Compare with Jonlib on the actual asset corpus. Supports 8-bit non-interlaced PNG and baseline JPEG. Its row-major `0xAARRGGBB` lists need conversion to the engine's texture representation. |
+| `bend-kit-json@0.7.0.0` or `ezjson@1.4.0.0` [S44] | E4: scene files and asset manifests | Choose one. The kit provides owned bytes and strict parsing with depth and duplicate-key checks; ezjson provides String-based APIs and a pull cursor. Engine schema validation remains separate. |
+| `bend-kit-bytes@0.3.3.0` [S44] | Binary parsing when a selected library needs it | Packed storage and bounded cursors are useful at the asset boundary. They do not replace the E3 upload checker or its exact size conversions. |
+| `bend-mathlib@0.8.1.0` [S45] | Missing arithmetic, list, ordering, and permutation lemmas | Import only needed proof modules after checking existing `bend-collections` lemmas. This is a proof library, not a replacement for graphics math. |
+| `bend-parallel@0.1.0.0` [S46] | R0 audit; R2 scans, spatial buckets, and contribution grouping; possible E7 compaction | Its scan, histogram, and stable counting sort depend on unsafe `Array.fork` and `Array.join`. Adoption requires an explicit trust boundary, real execution, and representative end-to-end measurements. |
+
+Entangle already imports `bend-ui-test@0.1.0.1` and `bend-window-capture@0.1.0.2` in its window drivers. Hub publications of Bendvy, bend-vulkan, and bend-collections do not justify replacing the validated revisions in `toolchain.bend`.
+
+Later candidates [S47] include Gralha fonts and SVG for UI, and `bolt` for developer tooling. Gralha's premultiplied quadtree images need a separate rendering adapter and include unsafe code. `bend-kit-cache` may inform asset metadata invalidation, but its `Data` values cannot directly own affine GPU resources. `bend-kit-resources` accounts for capacity; it does not establish Vulkan retirement safety. Archive and storage packages introduce libz and OpenSSL paths. Prefer Bend implementations where available, and keep necessary native effects at the system boundary.
+
+For each selected module, preserve its input limits and translate its values into engine-owned types. Validate the actual loading, simulation, or rendering consumer before adoption. Keep formal claims in `LAWS.bend`, and record which executable functions and external assumptions those claims cover. Optional parallelism must preserve observable state and pass the common measurement protocol.
 
 ---
 
@@ -413,6 +436,8 @@ Acceptance establishes numeric containment only. A native operation may impose s
 
 The current backend distinguishes execution completion from releasing recorded-command references; this rule must survive the project split [S6].
 
+Capacity pools such as `bend-kit-resources` do not track recorded commands, submissions, or descriptors [S47]. Their reservation laws cannot substitute for this resource-lifetime contract.
+
 **Done when:** the proven general property is actually used by the upload path, dynamic replacements pass checks, and trust boundaries are documented.
 
 **Not proven by this stage:** alignment, validity of all GPU accesses, synchronization, the native implementation, shaders, the driver, or the compiler. These retain separate requirements and tests.
@@ -425,13 +450,23 @@ The current backend distinguishes execution completion from releasing recorded-c
 
 - [ ] Add a minimal Asset API: handles, loading/error state, a cache, and release rules.
 - [ ] Define an internal mesh and material format independent of the importer.
-- [ ] Integrate one validated image decoder and one static-model format. Start with synchronous loading; asynchronous loading is not needed to demonstrate the API.
-- [ ] Reuse Bend math/decoding modules as needed, without bringing in all of Jonlib up front.
-- [ ] Implement a textured material, a simple light source, and a camera.
+- [ ] Select and integrate one image decoder. Compare Jonlib's standalone PNG decoder with `emerging-ezimg` on the prepared assets [S41, S43]. Record accepted variants, input and output limits, pixel layout, and errors. QOI is an optional narrow alternative, not a second required codec.
+- [ ] Start the static-model importer with Jonlib's `src/obj.bend`, subject to validation [S41]. Convert parser output into the engine's mesh and material types. Load synchronously through Assets; the importer does not own the ECS world or Vulkan handles.
+- [ ] Choose one JSON parser for scene files and manifests [S44]. Validate schema, number ranges, duplicate-key policy, asset references, and size/depth limits at the loading boundary.
+- [ ] For math or collision routines needed by the chosen consumers, evaluate Jonlib reuse through explicit adapters [S41]. Preserve Entangle's matrix multiplication, quaternion, projection, and numerical contracts; verify any replacement against retained scene evidence.
+- [ ] Extend the position/color vertex format with the attributes needed for textures and lighting. Implement texture upload and lifetime management, a textured material, a simple light source, and a camera in the existing Vulkan path.
 - [ ] Add scene descriptions, a Transform → GlobalTransform hierarchy, and rejection of parent cycles.
 - [ ] Correctly update dependent transforms/bounds when a parent changes; this must feed into future render change tracking.
 - [ ] Check corrupted files, missing assets, unsupported variants, and repeated loading.
 - [ ] Make a model viewer and a small scene with gameplay interaction the two required consumers.
+
+### Importer and math limits
+
+At the reviewed revision, Jonlib's standard PNG profile limits dimensions to 4096 per side and encoded input to 2 MiB. It supports variants, including Adam7 and 16-bit samples, beyond ezimg's PNG subset. Validate the selected profile with real assets and explicit rejection paths; a compiler check alone does not choose a decoder [S41, S43].
+
+Jonmath's `Matrix.multiply(left, right)` computes `right × left` in column-vector notation. Entangle's matrix function computes `left × right`. Preserve the existing Vulkan projection and choose a fixed numerical contract instead of switching simulation results according to the host's libm profile [S41].
+
+Defer GLB until a consumer needs it. Jonlib's reviewed loader accepts a restricted binary glTF subset, rejects text `.gltf`, and truncates indices to 16 bits for raylib compatibility. An Entangle adapter must reject out-of-range indices before truncation or preserve U32 indices in a revised importer. Jonlib's software drawing and shader-uniform wrappers do not implement Entangle's textured Vulkan renderer or lighting [S41].
 
 **Done when:** both applications use the public API, one scene loads from disk, loading errors do not break the application, and assets do not require manual Vulkan calls.
 
@@ -535,6 +570,7 @@ These are properties of the graph model and the production plan compiler. They d
 - [ ] Choose a simple, bounded indirect-command format. A GPU-generated count, bindless access, and device-generated state changes are not required.
 - [ ] Compare CPU and GPU visibility on known scenes, with particular attention to frustum boundaries and numerical tolerances.
 - [ ] Bound output-list capacity; overflow triggers explicit handling/fallback rather than memory corruption or silently disappearing objects.
+- [ ] If compaction needs a prefix scan, evaluate the reviewed `bend-parallel` algorithm only after the R0 ownership audit [S46]. Bend GPU dispatch does not establish access to Vulkan buffers or the synchronization needed by indirect draws.
 - [ ] Preserve the CPU/direct path for comparison, debugging, and devices without the required capabilities.
 - [ ] Compare CPU cost, GPU cost, frame intervals, and memory on the same workload, rather than comparing API-call counts.
 
@@ -556,6 +592,7 @@ Khronos publishes a separate GPU-culling and multi-draw-indirect example; it can
 
 - [ ] Pin compiler/dependency commits, the native target, and the corresponding guide/runtime source. Distinguish “described in the current guide” from “compiled and measured on our pinned version.”
 - [ ] Check creation, reading, writing, and transfer of an array owned by the function; separately check safe splitting/reassembly. If no views/split API exists, start with independently allocated chunks rather than inventing such an API.
+- [ ] Audit the `Array.fork` and `Array.join` path used by `bend-parallel@0.1.0.0` [S46]. The local strict check rejects its unsafe dependencies. Its compiled sharing semantics are outside the proof model; do not treat it as a proven split API or evaluate these kernels in the checker. Prefer independently owned chunks until a justified alternative passes real execution checks.
 - [ ] Check indexing rules, logical size, and physical capacity. The engine API rejects invalid indices before access; index wrapping is not considered a valid way to access a different entity.
 - [ ] Create a minimal example with two independent computations and confirm the available parallel execution path. Do not treat source syntax as proof of execution on multiple cores.
 - [ ] Choose an implementable method for reading neighboring data and measuring allocations/copies. Report an unavailable counter as “not measured,” not zero.
@@ -623,6 +660,7 @@ The iterative constraint solver in R4 cannot be reduced to a single additive red
 ### Contributions and conflicts
 
 - [ ] Start with local lists of `(destination, source, kind, ordinal, payload)` and explicit grouping by recipient. A hash-based or other sparse structure is a candidate after the baseline, not a mandatory Birdseed port [S16].
+- [ ] After R0 and the sequential baseline, evaluate `bend-parallel` scans, histograms, stable counting sort, and gather where they fit [S46]. Validate key bounds before the library clamps invalid keys into its last bucket. Prevent wrapping U32 counts from changing event multiplicity, and include scratch storage and assembly in measurements. Stable sorting preserves an input order; the engine must first make that order independent of worker completion.
 - [ ] Define a stable ordering key independent of worker ID and completion time. Include the tick and generation; sources with multiple events have a defined ordinal.
 - [ ] For floating-point sums, choose a canonical order or a fixed tree independent of task partitioning. A different tree or fast-math is a separate numerical configuration, not “the same deterministic simulation.”
 - [ ] Separate additive contributions from `Set / Spawn / Despawn / Reparent`. Define conflict-resolution rules and negative tests for each noncommutative command.
@@ -693,6 +731,8 @@ VBD uses local updates and graph coloring. Dynamic contacts require additional h
 
 For each proof, record the input domain, arithmetic, assumptions, executable function, and call path. Reuse existing proofs. Distinguish `specified`, `tested`, `proved`, and `integrated`: one status does not replace the others.
 
+Use `bend-mathlib` only for lemmas missing from the current proof dependencies [S45]. A package import that prints `ALL PROOFS CHECK` is not evidence that every desired property was stated, that the kernel was rerun with `--verdict`, or that native execution matches the model. Keep unsafe and foreign dependencies outside a claimed proof boundary unless that boundary explicitly accounts for them [S42, S46].
+
 Do not tie project success to the number of laws. Do not weaken contracts to pass the verifier. Changing the specification when requirements genuinely change is acceptable, but must be a separate, deliberate decision.
 
 ### Reference → optimized → evidence
@@ -712,6 +752,8 @@ Measure simulation, change collection, RenderScene updates, packing/upload prepa
 For frame time, name the exact boundary being measured. Do not present a submit/handoff interval as the time when the image is physically displayed. Publish median/p95, upload volume, draw count, and live-resource count; retaining raw samples is also useful.
 
 Sets of 100 / 1,000 / 10,000 objects are research points, not mandatory performance promises. Static and fully dynamic scenes are different workloads. Comparing methods requires identical data, quality, and conditions, or an explicit acknowledgment that they are not comparable.
+
+For a parallel candidate, include one CPU thread and representative thread counts for the primary development machine. Measure Bend GPU lane and work decomposition separately on the available execution lane. Before adoption, demonstrate a repeatable improvement in representative end-to-end workloads while preserving observable world and geometry state. Independence alone is not a reason to fork, and fine-grained leaf work stays sequential.
 
 Do not use old DDA/face/handoff figures to derive strict speedup ratios for the new engine.
 
@@ -790,7 +832,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 ## Sources and bases for decisions
 
-S1–S13 and the historical E0 evidence are carried forward from revision 3: its statuses are based on the logs/commits listed there. New sources S14–S22 were checked for revision 4, dated November 2, 2026. In revision 5, the independent window example's status was confirmed through the published README/repository page [S23]; there was no independent local run or clean-checkout gate at that time. Revision 6 adds the results of the actual clean-checkout gate and window verifier [S24]. The E1 updates record the native dependency baseline, scene extraction, rendering, window behavior, and measurements [S25–S30]. E2 evidence covers App extraction through the second application [S31–S37]. E0–E2 status reflects committed sources and recorded results through `2faa879`. The E3 review adds source inspection and standard proof checks at `7043fa6` [S38], without fresh native runtime execution. The later universal proof and production integration add kernel checking, real uploads, source mutations, and native renderer verification [S39]. External sources S1–S23 were not rechecked.
+S1–S13 and the historical E0 evidence are carried forward from revision 3: its statuses are based on the logs/commits listed there. New sources S14–S22 were checked for revision 4, dated November 2, 2026. In revision 5, the independent window example's status was confirmed through the published README/repository page [S23]; there was no independent local run or clean-checkout gate at that time. Revision 6 adds the results of the actual clean-checkout gate and window verifier [S24]. The E1 updates record the native dependency baseline, scene extraction, rendering, window behavior, and measurements [S25–S30]. E2 evidence covers App extraction through the second application [S31–S37]. E0–E2 status reflects committed sources and recorded results through `2faa879`. The E3 review adds source inspection and standard proof checks at `7043fa6` [S38], without fresh native runtime execution. The later universal proof and production integration add kernel checking, real uploads, source mutations, and native renderer verification [S39]. External sources S1–S23 were not rechecked. The November 3 dependency research adds source inspection and scoped compatibility checks [S41–S47]; it completes no engine stage.
 
 The R0–R4 architectural decisions are our design synthesis. External papers establish the methods described in the table within their own environments, not the compatibility, correctness, or speed of a Bend implementation. Sources on mutable branches require a commit/hash at implementation time; an access date does not replace a pin. Third-party speedup figures have not been imported into our engine's criteria.
 
@@ -891,4 +933,16 @@ The R0–R4 architectural decisions are our design synthesis. External papers es
 
 - [S40] Verification on `verify/upload-abi-limits`, based on `57d1f4c`, November 3, 2026. The [reviewable evidence](docs/verification/2026-11-03-upload-abi/README.md) records root proofs, source-policy and mutation checks, freshly compiled real Vulkan production/native drivers, and the default gate. Each driver checks 140 scalar U64 ABI inputs. An unbound `W.U64{257,1}` buffer reports requirements `W.U64{272,1}` without a 4 GiB allocation. Both drivers compare every byte and exact length for 16777216-byte transfers between two guards. Separate in-range engine and native 16777217-byte writer rejections, native read rejection, zero/max negative cases, unchanged complete destinations, immediate disposal counts, and zero final live objects pass. The standalone raw verifier is pinned by its complete source hash and cannot accept or return engine memory. Production hashes, dependencies, execution parallelism, and the 300000 ms command deadline are unchanged. Scalar roundtrips retain the paired-error caveat and do not cover all Vulkan structures. Dynamic replacement and broader resource lifetime remain open. No new window run or performance claim is made.
 
-Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], and scoped ABI/transport verification [S40] are complete under the recorded verification limits. E3–E7 and R0–R4 remain incomplete.
+### Jonlib and BendHub dependency research
+
+Reviewed November 3, 2026, using the installed Bend 2.0.39. The following are research results, not dependency-adoption evidence. Hub checks used a file containing only `import 0x<hash>/<entry> as Candidate`, run with `bend <file> --check-only`. They did not execute a package's `main` or foreign effects. No full conformance suite, kernel recheck, GPU execution, or performance measurement was performed for this survey.
+
+- [S41] [Jonlib source](https://github.com/jonathanperis/jonlib/tree/5e49707e346453f7d36c27d5ca0cb286e431973d), including the pinned [model profiles](https://github.com/jonathanperis/jonlib/blob/5e49707e346453f7d36c27d5ca0cb286e431973d/docs/MODELS.md), [PNG profile](https://github.com/jonathanperis/jonlib/blob/5e49707e346453f7d36c27d5ca0cb286e431973d/docs/PNG.md), [math conventions](https://github.com/jonathanperis/jonlib/blob/5e49707e346453f7d36c27d5ca0cb286e431973d/docs/MATH.md), [compiler overlay](https://github.com/jonathanperis/jonlib/blob/5e49707e346453f7d36c27d5ca0cb286e431973d/patches/README.md), and [license notices](https://github.com/jonathanperis/jonlib/blob/5e49707e346453f7d36c27d5ca0cb286e431973d/THIRD_PARTY_NOTICES.md). Checking `src/qoi.bend`, `src/png.bend`, `src/obj.bend`, and `jonmath.bend` passed. Checking `jonlib.bend` failed at the undefined `Path.stat` effect. The existing `examples/math.bend` compiled natively and printed `5` with `+RTS --threads 1 --gpu off`. That single example establishes neither decoder behavior nor full numerical or platform compatibility.
+- [S42] [BendHub catalog](https://hub.bend-lang.com/packages) and [publishing guide](https://hub.bend-lang.com/guide); [Bend Crater](https://pedrovioliv.github.io/bend-crater/) and its [method](https://github.com/PedroVIOliv/bend-crater#what-a-cell-means). The catalog was surveyed across its pages and named versions were grouped before selecting candidates. Crater's results are compiler checks, including separate unsafe and timeout statuses, not runtime validation. The package hashes below identify reviewed content independently of later catalog changes.
+- [S43] [`emerging-ezimg@1.3.0.0`](https://hub.bend-lang.com/0x57618559b9b26dd8415f821176a3e692), hash `0x57618559b9b26dd8415f821176a3e692`, entry `main.bend`. Published `main.bend` and `src/png.bend` establish the pixel representation and PNG subset. The local import check passed. No image decode, export, or Vulkan upload was run during this survey.
+- [S44] [`bend-kit-json@0.7.0.0`](https://hub.bend-lang.com/0x37aacddc1dcb57464b8b5ac6c397bd64), entry `json.bend`, and [`ezjson@1.4.0.0`](https://hub.bend-lang.com/0xdab377b48b4edd8247427c10e2120805), entry `main.bend`: both local import checks passed. The kit imports [`bend-kit-bytes@0.3.3.0`](https://hub.bend-lang.com/0x632652e3c1c0183f12728faf3870bb68), entry `bytes.bend`; its ownership and bounds APIs were inspected. These checks do not validate Entangle's future scene schema or asset limits.
+- [S45] [`bend-mathlib@0.8.1.0`](https://hub.bend-lang.com/0x8ae61ec3a6615abd35f196c07232ad28), hash `0x8ae61ec3a6615abd35f196c07232ad28`, entry `all.bend`; [upstream lemma documentation](https://github.com/bendlib/bendlib). The local import check passed. Upstream reports separate kernel checks; this survey did not repeat them or replace Entangle's existing arithmetic proofs.
+- [S46] [`bend-parallel@0.1.0.0`](https://hub.bend-lang.com/0xeef3a8486d410ea6f25709aac90dbf40), hash `0xeef3a8486d410ea6f25709aac90dbf40`, files `scan.bend`, `histogram.bend`, and `sort.bend`. The local `sort.bend` import check exited with code `1`, reporting dependencies on unsafe code. The sources document `Array.fork` sharing outside the checker model, wrapping U32 scan sums, last-bucket clamping, and scratch buffers controlled by fork depth and bucket count. No native algorithm run or speedup was established here.
+- [S47] Deferred candidates: [Gralha image representation](https://hub.bend-lang.com/0x2c63b99c875a43494881cedcbf2f440f), [bolt 1.27.0.0](https://hub.bend-lang.com/0xe80b84e038766a5c0c16cf84a1d6b0cf), [cache 0.3.0.0](https://hub.bend-lang.com/0x1afe27789226a57428f7ceb2621e112e), [resources 0.1.0.0](https://hub.bend-lang.com/0x8ef64648a1ae4481382be5e5ce2a9fc8), [archive 0.5.1.0](https://hub.bend-lang.com/0xb03a6159aa2131a6271ae6f2503d02f4), and [storage 0.1.0.0](https://hub.bend-lang.com/0x50c218b3c125011f70b36a9eb33129ac). Published source and the corresponding [bend-kit documentation](https://github.com/paymog/bend-kit) were inspected for ownership and native dependencies. No Entangle integration, native library qualification, or resource-lifetime guarantee follows from that inspection.
+
+Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], and scoped ABI/transport verification [S40] are complete under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. E3–E7 and R0–R4 remain incomplete.
