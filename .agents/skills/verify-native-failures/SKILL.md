@@ -5,6 +5,8 @@ description: Verify production Vulkan failure handlers after changes to native c
 
 # Verify native failure handlers
 
+For a task-level receipt, use the `native-failures` profile in [the development workflow](../../../docs/development.md). It runs the bounded proofs with their mutations and the real resource-failure driver from one retained source snapshot. Preserve each evidence kind and its limits separately.
+
 Run from the Entangle root. Read `AGENTS.md`, run `bend guide`, and read
 [`proofs/native-failures/README.md`](../../../proofs/native-failures/README.md).
 This checks C handler statements extracted from the production dependency,

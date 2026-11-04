@@ -44,7 +44,7 @@ Require `Mesh replacement offscreen and native retention verified; live Vulkan o
 
 ## X11 replacement verification
 
-Use the main skill's fresh isolated runtime, owned Xwayland, validation environment, and doctor. Insert this block before its mesh `run window ...` command. The driver starts only the installed child executable and checks its own PID window.
+Use a per-run copy of `tools/verify-window-session.sh` with its isolated runtime, owned Xwayland, validation environment, and doctor. Insert this block before its mesh `run window ...` command, following the [map](README.md#driving-conventions). The driver starts only the installed child executable and checks its own PID window.
 
 ```bash
 cd "$entangle_repo"

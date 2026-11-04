@@ -139,6 +139,15 @@ continue to run or be inspected independently of rendering.
 
 ## Verification and evidence
 
+Use the [development workflow](docs/development.md) to select affected checks and retain a source-specific result. The managed runner executes required stages in an isolated source snapshot.
+
+```sh
+mkdir -p build
+bend tools/verify-workflow.bend -o build/verify-workflow
+./build/verify-workflow --plan assets images
+./build/verify-workflow assets images +RTS --threads 1 --gpu off
+```
+
 Verification is part of development. The checks cover specific properties;
 the entire engine is not mathematically proved.
 

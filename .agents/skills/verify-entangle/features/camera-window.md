@@ -24,7 +24,7 @@ Both interactive examples let you orbit and zoom the camera, resize or hide the 
 Preconditions: the skill's launch shell owns a ready Xwayland and has passed its doctor.
 
 - **Mesh entry.** The complete launch recipe already taps key symbols 97, 100, 119, 115, 113, and 101. Require `geometry-moved=true R=exact` for each. It also exercises repeated resize, restored focus, unfocused Escape, and hidden Close. Both native logs must report zero live Vulkan objects.
-- **Cube entry.** Insert the following block immediately before `run window ...` in the launch recipe. It builds the actual cube example, runs all three existing scenarios, keeps their output separately, and restores the mesh binary and evidence link before the mesh run resumes.
+- **Cube entry.** Insert the following block immediately before `run window ...` in a per-run copy of `tools/verify-window-session.sh`, as described in the [map](README.md#driving-conventions). It builds the actual cube example, runs all three existing scenarios, keeps their output separately, and restores the mesh binary and evidence link before the mesh run resumes.
 
 ```bash
 cd "$entangle_repo"

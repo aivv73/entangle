@@ -59,7 +59,7 @@ def render_expected() -> String:
   render_ticks(8n,1) ++ "index-order=far-first\n" ++ render_ticks(8n,1) ++
   "Terminal Action cleanup verified.\nPublic Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm"
 
-def main() -> IO(Unit):
+def preflight() -> IO(Unit):
   do IO<Unit>:
     exact("bend",["version"],Pin.bend_version())
     +compiler : String <- run("clang",["--version"])
@@ -67,6 +67,10 @@ def main() -> IO(Unit):
     exact("clang",["-dumpmachine"],Pin.native_target())
     exact("uname",["-sm"],"Linux x86_64")
     revisions(Pin.dependencies())
+
+def main() -> IO(Unit):
+  do IO<Unit>:
+    preflight()
     command("mkdir",["-p","build"])
     command("bend",["tools/verify-upload-boundary.bend","-o","build/verify-upload-boundary"])
     command("./build/verify-upload-boundary",[])
