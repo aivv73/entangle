@@ -12,7 +12,9 @@ Read this index before choosing checks. Each file maps user actions to existing 
 
 ## Driving conventions
 
-The complete launch block drives mesh movement. Camera-window additions run inside that same shell before its `run window ...` line, while the owned display is alive. CPU and offscreen recipes are independent shell invocations. They create their own evidence directory and exit after the real process returns.
+The executable `tools/verify-window-session.sh` launcher drives mesh movement. For additional camera-window scenarios, follow that feature recipe with its own owned display and runtime. CPU and offscreen recipes are independent shell invocations. They create their own evidence directory and exit after the real process returns.
+
+For an optional window block, copy `tools/verify-window-session.sh` into the ignored `build/verification` directory, insert the block before its `run window ...` command, and run that copy from the repository root. Keep the copied script with the evidence. Do not edit the shared launcher or run the block after its display has been cleaned up.
 
 Use the exact key symbols and native driver modes in the feature files. Do not infer desktop coverage from a headless run. Do not reuse archived captures as evidence for a new build.
 
@@ -24,8 +26,11 @@ A mesh pass covers the mesh entry of camera controls. It does not establish the 
 
 ## Features
 
+Use the [verification profiles](../../../../docs/development.md#run-verification) to select required checks. Profile success is scoped to its listed scenarios.
+
 - [Formal laws](formal-laws.md): production Bend definitions, the universal upload-range theorem, mutation controls, and synchronization records.
 - [Source assets](../../../../docs/assets.md#verification-and-limits): typed cache handles, real file loading, cached failures, release/retry, exact retained mesh and material sources, source-only dependency closure, and scene execution after source release.
+- [PNG source images](images.md): pinned decoder, retained real images, complete-pixel comparison, file/cache/retry behavior and production mutation controls.
 - [Static OBJ sources](models.md): pinned parser, exact mesh/material/label conversion, file/cache/retry, source-only closure, real ECS/offscreen geometry, and owned X11 culling evidence.
 - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
 - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.

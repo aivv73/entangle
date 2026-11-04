@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 4, 2026 · updated for the bounded E4 OBJ importer
+**Revision:** 6 · November 4, 2026 · updated for the bounded E4 OBJ importer and verification workflow
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete in the working tree under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is implemented and verified on `feat/static-model-importer`, not merged. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete on `main` under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is verified and merged on `main` through `a016c6b`. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) now has source, cache/retry, Creation/ECS, offscreen, and X11 evidence on its feature branch. E4 and E5 still precede `v0.1-alpha`.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is on `main` through `a016c6b`, with source, cache/retry, Creation/ECS, offscreen, and X11 evidence. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
 
 ---
 
@@ -204,7 +204,7 @@ For each selected module, preserve its input limits and translate its values int
 | E0 | Library separated from `bend-voxel`; clean-checkout verifier and independent window example passed; README updated | Complete |
 | E1 | Bendvy manages 100 rendered objects with verified window behavior and recorded baseline measurements | Complete |
 | E2 | Two applications use the public API; a step contract and sequential reference are defined | Complete; mesh playground, headless execution, and runtime evidence recorded |
-| E3 | The production upload checker has a proven contract | Complete in the working tree under documented trust limits; upload integration, mesh replacement, buffer and sampled-image retention, and failure handling verified [S52] |
+| E3 | The production upload checker has a proven contract | Complete on `main` under documented trust limits; upload integration, mesh replacement, buffer and sampled-image retention, and failure handling verified [S52] |
 | E4 | Models, textures, materials, and an interactive scene | Assets and scenes |
 | E5 | Persistent RenderScene, change-driven updates, reproducible alpha | `v0.1-alpha` |
 | E6 | Small render graph with verifiable pass ordering | After alpha |
@@ -449,7 +449,7 @@ Capacity pools such as `bend-kit-resources` do not track recorded commands, subm
 
 ### Tasks
 
-- [x] Add a minimal Asset API: handles, loading/error state, a cache, and release rules. Implemented in the working tree: [API reference](docs/assets.md), [source](src/asset.bend), and [trail 23](https://entire.com/et/bend-engine/-/trails/23). Root lifecycle laws, real file loading/retry, and scene execution after source release pass. Scope names must be unique across handle lifetimes; native resource ownership is unchanged.
+- [x] Add a minimal Asset API: handles, loading/error state, a cache, and release rules. Landed on `main` as `513e5e4`: [API reference](docs/assets.md), [source](src/asset.bend), and [trail 23](https://entire.com/et/bend-engine/-/trails/23). Root lifecycle laws, real file loading/retry, and scene execution after source release pass. Scope names must be unique across handle lifetimes; native resource ownership is unchanged.
 - [x] Define an [internal mesh and material format](docs/content.md) independent of the importer.
 - [x] Select and integrate one [PNG image decoder](docs/image-decoder.md). Native comparison of pinned Jonlib and `emerging-ezimg` on retained cat photos, PNG variants, and engine captures qualifies Jonlib [S41, S43]. Accepted variants, limits, layout, errors, licenses, and reproduction are recorded in the [verification evidence](docs/verification/2026-11-04-image-decoder/README.md). QOI is not added.
 - [x] Start the [static-model importer](docs/model-obj.md) with validated Jonlib S41 `src/obj.bend`. Ordered mesh/material/label sources load synchronously through Assets without ECS or Vulkan ownership. The authored-triangle/diffuse profile, exact pin/licenses, properties, file/cache behavior, and real imported Creation/ECS/offscreen/X11 evidence are [recorded](docs/verification/2026-11-04-model-obj/README.md). Other E4 tasks remain incomplete.
@@ -827,7 +827,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) now has source, cache/retry, Creation/ECS, offscreen, and X11 evidence on its feature branch. E4 and E5 still precede `v0.1-alpha`.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is on `main` through `a016c6b`, with source, cache/retry, Creation/ECS, offscreen, and X11 evidence. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
 
 ---
 

@@ -1,5 +1,11 @@
 # Project instructions
 
+## Development workflow
+
+Follow [the development workflow](docs/development.md). Define observable acceptance and its required evidence before implementation. Use one owner for coupled code, laws, and verification. Arena and adversarial-review panels are explicit opt-ins. For unfamiliar dependencies, run a real-input qualification probe before choosing the adapter.
+
+Use `tools/verify-workflow.bend` to select required checks and retain a source-specific receipt. Keep source updates, applicable proofs, sensitivity controls, feature coverage, and task state together. Do not call a missing or skipped required check a pass.
+
 ## Tests
 
 Do not add traditional unit, integration, or mock-based tests.

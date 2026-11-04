@@ -51,7 +51,7 @@ test "$creation_status" -eq 0
 - **Observe public completion.** Require `Public instances completed two production ECS ticks.` from the actual example.
 - **Observe state and rendering.** Require the driver's `Public creation verified:` result with four distinct ECS entities, three used pairs, ranges `3,3,6`, two ticks, and zero live Vulkan objects. Also require the empty-geometry/rejection result and the configured-camera result. The driver checks exact real readbacks and retained observations.
 
-- **Check the window adapter when affected.** Insert this block before `run window ...` in the main skill's launch recipe. It uses the owned display and redirects the creation driver's historical capture path. Require red, green, and white captured geometry and `Public creation X11 gate passed with validation and zero live Vulkan objects.` in `creation-window.log`.
+- **Check the window adapter when affected.** Insert this block before `run window ...` in a per-run copy of `tools/verify-window-session.sh`, as described in the [map](README.md#driving-conventions). It uses the owned display and redirects the creation driver's historical capture path. Require red, green, and white captured geometry and `Public creation X11 gate passed with validation and zero live Vulkan objects.` in `creation-window.log`.
 
 ```bash
 cd "$entangle_repo"
