@@ -92,9 +92,11 @@ separates formal claims, native execution, window evidence, and their limits.
 
 `SourceImage{width:U32,height:U32,pixels:List<&2,U32>}` is also `Data`.
 `image_valid` checks positive dimensions and an exact Nat pixel count.
-The layout is top-left row-major, with numerical `0xRRGGBBAA` words and straight
-alpha. The source predicate has no PNG-specific limits. Source constructors
-remain unchecked, and Asset does not revalidate them.
+The layout is top-left row-major, with numerical `0xRRGGBBAA` words. Standard
+PNG alpha is straight. The PNG importer preserves native CgBI component values
+without alpha normalization, as documented in its reference. The source
+predicate checks storage, not color or alpha semantics, and has no PNG-specific
+limits. Source constructors remain unchecked, and Asset does not revalidate them.
 
 The [PNG reference](image-decoder.md) specifies importer limits, variants,
 errors, native-extension tolerances, and verification. Image source storage does

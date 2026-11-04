@@ -1,0 +1,114 @@
+deps/jonlib-png/png.bend: OK
+deps/jonlib-png/codec.bend: OK
+deps/jonlib-png/inflate.bend: OK
+docs/verification/2026-11-04-image-decoder/corpus/source/june.jpg: OK
+docs/verification/2026-11-04-image-decoder/corpus/source/tabby.jpg: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-ga16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-ga8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette-trns.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgb16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba-adam7.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/height4096.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/june-adam7.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/june-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/layout.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/materials-palette2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/mesh-palette4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/scene-palette1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/survivors-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/tabby-palette4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/tabby-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/width4096.png: OK
+june-rgb8 320 260 8 2 0 (Not interlaced)
+june-adam7 320 260 8 2 1 (Adam7 method)
+tabby-rgb8 192 256 8 2 0 (Not interlaced)
+tabby-palette4 192 256 4 3 0 (Not interlaced)
+cat-gray8 37 29 8 0 0 (Not interlaced)
+cat-ga8 37 29 8 4 0 (Not interlaced)
+cat-rgba8 37 29 8 6 0 (Not interlaced)
+cat-palette-trns 37 29 8 3 0 (Not interlaced)
+cat-gray1 37 29 1 0 0 (Not interlaced)
+cat-gray2 37 29 2 0 0 (Not interlaced)
+cat-gray4 37 29 4 0 0 (Not interlaced)
+cat-palette1 37 29 1 3 0 (Not interlaced)
+cat-palette2 37 29 2 3 0 (Not interlaced)
+cat-gray16 37 29 16 0 0 (Not interlaced)
+cat-ga16 37 29 16 4 0 (Not interlaced)
+cat-rgb16 37 29 16 2 0 (Not interlaced)
+cat-rgba16 37 29 16 6 0 (Not interlaced)
+cat-rgba-adam7 37 29 8 6 1 (Adam7 method)
+layout 3 2 8 6 0 (Not interlaced)
+width4096 4096 1 8 2 0 (Not interlaced)
+height4096 1 4096 8 2 0 (Not interlaced)
+mesh-palette4 640 480 4 3 0 (Not interlaced)
+materials-palette2 640 480 2 3 0 (Not interlaced)
+scene-palette1 1024 256 1 3 0 (Not interlaced)
+survivors-rgb8 800 394 8 2 0 (Not interlaced)
+june-rgb8 decode=file=all-pixels-exact
+june-adam7 decode=file=all-pixels-exact
+tabby-rgb8 decode=file=all-pixels-exact
+tabby-palette4 decode=file=all-pixels-exact
+cat-gray8 decode=file=all-pixels-exact
+cat-ga8 decode=file=all-pixels-exact
+cat-rgba8 decode=file=all-pixels-exact
+cat-palette-trns decode=file=all-pixels-exact
+cat-gray1 decode=file=all-pixels-exact
+cat-gray2 decode=file=all-pixels-exact
+cat-gray4 decode=file=all-pixels-exact
+cat-palette1 decode=file=all-pixels-exact
+cat-palette2 decode=file=all-pixels-exact
+cat-gray16 decode=file=all-pixels-exact
+cat-ga16 decode=file=all-pixels-exact
+cat-rgb16 decode=file=all-pixels-exact
+cat-rgba16 decode=file=all-pixels-exact
+cat-rgba-adam7 decode=file=all-pixels-exact
+layout decode=file=all-pixels-exact
+width4096 decode=file=all-pixels-exact
+height4096 decode=file=all-pixels-exact
+mesh-palette4 decode=file=all-pixels-exact
+materials-palette2 decode=file=all-pixels-exact
+scene-palette1 decode=file=all-pixels-exact
+survivors-rgb8 decode=file=all-pixels-exact
+stored tolerated=all-pixels-exact
+bad-crc tolerated=all-pixels-exact
+bad-adler tolerated=all-pixels-exact
+trailing tolerated=all-pixels-exact
+duplicate-ihdr decode=file=error 2147483649
+cgbi tolerated=all-pixels-exact
+input-at-limit tolerated=all-pixels-exact
+empty decode=file=error 2147483649
+truncated decode=file=error 2147483649
+bad-signature decode=file=error 2147483649
+unsupported decode=file=error 2147483649
+zero-width decode=file=error 2147483651
+width4097 decode=file=error 2147483651
+height4097 decode=file=error 2147483651
+filtered-over-limit decode=file=error 2147483651
+inflate-overrun decode=file=error 2147483653
+inflate-short decode=file=error 2147483653
+bad-filter decode=file=error 2147483653
+input-over-limit decode=file=error 2147483651
+Full image retained after release; repeated load cached; failure stable after repair; release/request/load retry recovered; actual loader calls=3.
+PNG production adapter verified.
+missing code=2 message=No such file or directory
+sparse-size code=75 message=Value too large for defined data type
+directory-read code=21 message=Is a directory
+Native missing-file and >UINT32_MAX errors preserved byte for byte; real shrink/growth rejected; 64 repetitions of six file paths retain descriptor count.
+order detected by native verifier status=1 message=pixels differ
+packing detected by native verifier status=1 message=pixels differ
+input-limit detected by native verifier status=1 message=input-at-limit file failed
+side-limit detected by native verifier status=1 message=width4096 decode failed
+Wrong order, packing, encoded limit and side limit were each rejected by actual runtime evidence.
+Loading
+Loaded 320x260 pixels=83200
+Missing
+Image decoder verification complete.

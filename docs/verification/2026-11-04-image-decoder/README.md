@@ -2,7 +2,7 @@
 
 The goal is to select one qualified PNG decoder and load its CPU source values through Entangle's existing Asset API. The implementation selects Jonlib's standalone PNG at S41 commit `5e49707e346453f7d36c27d5ca0cb286e431973d`. The alternative is the public `main.bend.decode_png` entry from emerging-ezimg S43, version `1.3.0.0`, hash `0x57618559b9b26dd8415f821176a3e692`.
 
-The base is `181d82b4e4a9e778626ea25d5f085f235214659d`, preserving the preceding internal mesh/material work. The local implementation branch is `feat/image-decoder`. Publication and independent review belong to the parent. This record creates no additional Trail.
+The base is `181d82b4e4a9e778626ea25d5f085f235214659d`, preserving the preceding internal mesh/material work. The implementation branch is `feat/image-decoder`. The preceding change has merged, and the remote `main` was verified at that exact base before publication. This work uses existing [Trail 25](https://entire.com/et/bend-engine/-/trails/25).
 
 ## Observed selection result
 
@@ -14,9 +14,13 @@ Every successful result was compared by width, height, exact logical count, and 
 | 20 error/policy probes | 6 exact, 14 rejected | 1 exact, 19 `None` |
 | Total 45 inputs per candidate | 31 exact, 14 rejected | 9 exact, 34 `None`, 2 terminated |
 
-The two terminations are June RGB8 at 320 by 260 and Bendvy's Survivors RGB8 screenshot at 800 by 394. Their native statuses were 137, which the installed Process effect encodes as `128 + signal`. The harness sets a 24 GiB address-space limit, 30-second CPU limit, and 45-second wall timeout per candidate invocation. The evidence establishes signal 9, not its cause. No wall timeout occurred in the final run. There is no performance or resident-memory claim.
+The table records the initial implementation run. Independent review repeated the same 45 inputs and process limits. Jonlib again had 31 exact results and 14 expected rejections. Ezimg had 8 exact results, 34 `None` results, and 3 unsuccessful processes across all 45 inputs. On the 25-image corpus alone, that is 7 exact, 15 `None`, and 3 unsuccessful processes. Tabby RGB8 changed from an exact result to status 137. Every other outcome was unchanged. Both runs remain visible; no repeat was discarded or substituted to improve the result.
+
+The two unsuccessful processes are June RGB8 at 320 by 260 and Bendvy's Survivors RGB8 screenshot at 800 by 394. Their native statuses were 137. The installed Process effect returns `128 + signal` for signal deaths and the exit code for normal exits, so these logs alone cannot distinguish signal 9 from a normal exit with code 137. The original logger labels every status at least 128 as `terminated`; that label is not an additional observation. The current logger prints only the returned status. The harness sets a 24 GiB address-space limit, 30-second CPU limit, and 45-second wall timeout per candidate invocation. No wall timeout occurred in the final run. There is no performance or resident-memory claim.
 
 [`comparison.log`](comparison.log) records all 90 candidate outcomes. `None` remains an opaque rejection. It is never relabeled as CRC, size, or unsupported-format failure without another exposed diagnostic.
+
+[`review-comparison.log`](review-comparison.log) records all 90 outcomes from the independent rerun using the current numeric-status logger. The third status-137 result is subject to the same ambiguity. The two observed runs do not establish a stable failure rate or a performance comparison.
 
 ## Retained inputs and independent references
 
@@ -57,6 +61,14 @@ This is the Bend frontend result. The whole root was not rerun with `--verdict`.
 
 The [PNG reference](../../image-decoder.md) separates the source-derived profile from observed cases. It documents CRC/Adler tolerance, trailing bytes, CgBI's unconverted native values, error categories, inclusive limits, and heap limits. The maximum 16,777,216-pixel output was not allocated. Success is decoding, not integrity verification.
 
+## Independent implementation review
+
+The coordinator read the production adapter, source type, formal additions, corpus and reference generation, both candidate wrappers, file/cache checks, and mutation controls. All three vendored Bend files were compared byte for byte with the downloaded upstream pin. The chosen architecture preserves the generic Asset API and Content's source-only dependency closure.
+
+The independent native rerun passed all 25 production memory/file image comparisons, cache retention and explicit retry, file errors and descriptor closure, and all four mutation controls. See [`review-runtime.log`](review-runtime.log). Existing Asset/source-only verification and root frontend proofs passed again in [`review-assets.log`](review-assets.log) and [`review-proof.log`](review-proof.log). The comparison rerun and its changed ezimg process outcome are recorded above.
+
+Review corrected the comparison's process-status wording, added ezimg's explicit input/output admission comparison, and clarified the CgBI exception to standard PNG alpha semantics. These corrections change the evidence presentation, not the decoder or Asset behavior. No unrelated renderer/UI checks or performance claims were added.
+
 ## Reproduce
 
 Run from the repository root with the pinned compiler and dependencies available. [`environment.txt`](environment.txt) records Bend, ImageMagick, Clang, and the native platform used for this run.
@@ -90,4 +102,4 @@ bend tools/image-decoder/regenerate.bend
 
 The parent's selected design keeps source representation in Content and codec/file policy in `src/image-png.bend`. Bend Base already reserves the name `Image`, so the concrete type is `Content.SourceImage`, as in the original design C sketch. No Asset API, cache state, renderer, ECS, shader, texture upload, or registry is added.
 
-Model the Domain shaped the reusable source value. Boundary Discipline kept admission and errors at the PNG boundary. Build the Lever produced the retained corpus, native comparator, verifier, and mutation controls. Prove It Works required exact pixels and real cache/file execution before selection. The design exploration and independent final review belong to the parent. This implementation had one writer and spawned no agents.
+Model the Domain shaped the reusable source value. Boundary Discipline kept admission and errors at the PNG boundary. Build the Lever produced the retained corpus, native comparator, verifier, and mutation controls. Prove It Works required exact pixels and real cache/file execution before selection. Three design candidates and an independent judge preceded implementation. One implementation owner wrote the integration, and the coordinator performed the separate review and reruns described above.

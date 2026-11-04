@@ -19,7 +19,7 @@ The [example](../examples/image-assets.bend) calls `Asset.request`, `Asset.load`
 
 ## Pixel layout
 
-The origin is the top left. Rows run left to right, followed by the next row. The list has exactly `width * height` numerical `0xRRGGBBAA` words. This is a numerical packing contract, not a host byte-order or upload ABI. Alpha is straight. The adapter neither premultiplies nor unpremultiplies RGB.
+The origin is the top left. Rows run left to right, followed by the next row. The list has exactly `width * height` numerical `0xRRGGBBAA` words. This is a numerical packing contract, not a host byte-order or upload ABI. Standard PNG alpha is straight. The adapter neither premultiplies nor unpremultiplies RGB; the native CgBI exception is described below.
 
 Grayscale expands to RGB. Missing alpha becomes 255. Packed grayscale expands to the full 8-bit range. Palette entries expand to RGBA, including tRNS. Accepted 16-bit samples reduce to their high byte. Source-derived behavior compares 16-bit transparency keys at full width before reduction.
 
@@ -42,7 +42,7 @@ The source-derived profile covers the following combinations. Runtime observatio
 
 Observed Jonlib output matched every reference word on all 25 retained images. Those include both cat photographs, gray/gray-alpha/RGB/RGBA derivatives, palette+tRNS, packed gray and palette depths, four 16-bit families, RGB and RGBA Adam7, three packed Entangle captures, and Bendvy's RGB screenshot. This is not an exhaustive proof of every combination, filter, or compressed stream.
 
-Ezimg returned exact pixels on 8 of those images, returned `None` on 15, and was terminated with status 137 on June RGB8 and the Survivors screenshot under the harness resource limits. Termination is not a decoder rejection. The evidence does not attribute its cause beyond signal 9. No speed or memory comparison is claimed.
+Ezimg's initial run returned exact pixels on 8 of those images, returned `None` on 15, and exited unsuccessfully with status 137 on June RGB8 and the Survivors screenshot under the harness resource limits. The independent review rerun had 7 exact results, the same 15 rejections, and 3 unsuccessful processes. Tabby RGB8 also returned status 137 on that rerun. Both logs are retained in the verification record. The process outcomes are not stable success rates or decoder rejections. Status 137 is consistent with signal 9, but the Process effect also returns 137 for a normal exit with that code. These logs do not distinguish those causes. No speed or memory comparison is claimed.
 
 ## Admission limits
 
@@ -60,6 +60,19 @@ These are Jonlib's unchanged standard profile limits. They apply to `decode` and
 These bounds interact. A 4096 by 4096 RGBA8 image needs 67,112,960 filtered bytes because each row also has a filter byte, so that profile is rejected despite meeting the side and pixel bounds. Adam7 uses the sum of its pass lengths. The nominal maximum RGBA payload is 67,108,864 bytes. Array padding, word storage, list nodes, reference counts, and decoder intermediates require additional memory. Admission limits are not runtime heap guarantees. The full 16,777,216-pixel output was not allocated during verification.
 
 The engine adds no duplicate header parser or arbitrary smaller cap. `decode.wide` is not used.
+
+The candidate limits differ at the decoding boundary. The following ezimg findings come from its pinned `main.bend`, `src/png.bend`, and `src/inflate.bend`, not from maximum-size allocations.
+
+| Quantity | Jonlib standard entry | Ezimg public PNG entry |
+| --- | --- | --- |
+| Encoded input | 2 MiB, checked before parsing | No explicit total-byte admission cap |
+| Dimensions | Each 1 through 4096 | Positive U32 dimensions, with no smaller admission cap |
+| Inflated output | Exact header-derived length, at most 64 MiB, enforced during inflation | No emitted-byte budget; the complete inflated list precedes raster validation |
+| Final output | At most 16,777,216 RGBA words | No explicit pixel-count admission cap |
+| Native packing | `0xRRGGBBAA` Array | `0xAARRGGBB` list |
+| Failure value | Typed `Codec.Error` | Opaque `None` |
+
+Ezimg calculates the scanline stride as U32 `width * channels` without an overflow guard. Its nominal dimension field range is not a qualified capacity guarantee. The 4097-side probes contain incomplete rasters, and the 2 MiB probes contain trailing data. Their `None` results therefore do not establish ezimg size limits.
 
 ## Errors and file reads
 

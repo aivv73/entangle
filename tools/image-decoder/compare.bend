@@ -11,7 +11,7 @@ def result(+label:String,value:Result<&1,&1,U32 & String,U32 & (String & String)
       +out:String = out
       +code:U32 = code
       do IO<Unit>:
-        IO.print(label ++ Bool.pick(String,U32.is_ge(code,128)," terminated status="," exit=") ++ U32.show(code) ++ " " ++ String.trim(out) ++ " " ++ String.trim(err))
+        IO.print(label ++ " exit=" ++ U32.show(code) ++ " " ++ String.trim(out) ++ " " ++ String.trim(err))
         C.require(Bool.not(String.contains(out,"MISMATCH")),label ++ " returned incorrect pixels")
 
 def probe(+codec:String,+name:String,width:U32,height:U32) -> IO(Unit):
