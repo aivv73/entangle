@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 4, 2026 · updated for the minimal E4 Asset API
+**Revision:** 6 · November 4, 2026 · updated for the bounded E4 OBJ importer
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete in the working tree under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has begun with the minimal [Asset API](docs/assets.md) in the working tree; its remaining tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete in the working tree under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is implemented and verified on `feat/static-model-importer`, not merged. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -14,7 +14,7 @@
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
 
-**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. The minimal E4 [Asset API](docs/assets.md) is implemented in the working tree. Internal formats and importer integration are next; the stage order and alpha criteria are unchanged.
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. Subsequent runtime qualification selected Jonlib's narrow PNG and OBJ modules behind engine APIs. The [OBJ evidence](docs/verification/2026-11-04-model-obj/README.md) records its supported profile and validation limits. E4 remains incomplete.
 
 ## E1 progress, November 3, 2026
 
@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** define the internal mesh/material format, then integrate E4 importers through the [Asset API](docs/assets.md). Typed source handles, synchronous loading/error state, caching, and explicit release are implemented in the working tree. [Sampled-image retention verification](docs/verification/2026-11-04-sampled-retention/README.md) closes E3's remaining checklist item [S52]. Native failure handling combines real-runtime evidence with bounded proofs of production handlers [S50, S51]. Rare driver errors remain formally covered rather than observed hardware events. Texture sampling, file importers, and textured materials remain E4 work.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) now has source, cache/retry, Creation/ECS, offscreen, and X11 evidence on its feature branch. E4 and E5 still precede `v0.1-alpha`.
 
 ---
 
@@ -827,7 +827,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** begin E4 with the minimal Asset API and internal mesh/material format. E0–E2 are complete, and sampled-image retention verification closes E3 in the working tree [S52]. The universal proof, production upload enforcement, scoped ABI/transport checks, whole-mesh replacement, retaining references, and failure handling are complete within their documented trust limits [S39, S40, S48–S52]. E4 and E5 still precede `v0.1-alpha`. After alpha, the research priority is R0–R3; E6/E7 do not block that path.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) now has source, cache/retry, Creation/ECS, offscreen, and X11 evidence on its feature branch. E4 and E5 still precede `v0.1-alpha`.
 
 ---
 
