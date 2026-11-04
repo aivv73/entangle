@@ -1,0 +1,27 @@
+# Native resource failure verification
+
+This work extends S49 on base `bb565d1` and is tracked by [trail 20](https://entire.com/et/bend-engine/-/trails/20). The production renderer, buffer/geometry helpers, native registry, and dependency pins are unchanged. New Bend verification runs through their real effects. The native gate includes the driver; the reviewed dependency inventory adds only `CommandBuffer.fill_buffer`.
+
+Evidence is retained in `build/verification/native-failures-j7hYkpiQ`. `run.sh` reruns the serialized root proofs, standalone driver, full native gate, and existing upload-policy mutations. Per-stage logs and statuses, command history, revision, dependency revisions, source hashes, and binary hashes identify the run. The exploratory `probe.bend`, build log, and native log preserve the first successful allocation-pressure experiment. Earlier complete-driver attempts remain alongside the final logs.
+
+## Observed properties
+
+Rejected recording and submission operations preserve an earlier GPU fill and its retaining references. The same command submits after its signaled fence is reset, and every byte reads back as expected. Pending command/fence reset, destruction, resubmission, and host access reject without changing native object counts. Completion retains the recorded allocation; successful reset followed by collection makes its handle stale. The command and fence then execute again.
+
+Partial upload verification enters the existing production upload stage with an invalid index byte after a valid prefix. The vertex write succeeds first. All four combinations of retained vertex/index candidates preserve the exact initiating error and all cleanup errors. Successful-write counters count only the vertex write. Live counts and handle lookups show that the second disposal runs even if the first rejects. After references release, cleanup restores the baseline count. A separate terminal scope leaves both candidate disposals rejected and proves that entry teardown releases everything while returning all diagnostics.
+
+The allocation check uses a valid mesh with 72 vertex bytes and 8388600 index bytes. It acquires the first candidate buffer, then caps only its own process address space before calling the existing second-allocation stage. The observed failure is **`vkAllocateMemory: VkResult -2`**, the original `VK_ERROR_OUT_OF_DEVICE_MEMORY` bit pattern `4294967294`. This is a genuine driver result under an OS resource limit, not a lifetime rejection or an injected return value. The first candidate becomes stale, the immediate native count returns to baseline, and the rejected transaction returns the original allocation identities, ranges, complete byte contents, and diagnostics. Restoring the saved process limit permits fresh allocation and upload on the same device.
+
+## Verification and limits
+
+Root `bend PROOF.bend` reports `ALL PROOFS CHECK`. The standalone failure driver and full `bend tools/verify.bend` gate both exit zero with Vulkan validation and synchronization validation enabled. Both runs observe the genuine `vkAllocateMemory: VkResult -2` failure and finish with zero live objects, including the separate terminal-error scope. Native logs contain no validation errors, sync hazards, or VUID diagnostics. The full gate also passes the existing upload, ECS, offscreen rendering, replacement, and retaining-reference checks. The inspected replacement captures show the expected red square, green square, green half-square, and empty blue frame; original PPM copies and hashes remain in the evidence directory.
+
+All 11 existing upload-policy mutations reject, with baseline and restored passes. `mutations.log` records their separate evidence directory. Every executed stage status and the overall `run.status` are zero. Final source and policy hash checks pass. Production source, dependencies, `LAWS.bend`, `PROOF.bend`, and `toolchain.bend` have no diff.
+
+The [reproduction recipe](../../../.agents/skills/verify-entangle/features/resource-failures.md) describes prerequisites, commands, and required output. The process cap preserves the hard limit and refuses to raise an existing soft limit. Its restoration is read back before result assertions. The verifier is disposable; its limits do not affect the parent or other applications.
+
+The allocation-pressure mechanism is Linux/native verification, not a portable engine requirement. A device that does not produce the expected genuine allocation failure fails this check. The implementation does not replace Vulkan dispatch, use mocks, change allocation policy, or relax the upload boundary. Formal claims in `LAWS.bend` and proofs are unchanged: existing resident-selection laws remain applicable, while C/Vulkan behavior remains outside their scope.
+
+Uncertain submission, device loss, native Vulkan begin/end/reset errors, and descriptor free/reset driver errors remain unexercised. The recording, submission, reset, and cleanup rejections in this run are native registry checks. Buffer destruction and memory free use void Vulkan calls and cannot supply driver error statuses. The roadmap failure-path item remains open for those missing failure modes. Sampled-image descriptors and other execution lanes are also outside this run. No UI or performance change is included.
+
+No X11 run was repeated because production rendering and window behavior are unchanged. The process limit and failure driver apply only to the native verification executable.

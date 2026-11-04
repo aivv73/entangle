@@ -29,6 +29,7 @@ deps/bend-vulkan/Vulkan.bend CommandBuffer.copy_image_to_buffer
 deps/bend-vulkan/Vulkan.bend CommandBuffer.draw_indexed
 deps/bend-vulkan/Vulkan.bend CommandBuffer.end
 deps/bend-vulkan/Vulkan.bend CommandBuffer.end_render_pass
+deps/bend-vulkan/Vulkan.bend CommandBuffer.fill_buffer
 deps/bend-vulkan/Vulkan.bend CommandBuffer.pipeline_barrier
 deps/bend-vulkan/Vulkan.bend CommandBuffer.push_constants
 deps/bend-vulkan/Vulkan.bend CommandBuffer.reset

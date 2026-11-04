@@ -91,4 +91,6 @@ def main() -> IO(Unit):
     exact("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/scene-render","--threads","1","--gpu","off"],render_expected())
     command("bend",["tools/verify-mesh-replacement.bend","-o","build/verify-mesh-replacement"])
     command("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/verify-mesh-replacement","+RTS","--threads","1","--gpu","off"])
+    command("bend",["tools/verify-resource-failures.bend","-o","build/verify-resource-failures"])
+    command("env",["-u","DISPLAY","-u","WAYLAND_DISPLAY","./build/verify-resource-failures","+RTS","--threads","1","--gpu","off"])
     IO.print("Pinned native toolchain and dependency compatibility verified.")
