@@ -1,3 +1,7 @@
+import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as JsonBytes
+import ./src/json-boundary.bend as Json
+import ./src/scene-file.bend as SceneFile
+import 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend as JsonParser
 import ./deps/jonlib-obj/obj.bend as ModelParser
 import ./src/model-obj.bend as Obj
 import ./proofs/image-array.bend as ImageArray
@@ -706,3 +710,23 @@ def Laws.model_run_coalescing(labels,previous,line,first,n,rest,equal):
   asset_rewrite(Bool,b => {Bool.pick(List<&2,Obj.Run>,b,Obj.Run{1n+n,previous,first} <> rest,Obj.Run{1n,labels,line} <> Obj.Run{n,previous,first} <> rest) == Obj.Run{1n+n,previous,first} <> rest : List<&2,Obj.Run>},F.same_labels(labels,previous),True{},equal,{==})
 
 def Laws.model_source_limit_shadowed():{==}
+
+def Laws.json_guard_reject(code,path,reason):{==}
+
+def Laws.json_encoded_bound(bytes,path,oversized):
+  asset_rewrite(Bool,b => {Result.bind(&2,&1,Asset.Error,Unit,JsonParser.Val,Json.need(b,2,path,"JSON exceeds 65536 bytes"),_ => Result.bind(&2,&1,Asset.Error,Unit,JsonParser.Val,Json.need(Json.octets(bytes),1,path,"input contains a non-byte word"),_ => Json.parsed(JsonParser.parse.strict.unique.bytes(JsonBytes.from_string(Json.string(bytes)),Json.depth_limit()),path))) == Fail{Json.error(2,path,"JSON exceeds 65536 bytes")} : Result<&2,&1,Asset.Error,JsonParser.Val>},Nat.is_le(List.length(&2,U32,bytes),Json.byte_limit()),False{},oversized,{==})
+
+def Laws.json_read_exact(bytes,size,path,incomplete):
+  asset_rewrite(Bool,b => {Result.bind(&2,&2,Asset.Error,Unit,List<&2,U32>,Json.data(Unit,Json.need(b,6,path,"file changed or read incomplete")),_ => Done{bytes}) == Fail{Json.error(6,path,"file changed or read incomplete")} : Result<&2,&2,Asset.Error,List<&2,U32>>},Nat.is_eq(List.length(&2,U32,bytes),U32.to_nat(size)),False{},incomplete,{==})
+
+def Laws.json_reject_image_as_model(id,path):{==}
+def Laws.json_unresolved_reference(id,path):{==}
+def Laws.json_preserve_model_part(mesh,material,labels,transform):{==}
+
+def json_checked(+scene:Create.Scene,path:String,valid:Bool,equal:{SceneFile.scene_valid(scene) == valid : Bool}) -> {SceneFile.valid_result(SceneFile.checked(scene,path,valid)) == True{} : Bool}:
+  match valid:
+    case False{}:{==}
+    case True{}:equal
+
+def Laws.json_admitted_scene_compiles(scene,path):json_checked(scene,path,SceneFile.scene_valid(scene),{==})
+def Laws.json_depth_limit():{==}

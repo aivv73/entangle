@@ -12,7 +12,7 @@ def native(+name:String,kind:String,path:String,args:List<&2,String>) -> List<&2
    Step{name,kind,"./" ++ binary,List.append(&2,String,args,["+RTS","--threads","1","--gpu","off"])}]
 
 def known(name:String) -> Bool:
-  S.has(["toolchain","proofs","assets","images","upload","native-failures","native","window","all"],name)
+  S.has(["toolchain","proofs","assets","images","json","upload","native-failures","native","window","all"],name)
 
 def valid(names:List<&2,String>) -> Bool:
   match names:
@@ -28,7 +28,7 @@ def add(ok:Bool,steps:List<&2,Step>) -> List<&2,Step>:
 def plan(+names:List<&2,String>) -> List<&2,Step>:
   +baseline:Bool = selected(names,"native")
   +proofs:Bool = selected(names,"proofs")
-  +assets:Bool = selected(names,"assets") || selected(names,"images")
+  +assets:Bool = selected(names,"assets") || selected(names,"images") || selected(names,"json")
   +upload:Bool = selected(names,"upload") || baseline
   +failures:Bool = selected(names,"native-failures") || baseline
   +laws:Bool = proofs || assets || upload || failures
@@ -38,6 +38,7 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
     add(laws && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
     add(assets && Bool.not(baseline),native("assets","runtime","tools/verify-assets.bend",[])),
     add(selected(names,"images") && Bool.not(baseline),native("images","runtime-and-sensitivity","tools/verify-images.bend",[])),
+    add(selected(names,"json") && Bool.not(baseline),native("json","runtime-and-sensitivity","tools/verify-json.bend",[])),
     add(upload && Bool.not(baseline),native("upload-runtime","runtime","tools/verify-upload-runtime.bend",[])),
     add(upload && Bool.not(baseline),native("upload-native-limit","runtime","tools/verify-upload-native-limit.bend",[])),
     add(failures && Bool.not(baseline),native("resource-failures","runtime","tools/verify-resource-failures.bend",[])),
@@ -200,7 +201,7 @@ def run(+names:List<&2,String>) -> IO(Unit):
     S.require(ok,"Required verification failed; inspect manifest.tsv and per-stage logs.")
 
 def usage() -> String:
-  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images upload native-failures native window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nwindow covers mesh controls and replay; other window scenarios remain in the feature map."
+  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images json upload native-failures native window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nwindow covers mesh controls and replay; other window scenarios remain in the feature map."
 
 def choose(names:List<&2,String>,dry:Bool) -> IO(Unit):
   +names:List<&2,String> = names

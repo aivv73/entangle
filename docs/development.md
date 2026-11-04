@@ -30,6 +30,7 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 | `proofs` | Root frontend proofs, standalone upload kernel verdict, law mutations and restored baselines. |
 | `assets` | Root frontend proofs, law mutations, real file/cache/release/retry and source-consumer checks. |
 | `images` | Assets plus PNG corpus, full-pixel comparison, real file/cache behavior and decoder mutations. |
+| `json` | Assets plus strict scene/manifest files, reference and resource limits, cache/retry, parser qualification, production mutations and real ECS/offscreen comparison. |
 | `upload` | Root frontend proofs, upload kernel verdict, law and source-policy mutations, real production/native upload boundaries and readback. |
 | `native-failures` | Root frontend proofs and law mutations, bounded production-handler proofs with all mutations, real resource failure/rollback/retry. |
 | `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler sensitivity controls. |

@@ -110,6 +110,16 @@ bend examples/model-assets.bend -o build/model-assets
 ./build/model-assets docs/verification/2026-11-04-model-obj/corpus/sign.obj +RTS --threads 1 --gpu off
 ```
 
+The [JSON loader](docs/json-scene.md) reads versioned scene files and asset
+manifests through one strict parser. It validates schema, numeric ranges,
+duplicate keys, asset references, and size/depth limits before returning a
+`Creation.Scene`.
+
+```sh
+bend examples/json-scene.bend -o build/json-scene-example
+./build/json-scene-example docs/verification/2026-11-04-json-scene/corpus/scene.json +RTS --threads 1 --gpu off
+```
+
 Other examples load bytes or PNG images. Texture loading and richer model
 formats remain future work.
 
@@ -188,6 +198,7 @@ through small working examples backed by reproducible evidence.
 - [Public scene creation](docs/public-creation.md)
 - [Mesh and material source format](docs/content.md)
 - [Asset cache and loading](docs/assets.md)
+- [JSON scene files and manifests](docs/json-scene.md)
 - [Application module registration](docs/modules-registration.md)
 - [Headless execution](docs/headless-reference.md)
 - [Rendering verification](docs/render-verification.md)

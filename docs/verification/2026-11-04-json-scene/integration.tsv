@@ -1,0 +1,3 @@
+command	exit	evidence
+bend tools/verify.bend -o build/json-scene/default-verifier	0	build/json-scene/default-verifier-build.log
+./build/json-scene/boundary +RTS --threads 1 --gpu off	0	build/json-scene/final-boundary.log

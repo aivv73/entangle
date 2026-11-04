@@ -1,0 +1,11 @@
+kit expected=False input={"x":1,"x":2}
+kit expected=False input={"x":1,"\u0078":2}
+kit expected=False input={"nested":{"x":1,"x":2}}
+kit expected=True input=[[]]
+kit expected=False input=[[]]
+kit expected=False input="\ud800"
+kit expected=True input="\ud83d\ude00"
+kit expected=False input=01
+kit expected=False input={} trailing
+ezjson duplicate accepted=True
+Selected bend-kit-json strict unique byte parser. Exact numbers, decoded-key uniqueness and pre-descent depth checks qualified.

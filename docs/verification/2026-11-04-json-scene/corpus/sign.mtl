@@ -1,0 +1,8 @@
+# Entangle sign diffuse materials. MIT.
+newmtl red
+Kd 1 0 0
+d 1
+Tr 0
+illum 0
+newmtl green
+Kd 0 1 0

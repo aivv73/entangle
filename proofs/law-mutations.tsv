@@ -5,3 +5,5 @@ asset-identity-reused	src/asset.bend	PROOF.bend	    case None{}:(Cache{scope,1n+
 clock-regresses	src/time.bend	PROOF.bend	  accumulated(config,Nat.max(sample,now),Nat.add(remainder,Nat.sub(now,sample)))	  accumulated(config,now,Nat.add(remainder,Nat.sub(now,sample)))	time_high_water
 upload-drops-byte	src/upload-size.bend	PROOF.bend	    case x <> rest:x <> transport(rest)	    case x <> rest:transport(rest)	upload_transport_length
 upload-offset-guard-removed	deps/bend-vulkan/src/core.bend	proofs/upload-range/PROOF.bend	  Bool.not(size_less(capacity,offset)) && Bool.not(size_less(W.add(capacity,W.neg(offset)),length))	  Bool.not(size_less(W.add(capacity,W.neg(offset)),length))	universal
+json-depth	src/json-boundary.bend	PROOF.bend	def depth_limit() -> U32:8	def depth_limit() -> U32:9	json_depth_limit
+json-part-preservation	src/scene-file.bend	PROOF.bend	    case F.ModelPart{mesh,material,_} <> rest:Create.Instance{mesh,material,transform} <> instances(rest,transform)	    case F.ModelPart{mesh,material,_} <> rest:instances(rest,transform)	json_preserve_model_part

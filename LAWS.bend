@@ -1,3 +1,6 @@
+import ./src/json-boundary.bend as Json
+import ./src/scene-file.bend as SceneFile
+import 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend as JsonParser
 import ./deps/jonlib-obj/obj.bend as ModelParser
 import ./src/model-obj.bend as Obj
 import ./proofs/image-array.bend as ImageArray
@@ -969,3 +972,47 @@ law model_run_coalescing:
 
 law model_source_limit_shadowed:
   {Nat.is_lt(Obj.obj_limit(),Nat.sub(Nat.mul(699050n,8n),1n)) == True{} : Bool}
+
+law json_guard_reject:
+  for code:U32
+  for path:String
+  for reason:String
+  {Json.need(False{},code,path,reason) == Fail{Json.error(code,path,reason)} : Result<&2,&1,Asset.Error,Unit>}
+
+law json_encoded_bound:
+  for +bytes:List<&2,U32>
+  for +path:String
+  for oversized:{Nat.is_le(List.length(&2,U32,bytes),Json.byte_limit()) == False{} : Bool}
+  {Json.parse(bytes,path) == Fail{Json.error(2,path,"JSON exceeds 65536 bytes")} : Result<&2,&1,Asset.Error,JsonParser.Val>}
+
+law json_read_exact:
+  for +bytes:List<&2,U32>
+  for +size:U32
+  for +path:String
+  for incomplete:{Nat.is_eq(List.length(&2,U32,bytes),U32.to_nat(size)) == False{} : Bool}
+  {Json.exact(Done{bytes},size,path) == Fail{Json.error(6,path,"file changed or read incomplete")} : Result<&2,&2,Asset.Error,List<&2,U32>>}
+
+law json_reject_image_as_model:
+  for id:String
+  for path:String
+  {SceneFile.reference_kind(True{},SceneFile.Image{},id,path) == Fail{Json.error(5,path,"image used as model " ++ id)} : Result<&2,&2,Asset.Error,Unit>}
+
+law json_unresolved_reference:
+  for +id:String
+  for +path:String
+  {SceneFile.model_reference([],id,path) == Fail{Json.error(5,path,"unresolved model " ++ id)} : Result<&2,&2,Asset.Error,Unit>}
+
+law json_preserve_model_part:
+  for mesh:F.Mesh
+  for material:F.Material
+  for labels:F.ModelLabels
+  for transform:C.Transform
+  {SceneFile.instances([F.ModelPart{mesh,material,labels}],transform) == [Create.Instance{mesh,material,transform}] : List<&2,Create.Instance>}
+
+law json_admitted_scene_compiles:
+  for +scene:Create.Scene
+  for path:String
+  {SceneFile.valid_result(SceneFile.admit(scene,path)) == True{} : Bool}
+
+law json_depth_limit:
+  {Json.depth_limit() == 8 : U32}

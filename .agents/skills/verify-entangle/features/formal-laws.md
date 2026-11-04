@@ -87,3 +87,8 @@ When maintaining this record, inspect diffs and commit messages from the sync
 commit, including dependencies and new writers of guarded state. Rerun the
 commands above after checking the correspondence. Advance the sync commit
 only for checks that run successfully. Record blocked checks separately.
+
+The local S44 JSON loading change adds eight root laws and two law mutation
+controls. The [JSON verification record](../../../../docs/verification/2026-11-04-json-scene/README.md)
+retains their source-specific frontend and sensitivity evidence. It does not
+advance the earlier synchronization commit or add a kernel verdict for JSON.
