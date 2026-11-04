@@ -29,9 +29,16 @@ C, source hashes, proof logs, counterexamples, and exit statuses.
 The dependency's existing Python 3 generator check also verifies that the
 window bundle embeds the same native implementation.
 
-Coverage was synchronized against root commit
-`e0dfa4b` and `deps/bend-vulkan` commit
+All eleven proof entries were synchronized against root commit
+`71c16701a0bba33e9635624dfc916acfb87d9344` on November 4, 2026, and `deps/bend-vulkan` commit
 `a144f7dd4fb4835ca3d5ce17350fc850de049038`.
+Their outcome is **in sync**. The production dependency is unchanged since
+the previous root sync, `e0dfa4b4bd9ff548447382585931484cd66be511`.
+The intervening commits, `5ef97bb` and `71c1670`, add formal and runtime
+verification. They change no production handler, property, or bound.
+All positive proofs, all 18 production mutations, and the restored proofs
+passed maintenance. Sampled-image retention added in `71c1670` is runtime
+coverage, not an additional CBMC theorem.
 The authoritative function/region list is
 [`handlers.in.c`](../../../proofs/native-failures/handlers.in.c).
 It covers begin/end/reset return handling, submission and synced semaphore

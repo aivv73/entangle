@@ -7,6 +7,10 @@ description: Verify Entangle's native X11 mesh playground and scene window, publ
 
 Read [the feature map](features/README.md) first. Entangle's primary interactive app is a native X11 window. Its other user paths are Bend scene descriptions and command-line examples. There is no web server, account, database, or seed service. Examples supply their own scene data.
 
+For formal verification maintenance, follow [the law checks](features/formal-laws.md).
+That entry records covered code, assumptions, commands, mutation controls, and
+the synchronization commit separately from live-window evidence.
+
 ## Launch
 
 Run from the repository root on Linux x86-64. Read `AGENTS.md`, run `bend guide`, and check `toolchain.bend`. The current native lane requires Bend 2.0.39, Clang 23.1.4, Node.js or Bun, initialized dependencies, Vulkan and X11 development headers, and a Vulkan graphics/presentation device. The live recipe also needs `Xwayland`, a working parent Wayland session, and `VK_LAYER_KHRONOS_validation`.

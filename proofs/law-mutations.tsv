@@ -1,0 +1,4 @@
+geometry-reject-installs-candidate	src/scene-geometry-policy.bend	PROOF.bend	    case False{}:old	    case False{}:fresh	geometry_install_reject
+clock-regresses	src/time.bend	PROOF.bend	  accumulated(config,Nat.max(sample,now),Nat.add(remainder,Nat.sub(now,sample)))	  accumulated(config,now,Nat.add(remainder,Nat.sub(now,sample)))	time_high_water
+upload-drops-byte	src/upload-size.bend	PROOF.bend	    case x <> rest:x <> transport(rest)	    case x <> rest:transport(rest)	upload_transport_length
+upload-offset-guard-removed	deps/bend-vulkan/src/core.bend	proofs/upload-range/PROOF.bend	  Bool.not(size_less(capacity,offset)) && Bool.not(size_less(W.add(capacity,W.neg(offset)),length))	  Bool.not(size_less(W.add(capacity,W.neg(offset)),length))	universal
