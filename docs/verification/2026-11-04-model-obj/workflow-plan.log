@@ -1,0 +1,42 @@
+toolchain [precondition]
+bend
+tools/verify-toolchain.bend
+boundary-build [build]
+bend
+tools/verify-upload-boundary.bend
+-o
+build/verify-upload-boundary
+boundary [source-policy]
+./build/verify-upload-boundary
++RTS
+--threads
+1
+--gpu
+off
+frontend [frontend]
+bend
+PROOF.bend
+assets-build [build]
+bend
+tools/verify-assets.bend
+-o
+build/workflow-assets
+assets [runtime]
+./build/workflow-assets
++RTS
+--threads
+1
+--gpu
+off
+law-mutations-build [build]
+bend
+tools/verify-law-mutations.bend
+-o
+build/workflow-law-mutations
+law-mutations [sensitivity]
+./build/workflow-law-mutations
++RTS
+--threads
+1
+--gpu
+off

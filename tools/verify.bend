@@ -76,6 +76,8 @@ def main() -> IO(Unit):
     command("./build/verify-assets",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-images.bend","-o","build/verify-images"])
     command("./build/verify-images",["+RTS","--threads","1","--gpu","off"])
+    command("bend",["tools/verify-models.bend","-o","build/verify-models"])
+    command("./build/verify-models",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-native-failures.bend","-o","build/verify-native-failures"])
     command("./build/verify-native-failures",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-upload-runtime.bend","-o","build/verify-upload-runtime"])

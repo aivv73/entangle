@@ -1,3 +1,5 @@
+import ./deps/jonlib-obj/obj.bend as ModelParser
+import ./src/model-obj.bend as Obj
 import ./proofs/image-array.bend as ImageArray
 import ./src/image-png.bend as Png
 import ./deps/jonlib-png/codec.bend as PngCodec
@@ -632,3 +634,75 @@ def Laws.image_error_byte():{==}
 def Laws.image_error_size():{==}
 def Laws.image_error_truncated():{==}
 def Laws.image_error_stream():{==}
+
+def Laws.model_pair_validity(mesh,material,labels,rest):{==}
+def Laws.model_aggregate_validity(parts):{==}
+def Laws.model_triangle_emission(a,b,c,tail):{==}
+def Laws.model_triangle_corner_count(a,b,c,tail):{==}
+def Laws.model_local_indices(local,tail):{==}
+def Laws.model_index_count(local,tail):{==}
+def Laws.model_first_triangle_order(a,b,c):{==}
+def Laws.model_first_indices():{==}
+def Laws.model_initial_material(materials,line):{==}
+def Laws.model_missing_material(name,line,index):{==}
+def Laws.model_raw_zero(count,line):{==}
+def Laws.model_negative_zero(count,line):{==}
+def Laws.model_run_conservation(n,labels,line,rest):{==}
+def Laws.model_run_boundary(labels,previous,line,first,n,rest,different):
+  asset_rewrite(Bool,b => {Bool.pick(List<&2,Obj.Run>,b,Obj.Run{1n+n,previous,first} <> rest,Obj.Run{1n,labels,line} <> Obj.Run{n,previous,first} <> rest) == Obj.Run{1n,labels,line} <> Obj.Run{n,previous,first} <> rest : List<&2,Obj.Run>},F.same_labels(labels,previous),False{},different,{==})
+
+def model_checked(+model:F.SourceModel,valid:Bool,equal:{F.model_valid(model) == valid : Bool}) -> {Obj.valid_result(Obj.checked(model,valid)) == True{} : Bool}:
+  match valid:
+    case False{}:{==}
+    case True{}:equal
+
+def Laws.model_checked_success(model):model_checked(model,F.model_valid(model),{==})
+
+def Laws.model_reject_incomplete_read(bytes,size,path,incomplete):
+  asset_rewrite(Bool,b => {Result.bind(&2,&2,Asset.Error,Unit,List<&2,U32>,Obj.need(b,8,path,0n,"file size changed or read was incomplete"),_ => Done{bytes}) == Fail{Obj.error(8,path,0n,"file size changed or read was incomplete")} : Result<&2,&2,Asset.Error,List<&2,U32>>},Nat.is_eq(List.length(&2,U32,bytes),U32.to_nat(size)),False{},incomplete,{==})
+
+def Laws.model_expanded_limit():{==}
+def Laws.model_expanded_over_limit():{==}
+
+def Laws.model_admit_result(result):
+  match result:
+    case Fail{_}:{==}
+    case Done{model}:Laws.model_checked_success(model)
+
+def Laws.model_finish_valid(plan,materials):
+  match plan materials:
+    case Obj.Plan{+commands,+runs,+lib,+uses,+vc,+fc},Obj.Materials{+values,+table}:
+      Laws.model_admit_result(Result.bind(&2,&2,Asset.Error,Unit,F.SourceModel,Obj.check_uses(uses,values,table),_ => Obj.lower(Obj.Plan{commands,runs,lib,uses,vc,fc},Obj.Materials{values,table},ModelParser.attributes(commands,table))))
+
+def model_materials_valid(+plan:Obj.Plan,result:Result<&2,&2,Asset.Error,Obj.Materials>) ->
+  {Obj.valid_result(Result.bind(&2,&2,Asset.Error,Obj.Materials,F.SourceModel,result,materials => Obj.finish(plan,materials))) == True{} : Bool}:
+  match result:
+    case Fail{_}:{==}
+    case Done{materials}:Laws.model_finish_valid(plan,materials)
+
+def Laws.model_finish_bytes_valid(plan,mtl):
+  match plan mtl:
+    case Obj.Plan{commands,runs,None{},uses,vc,fc},None{}:Laws.model_finish_valid(Obj.Plan{commands,runs,None{},uses,vc,fc},Obj.Materials{[],ModelParser.table.new()})
+    case Obj.Plan{commands,runs,Some{name},uses,vc,fc},Some{bytes}:model_materials_valid(Obj.Plan{commands,runs,Some{name},uses,vc,fc},Obj.materials(bytes))
+    case Obj.Plan{_,_,None{},_,_,_},Some{_}:{==}
+    case Obj.Plan{_,_,Some{_},_,_,_},None{}:{==}
+
+def model_prepared_valid(result:Result<&2,&2,Asset.Error,Obj.Plan>,+mtl:Maybe<&2,List<&2,U32>>) ->
+  {Obj.valid_result(Result.bind(&2,&2,Asset.Error,Obj.Plan,F.SourceModel,result,plan => Obj.finish_bytes(plan,mtl))) == True{} : Bool}:
+  match result:
+    case Fail{_}:{==}
+    case Done{plan}:Laws.model_finish_bytes_valid(plan,mtl)
+
+def Laws.model_decode_valid(obj,mtl):model_prepared_valid(Obj.prepare(obj),mtl)
+
+def Laws.model_parsed_word(value,source,line,finite):
+  asset_rewrite(Bool,b => {Result.bind(&2,&2,Asset.Error,Unit,F32,Obj.need(b,3,source,line,"nonfinite number"),_ => Done{value}) == Done{value} : Result<&2,&2,Asset.Error,F32>},F.finite(value),True{},finite,{==})
+
+def Laws.model_negative_relative(value,count,nonzero,in_range):
+  asset_rewrite(Bool,b => {Bool.pick(ModelParser.Fix,b,ModelParser.Fix{True{},0},Bool.pick(ModelParser.Fix,U32.is_le(value,count),ModelParser.Fix{True{},U32.sub(count,value)},ModelParser.Fix{False{},0})) == ModelParser.Fix{True{},U32.sub(count,value)} : ModelParser.Fix},U32.is_eq(value,0),False{},nonzero,
+    asset_rewrite(Bool,b => {Bool.pick(ModelParser.Fix,b,ModelParser.Fix{True{},U32.sub(count,value)},ModelParser.Fix{False{},0}) == ModelParser.Fix{True{},U32.sub(count,value)} : ModelParser.Fix},U32.is_le(value,count),True{},in_range,{==}))
+
+def Laws.model_run_coalescing(labels,previous,line,first,n,rest,equal):
+  asset_rewrite(Bool,b => {Bool.pick(List<&2,Obj.Run>,b,Obj.Run{1n+n,previous,first} <> rest,Obj.Run{1n,labels,line} <> Obj.Run{n,previous,first} <> rest) == Obj.Run{1n+n,previous,first} <> rest : List<&2,Obj.Run>},F.same_labels(labels,previous),True{},equal,{==})
+
+def Laws.model_source_limit_shadowed():{==}

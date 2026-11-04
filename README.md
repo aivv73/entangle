@@ -100,8 +100,18 @@ bend examples/content-assets.bend -o build/content-assets
 ./build/content-assets +RTS --threads 1 --gpu off
 ```
 
-Other examples load bytes from disk and compile a cached scene after releasing
-its source handle. File importers and texture loading remain future work.
+The [static OBJ importer](docs/model-obj.md) loads authored triangles and opaque
+diffuse materials synchronously through Assets. Its source values own no ECS or
+Vulkan resources. The [model example](examples/model-assets.bend) releases its
+cache handle, compiles ordinary instances, and advances two real ECS ticks.
+
+```sh
+bend examples/model-assets.bend -o build/model-assets
+./build/model-assets docs/verification/2026-11-04-model-obj/corpus/sign.obj +RTS --threads 1 --gpu off
+```
+
+Other examples load bytes or PNG images. Texture loading and richer model
+formats remain future work.
 
 ## Simulate without rendering
 

@@ -32,6 +32,7 @@ def scan(xs:List<&2,String>,+all:List<&2,String>,+policy:List<&2,String>,+hashes
 def main() -> IO(Unit):
   do IO<Unit>:
     pins(Pin.dependencies())
+    _:String <- S.run("sha256sum",["-c","deps/jonlib-obj/SHA256SUMS"])
     +symlinks:String <- S.run("find",[".","-path","./.git","-prune","-o","-path","./deps","-prune","-o","-path","./build","-prune","-o","-path","./docs","-prune","-o","-type","l","-print"])
     S.require(String.is_empty(symlinks),"Upload source scope rejects symlinks: " ++ symlinks)
     +files:List<&2,String> <- I.files()

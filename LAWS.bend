@@ -1,3 +1,5 @@
+import ./deps/jonlib-obj/obj.bend as ModelParser
+import ./src/model-obj.bend as Obj
 import ./proofs/image-array.bend as ImageArray
 import ./src/image-png.bend as Png
 import ./deps/jonlib-png/codec.bend as PngCodec
@@ -823,3 +825,147 @@ law image_error_truncated:
   {Png.decoder_error(PngCodec.Truncated{}) == Asset.Error{2147483652,"PNG Truncated"} : Asset.Error}
 law image_error_stream:
   {Png.decoder_error(PngCodec.BadStream{}) == Asset.Error{2147483653,"PNG BadStream"} : Asset.Error}
+
+law model_pair_validity:
+  for +mesh:F.Mesh
+  for +material:F.Material
+  for labels:F.ModelLabels
+  for +rest:List<&2,F.ModelPart>
+  {F.parts_valid(F.ModelPart{mesh,material,labels} <> rest) == (F.mesh_valid(mesh) && F.material_valid(material) && F.parts_valid(rest)) : Bool}
+
+law model_aggregate_validity:
+  for +parts:List<&2,F.ModelPart>
+  {F.model_valid(F.SourceModel{parts}) == (F.parts_valid(parts) && F.counts_fit(F.model_counts(parts))) : Bool}
+
+law model_triangle_emission:
+  for a:F.Vertex
+  for b:F.Vertex
+  for c:F.Vertex
+  for tail:List<&2,F.Vertex>
+  {Obj.emit_vertices(a,b,c,tail) == c <> b <> a <> tail : List<&2,F.Vertex>}
+
+law model_triangle_corner_count:
+  for a:F.Vertex
+  for b:F.Vertex
+  for c:F.Vertex
+  for tail:List<&2,F.Vertex>
+  {List.length(&2,F.Vertex,Obj.emit_vertices(a,b,c,tail)) == 3n+List.length(&2,F.Vertex,tail) : Nat}
+
+law model_local_indices:
+  for +local:U32
+  for tail:List<&2,U32>
+  {Obj.emit_indices(local,tail) == U32.add(local,2) <> U32.inc(local) <> local <> tail : List<&2,U32>}
+
+law model_index_count:
+  for local:U32
+  for tail:List<&2,U32>
+  {List.length(&2,U32,Obj.emit_indices(local,tail)) == 3n+List.length(&2,U32,tail) : Nat}
+
+law model_first_triangle_order:
+  for +a:F.Vertex
+  for +b:F.Vertex
+  for +c:F.Vertex
+  {List.reverse(&2,F.Vertex,Obj.emit_vertices(a,b,c,[])) == [a,b,c] : List<&2,F.Vertex>}
+
+law model_first_indices:
+  {List.reverse(&2,U32,Obj.emit_indices(0,[])) == [0,1,2] : List<&2,U32>}
+
+law model_initial_material:
+  for materials:List<&2,Obj.NamedMaterial>
+  for line:Nat
+  {Obj.selected(None{},materials,line) == Done{Obj.Selected{4294967295,F.white()}} : Result<&2,&2,Asset.Error,Obj.Selected>}
+
+law model_missing_material:
+  for +name:String
+  for +line:Nat
+  for index:U32
+  {Obj.named([],name,line,index) == Fail{Obj.error(5,"OBJ",line,"unresolved usemtl " ++ name)} : Result<&2,&2,Asset.Error,Obj.Selected>}
+
+law model_raw_zero:
+  for count:Nat
+  for +line:Nat
+  {Obj.index("0",count,line) == Fail{Obj.error(4,"OBJ",line,"nonzero complete signed 31-bit index required")} : Result<&2,&2,Asset.Error,Unit>}
+
+law model_negative_zero:
+  for count:Nat
+  for +line:Nat
+  {Obj.index("-0",count,line) == Fail{Obj.error(4,"OBJ",line,"nonzero complete signed 31-bit index required")} : Result<&2,&2,Asset.Error,Unit>}
+
+law model_run_conservation:
+  for +n:Nat
+  for labels:F.ModelLabels
+  for line:Nat
+  for rest:List<&2,Obj.Run>
+  {Obj.run_count(Obj.Run{n,labels,line} <> rest) == Nat.add(n,Obj.run_count(rest)) : Nat}
+
+law model_run_boundary:
+  for +labels:F.ModelLabels
+  for +previous:F.ModelLabels
+  for +line:Nat
+  for +first:Nat
+  for +n:Nat
+  for +rest:List<&2,Obj.Run>
+  for different:{F.same_labels(labels,previous) == False{} : Bool}
+  {Obj.add_run(Obj.Run{n,previous,first} <> rest,labels,line) == Obj.Run{1n,labels,line} <> Obj.Run{n,previous,first} <> rest : List<&2,Obj.Run>}
+
+law model_checked_success:
+  for +model:F.SourceModel
+  {Obj.valid_result(Obj.admit(model)) == True{} : Bool}
+
+law model_reject_incomplete_read:
+  for +bytes:List<&2,U32>
+  for +size:U32
+  for +path:String
+  for incomplete:{Nat.is_eq(List.length(&2,U32,bytes),U32.to_nat(size)) == False{} : Bool}
+  {Obj.exact(Done{bytes},size,path) == Fail{Obj.error(8,path,0n,"file size changed or read was incomplete")} : Result<&2,&2,Asset.Error,List<&2,U32>>}
+
+law model_expanded_limit:
+  {F.mesh_fits(699048n,699048n) == True{} : Bool}
+law model_expanded_over_limit:
+  {F.mesh_fits(699051n,699051n) == False{} : Bool}
+
+law model_admit_result:
+  for result:Result<&2,&2,Asset.Error,F.SourceModel>
+  {Obj.valid_result(Obj.admit_result(result)) == True{} : Bool}
+
+law model_finish_valid:
+  for plan:Obj.Plan
+  for materials:Obj.Materials
+  {Obj.valid_result(Obj.finish(plan,materials)) == True{} : Bool}
+
+law model_finish_bytes_valid:
+  for plan:Obj.Plan
+  for mtl:Maybe<&2,List<&2,U32>>
+  {Obj.valid_result(Obj.finish_bytes(plan,mtl)) == True{} : Bool}
+
+law model_decode_valid:
+  for obj:List<&2,U32>
+  for mtl:Maybe<&2,List<&2,U32>>
+  {Obj.valid_result(Obj.decode(obj,mtl)) == True{} : Bool}
+
+law model_parsed_word:
+  for +value:F32
+  for +source:String
+  for +line:Nat
+  for finite:{F.finite(value) == True{} : Bool}
+  {Obj.parsed(ModelParser.Parsed{False{},Some{value}},source,line) == Done{value} : Result<&2,&2,Asset.Error,F32>}
+
+law model_negative_relative:
+  for +value:U32
+  for +count:U32
+  for nonzero:{U32.is_eq(value,0) == False{} : Bool}
+  for in_range:{U32.is_le(value,count) == True{} : Bool}
+  {ModelParser.fix.int(True{},value,count) == ModelParser.Fix{True{},U32.sub(count,value)} : ModelParser.Fix}
+
+law model_run_coalescing:
+  for +labels:F.ModelLabels
+  for +previous:F.ModelLabels
+  for line:Nat
+  for +first:Nat
+  for +n:Nat
+  for +rest:List<&2,Obj.Run>
+  for equal:{F.same_labels(labels,previous) == True{} : Bool}
+  {Obj.add_run(Obj.Run{n,previous,first} <> rest,labels,line) == Obj.Run{1n+n,previous,first} <> rest : List<&2,Obj.Run>}
+
+law model_source_limit_shadowed:
+  {Nat.is_lt(Obj.obj_limit(),Nat.sub(Nat.mul(699050n,8n),1n)) == True{} : Bool}

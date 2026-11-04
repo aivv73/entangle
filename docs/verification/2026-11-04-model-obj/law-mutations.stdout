@@ -1,0 +1,13 @@
+Bend law mutation evidence: build/verification/law-mutations-LWrGY9Qv
+baseline-root passed
+baseline-upload passed
+geometry-reject-installs-candidate rejected by geometry_install_reject
+asset-release-retains-entry rejected by asset_release_entry
+asset-failure-overwritten rejected by asset_failed_stable
+asset-identity-reused rejected by asset_request_miss
+clock-regresses rejected by time_high_water
+upload-drops-byte rejected by upload_transport_length
+upload-offset-guard-removed rejected by universal
+restored-root passed
+restored-upload passed
+Production Bend law mutations rejected; original sources restored in the evidence copy.

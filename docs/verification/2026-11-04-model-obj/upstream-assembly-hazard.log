@@ -1,0 +1,5 @@
+lines=True mtl=True attrib=True positions=4
+0 0 0 1069547520 0 0 0 1048576000 0 0 0 1073741824 
+True/0 True/1 True/2 material=4294967295
+True/0 True/2 True/3 material=0
+ok=True corners=6 material=0

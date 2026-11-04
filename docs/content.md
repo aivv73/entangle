@@ -44,7 +44,7 @@ source bit, including signed zero and arbitrary non-finite payloads in raw value
 
 No transfer function, named color space, gamma conversion, or physically based
 color interpretation is promised. Textures, normals, UVs, lighting, transparency,
-and importer implementations remain separate work.
+and richer importer profiles remain separate work.
 
 ## Current supported profile
 
@@ -101,3 +101,21 @@ limits. Source constructors remain unchecked, and Asset does not revalidate them
 The [PNG reference](image-decoder.md) specifies importer limits, variants,
 errors, native-extension tolerances, and verification. Image source storage does
 not establish a Vulkan texture, upload layout, or textured material.
+
+## Model sources
+
+`SourceModel{parts:List<&2,ModelPart>}` pairs each `Mesh` with its `Material`
+and `ModelLabels{object_name,group_names,material_name}`. All are copyable `Data`.
+Labels retain optional object/material names and ordered group names. They are
+metadata, without entity identity, hierarchy, material slots, or native owners.
+
+`model_valid` checks every pair and aggregate mesh capacity. `same_model`
+compares all vertex/material words, indices, labels, and part order exactly.
+Constructors remain raw. Asset does not revalidate source values.
+
+The [OBJ adapter](model-obj.md) admits authored triangles and opaque diffuse
+materials, preserving maximal contiguous label/material runs. It expands three
+white RGB vertices per triangle with sequential local indices. Coordinates,
+winding, and accepted F32 words survive. Unused input declarations are validated
+but need not appear in the model. Callers create ordinary `Create.Instance`
+values after loading; the importer owns no ECS or Vulkan state.

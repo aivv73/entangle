@@ -100,3 +100,62 @@ type SourceImage is Data:
 def image_valid(image:SourceImage) -> Bool:
   SourceImage{+width,+height,+pixels} = image
   U32.is_gt(width,0) && U32.is_gt(height,0) && Nat.is_eq(List.length(&2,U32,pixels),Nat.mul(U32.to_nat(width),U32.to_nat(height)))
+
+type ModelLabels is Data:
+  ModelLabels{object_name:Maybe<&2,String>,group_names:List<&2,String>,material_name:Maybe<&2,String>}
+type ModelPart is Data:
+  ModelPart{mesh:Mesh,material:Material,labels:ModelLabels}
+type SourceModel is Data:
+  SourceModel{parts:List<&2,ModelPart>}
+
+def same_name(a:Maybe<&2,String>,b:Maybe<&2,String>) -> Bool:
+  match a b:
+    case None{},None{}:True{}
+    case Some{x},Some{y}:String.eq(x,y)
+    case _,_:False{}
+
+def same_names(a:List<&2,String>,b:List<&2,String>) -> Bool:
+  match a b:
+    case [],[]:True{}
+    case x <> xs,y <> ys:String.eq(x,y) && same_names(xs,ys)
+    case _,_:False{}
+
+def same_labels(a:ModelLabels,b:ModelLabels) -> Bool:
+  ModelLabels{o,g,m} = a
+  ModelLabels{p,h,n} = b
+  same_name(o,p) && same_names(g,h) && same_name(m,n)
+
+def same_parts(a:List<&2,ModelPart>,b:List<&2,ModelPart>) -> Bool:
+  match a b:
+    case [],[]:True{}
+    case ModelPart{m,c,l} <> xs,ModelPart{n,d,k} <> ys:
+      same_mesh(m,n) && same_material(c,d) && same_labels(l,k) && same_parts(xs,ys)
+    case _,_:False{}
+
+def same_model(a:SourceModel,b:SourceModel) -> Bool:
+  SourceModel{a} = a
+  SourceModel{b} = b
+  same_parts(a,b)
+
+def add_counts(vertices:Nat,indices:Nat,counts:Nat & Nat) -> Nat & Nat:
+  (vc,ic) = counts
+  (Nat.add(vertices,vc),Nat.add(indices,ic))
+
+def model_counts(parts:List<&2,ModelPart>) -> Nat & Nat:
+  match parts:
+    case []:(0n,0n)
+    case ModelPart{Mesh{vs,is1},_,_} <> rest:
+      add_counts(List.length(&2,Vertex,vs),List.length(&2,U32,is1),model_counts(rest))
+
+def parts_valid(parts:List<&2,ModelPart>) -> Bool:
+  match parts:
+    case []:True{}
+    case ModelPart{mesh,material,_} <> rest:mesh_valid(mesh) && material_valid(material) && parts_valid(rest)
+
+def counts_fit(counts:Nat & Nat) -> Bool:
+  (vc,ic) = counts
+  mesh_fits(vc,ic)
+
+def model_valid(model:SourceModel) -> Bool:
+  SourceModel{+parts} = model
+  parts_valid(parts) && counts_fit(model_counts(parts))

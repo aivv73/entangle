@@ -1,0 +1,7 @@
+receipt	state
+models-final-wxcB3fIt	0 (all required stages zero)
+workflow-zIbnOaXe	complete (all required stages zero)
+model-window-xnuTk9Ov	0 (all required stages zero; runtime removed and display reaped)
+models-final-W5bdRFKU	1 (binary output collided with fixture directory)
+models-final-emt322zu	1 (unregistered dependency at shared workflow boundary)
+workflow-c0HRPOnJ	failed (boundary stage)

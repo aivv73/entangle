@@ -127,3 +127,19 @@ The default [`tools/verify.bend`](../tools/verify.bend) gate includes this drive
 Storage uses a sequential list with linear lookup. Capacity policy, automatic
 eviction, reference counting, hot reload, dependency graphs, and performance
 claims are outside this API. [The design note](asset-design.md) records alternatives.
+
+## Static model loading
+
+`Asset.load(Content.SourceModel,cache,handle,Obj.load)` synchronously imports
+the [strict OBJ profile](model-obj.md). The whole OBJ and its optional relative
+MTL form one cached result. A missing or invalid dependency fails the import.
+Cached success and failure both remain stable across file edits. Release,
+request, and load retry the complete source. Copied mesh/material/label values
+survive release and remain usable by existing Creation.
+
+The [model example](../examples/model-assets.bend) demonstrates that consumer.
+`tools/verify-models.bend` checks exact retained data, dependency edits and retry,
+bounded real IO, descriptor closure, isolated source-only compilation, mutation
+sensitivity, and real ECS/offscreen consumption. The separate owned X11 gate
+is `bash tools/model-obj/window-session.sh`. These do not add renderer ownership
+to Asset or change the separate `Modules.Assets` startup callback.

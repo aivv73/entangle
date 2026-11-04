@@ -1,0 +1,306 @@
+deps/jonlib-obj/binary64_add_sub.bend: OK
+deps/jonlib-obj/binary64_fma.bend: OK
+deps/jonlib-obj/binary64_narrow.bend: OK
+deps/jonlib-obj/binary64_ops.bend: OK
+deps/jonlib-obj/float64.bend: OK
+deps/jonlib-obj/float64_ops.bend: OK
+deps/jonlib-obj/obj.bend: OK
+deps/jonlib-obj/resize_numeric.bend: OK
+deps/jonlib-obj/LICENSE: OK
+deps/jonlib-obj/LICENSES/raylib.txt: OK
+deps/jonlib-obj/LICENSES/tinyobj_loader_c.txt: OK
+deps/jonlib-obj/THIRD_PARTY_NOTICES.md: OK
+docs/verification/2026-11-04-model-obj/corpus/sign.obj: OK
+docs/verification/2026-11-04-model-obj/corpus/sign.mtl: OK
+docs/verification/2026-11-04-model-obj/corpus/wedge.obj: OK
+docs/verification/2026-11-04-model-obj/corpus/LICENSE.txt: OK
++ bend tools/model-obj/qualify.bend -o build/model-obj/bin/qualify
++ build/model-obj/bin/qualify +RTS --threads 1 --gpu off
+MtlOut.ok=True table.ok=True material-count=2
+material=0 diffuse=False/1065353216 False/0 False/0  specular=False/0 False/0 False/0  emission=False/0 False/0 False/0  shininess=False/1065353216 
+material=1 diffuse=False/0 False/1065353216 False/0  specular=False/0 False/0 False/0  emission=False/0 False/0 False/0  shininess=False/1065353216 
+CEmpty
+CLib sign.mtl
+CShape
+CV False/3225419776 False/3212836864 False/0 
+CV False/3212836864 False/3212836864 False/0 
+CV False/3212836864 False/1065353216 False/0 
+CV False/3225419776 False/1065353216 False/0 
+CV False/3212836864 False/3212836864 False/0 
+CV False/1065353216 False/3212836864 False/0 
+CV False/1065353216 False/1065353216 False/0 
+CV False/3212836864 False/1065353216 False/0 
+CV False/1065353216 False/3212836864 False/2147483648 
+CV False/1077936128 False/3212836864 False/0 
+CV False/1077936128 False/1065353216 False/0 
+CV False/1065353216 False/1065353216 False/0 
+CShape
+CF count=3 +1/missing/missing +2/missing/missing +3/missing/missing 
+CF count=3 +1/missing/missing +3/missing/missing +4/missing/missing 
+CUse red
+CShape
+CF count=3 +5/missing/missing +6/missing/missing +7/missing/missing 
+CF count=3 +5/missing/missing +7/missing/missing +8/missing/missing 
+CUse green
+CShape
+CF count=3 -4/missing/missing -3/missing/missing -2/missing/missing 
+CF count=3 -4/missing/missing -2/missing/missing -1/missing/missing 
+CEmpty
+sign positions ub/word False/3225419776 False/3212836864 False/0 False/3212836864 False/3212836864 False/0 False/3212836864 False/1065353216 False/0 False/3225419776 False/1065353216 False/0 False/3212836864 False/3212836864 False/0 False/1065353216 False/3212836864 False/0 False/1065353216 False/1065353216 False/0 False/3212836864 False/1065353216 False/0 False/1065353216 False/3212836864 False/2147483648 False/1077936128 False/3212836864 False/0 False/1077936128 False/1065353216 False/0 False/1065353216 False/1065353216 False/0 
+True/0 True/1 True/2 material=4294967295
+True/0 True/2 True/3 material=4294967295
+True/4 True/5 True/6 material=0
+True/4 True/6 True/7 material=0
+True/8 True/9 True/10 material=1
+True/8 True/10 True/11 material=1
+S41 retained authored sign exact 36 position words, 18 corners, six material selections including default and negative-relative indices.
+wedge positions ub/word False/3212836864 False/3212836864 False/0 False/1065353216 False/3212836864 False/0 False/1065353216 False/1065353216 False/0 False/3212836864 False/1065353216 False/0 False/3212836864 False/3212836864 False/1065353216 False/1065353216 False/3212836864 False/1073741824 
+True/0 True/2 True/1 material=4294967295
+True/0 True/3 True/2 material=4294967295
+True/0 True/1 True/5 material=4294967295
+True/0 True/5 True/4 material=4294967295
+True/1 True/2 True/5 material=4294967295
+True/2 True/3 True/4 material=4294967295
+True/2 True/4 True/5 material=4294967295
+True/3 True/0 True/4 material=4294967295
+S41 Blender 5.2.3 closed asymmetric wedge matches independent six-vertex/eight-face authoring specification.
+Actual 128-declaration MTL has MtlOut.ok=True and table.ok=False; both flags require checking.
+numeric -0 checked
+numeric +0 checked
+numeric 1.5 checked
+numeric 1.000000059604644775390625 checked
+numeric 1.00000011920928955078125 checked
+numeric 1e-20 checked
+numeric 1e38 checked
+numeric 1e-45 checked
+numeric 1e-46 checked
+numeric -1e-46 checked
+numeric 1e39 checked
+numeric 1e65 checked
+numeric 1e2147483648 checked
+numeric 1junk checked
+numeric .5 checked
+numeric 1e checked
+Pinned parser qualification passed. Prefix/zero/line quirks require adapter admission. No universal decimal conversion claim.
++ bend tools/model-obj/runtime.bend -o build/model-obj/bin/runtime
++ build/model-obj/bin/runtime +RTS --threads 1 --gpu off
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 0 2 3 OBJ line 4: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f -0 2 3 OBJ line 4: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1 2 3
+v 1 0 0
+v 0 1 0 OBJ line 2: face index outside positions declared so far
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f -4 -2 -1 OBJ line 4: face index outside positions declared so far
+rejected v 1junk 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v .5 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v 1e 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v 1e39 0 0
+f 1 1 1 OBJ line 1: number outside pinned parser domain
+rejected v 0 0 0
+f 2147483648 1 1 OBJ line 2: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1/1 1/1 1/1 OBJ line 2: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1 1 1 1 OBJ line 2: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0 1
+f 1 1 1 OBJ line 1: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+vn 0 0 1 OBJ line 5: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+vt 0 0 OBJ line 5: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+s 1 OBJ line 5: active smoothing unsupported
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+usemtl missing OBJ line 5: unresolved usemtl missing
+rejected mtllib ../mat
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib /mat
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib a//b
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib https:a
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib a
+mtllib b
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 2: duplicate mtllib
+rejected # blank only OBJ line 0: no triangles
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 5: lone CR
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+\
+ OBJ line 5: line continuation
+rejected  MTL line 0: declared MTL contains no materials
+rejected # only MTL line 0: declared MTL contains no materials
+rejected newmtl a MTL line 1: material requires exactly one Kd
+rejected newmtl a
+Kd 1 0 0
+Kd 0 1 0 MTL line 3: duplicate material property
+rejected newmtl a
+Kd 1 0 0
+d 0.99999999999999999999 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1 0 0
+Tr 1e-40 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1 0 0
+illum 1 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1.1 0 0 MTL line 2: Kd channels outside [0,1]
+rejected newmtl a
+Kd 1 0 0
+map_Kd texture MTL line 3: unsupported material property
+rejected newmtl a
+Kd 1 0 0
+Ks 0 0 0 MTL line 3: unsupported property or field count
+rejected newmtl ab
+Kd 1 0 0
+newmtl bA
+Kd 0 1 0 MTL line 3: duplicate or colliding material name
+rejected newmtl a
+Kd 1 0 0
+newmtl a
+Kd 0 1 0 MTL line 3: duplicate or colliding material name
+Complete source fidelity and strict production rejection checks passed.
++ bend tools/model-obj/properties.bend -o build/model-obj/bin/properties
++ build/model-obj/bin/properties +RTS --threads 1 --gpu off
+rejected NUL OBJ line 1: expected ASCII text without controls or NUL
+rejected nonbyte OBJ line 1: expected ASCII text without controls or NUL
+rejected BOM OBJ line 1: expected ASCII text without controls or NUL
+rejected control OBJ line 1: expected ASCII text without controls or NUL
+rejected unexpected MTL MTL line 0: unexpected supplied MTL bytes
+rejected missing MTL MTL line 0: declared MTL bytes missing
+rejected newmtl unused
+Kd 1e65 0 0 MTL line 2: number outside pinned parser domain
+rejected newmtl unused
+Kd 0 0 0
+d 1
+d 1 MTL line 4: duplicate material property
+rejected mtllib a
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+usemtl missing MTL line 0: declared MTL bytes missing
+rejected #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: physical line exceeds 4095 bytes
+rejected o xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: label exceeds 255 bytes
+rejected v 00000000000000000000000000000000000000000000000000000000000000000 0 0
+f 1 1 1 OBJ line 1: numeric token exceeds 64 bytes
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+v 1e65 0 0 OBJ line 5: number outside pinned parser domain
+192 generated encoding/conservation checks; complete Blender wedge; bytes, exact opacity and reachable scalar boundaries passed.
++ bend tools/model-obj/bounds.bend -o build/model-obj/bin/bounds
++ build/model-obj/bin/bounds +RTS --threads 1 --gpu off
+rejected 129 materials MTL line 257: material limit
+rejected 4097 parts OBJ line 8195: part limit
+rejected OBJ over 2 MiB OBJ line 0: encoded byte limit
+rejected MTL over 256 KiB MTL line 0: encoded byte limit
+rejected expanded geometry over 699050 vertices OBJ line 233018: expanded geometry limit
+rejected root path over 4096 UTF-8 bytes xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx line 0: root path is empty, contains NUL or exceeds 4096 UTF-8 bytes
+rejected root path NUL  x line 0: root path is empty, contains NUL or exceeds 4096 UTF-8 bytes
+Production byte/material/part/expanded-geometry bounds checked at and over admission limits; every one of 699048 emitted vertices and indices checked.
++ bend tools/model-obj/files.bend -o build/model-obj/bin/files
++ build/model-obj/bin/files +RTS --threads 1 --gpu off
+Fresh request loaded exact dependency content; stale and foreign handles performed no load.
+Cached success skipped invalid changed files; full retained source survived release; fresh load observed red-to-blue dependency edit.
+Fresh request loaded exact dependency content; stale and foreign handles performed no load.
+Missing dependency failure remained cached after creation; whole-model retry recovered.
+rejected real OBJ over byte limit build/model-obj/files/bound line 0: encoded byte limit
+rejected real MTL over byte limit build/model-obj/files/sign.mtl line 0: encoded byte limit
+rejected joined dependency path over limit build/model-obj/files/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx line 0: joined dependency path exceeds path policy
+Native missing-file, >UINT32_MAX stat and directory-read codes/messages preserved with path context.
+Unicode root without extension loaded; real shrink/growth rejected; 64 repetitions of success/missing dependency/missing root/directory/over-limit paths kept descriptor count.
++ bend tools/model-obj/inventory.bend -o build/model-obj/bin/inventory
++ build/model-obj/bin/inventory +RTS --threads 1 --gpu off
+Source-only OBJ consumer ran without Creation, ECS or Vulkan.
+build/model-obj/source-only-RhcPWERj/consumer
+build/model-obj/source-only-RhcPWERj/tools/model-obj/consumer.bend
+build/model-obj/source-only-RhcPWERj/src/asset.bend
+build/model-obj/source-only-RhcPWERj/src/components.bend
+build/model-obj/source-only-RhcPWERj/src/content.bend
+build/model-obj/source-only-RhcPWERj/src/model-obj.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/binary64_ops.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/binary64_add_sub.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/binary64_fma.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/obj.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/resize_numeric.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/binary64_narrow.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/float64.bend
+build/model-obj/source-only-RhcPWERj/deps/jonlib-obj/float64_ops.bend
+
+Source-only inventory compiled and ran with only Base, Content, Components, Asset, OBJ adapter and eight pinned parser modules.
++ bend tools/model-obj/mutations.bend -o build/model-obj/bin/mutations
++ build/model-obj/bin/mutations +RTS --threads 1 --gpu off
+winding mutation detected by actual production decode, native status=1, expected observation=complete sign source differs
+raw-zero mutation detected by actual production decode, native status=1, expected observation=f 0 2 3 accepted
+material-fallback mutation detected by actual production decode, native status=1, expected observation=usemtl missing accepted
+unsupported-fields mutation detected by actual production decode, native status=1, expected observation=Ks 0 0 0 accepted
+Winding, raw-zero, silent material fallback and ignored unsupported MTL mutations each failed the native verifier as intended.
++ bend tools/model-obj/native.bend -o build/model-obj/bin/native
++ build/model-obj/bin/native +RTS --threads 1 --gpu off
+sign full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+wedge full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+Imported model parts completed two production ECS ticks after cache release.
+Static OBJ source, properties, bounds, files/cache, mutations, source-only closure and real native consumers verified. X11 is a separate owned-display gate.
