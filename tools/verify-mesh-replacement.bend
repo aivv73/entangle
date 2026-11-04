@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import Base
 import ../src/scene-geometry.bend as G
 import ../src/scene-buffer.bend as B
@@ -18,11 +19,11 @@ import ../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W
 
 def camera() -> M.Mat4:M.model(C.Transform.identity())
 
-def vertices(+color:C.Vec3) -> List<&2,Create.Vertex>:
-  [Create.Vertex{C.Vec3{F32.neg(0.75),F32.neg(0.75),0.25},color},
-   Create.Vertex{C.Vec3{0.75,F32.neg(0.75),0.25},color},
-   Create.Vertex{C.Vec3{0.75,0.75,0.25},color},
-   Create.Vertex{C.Vec3{F32.neg(0.75),0.75,0.25},color}]
+def vertices(+color:C.Vec3) -> List<&2,F.Vertex>:
+  [F.Vertex{C.Vec3{F32.neg(0.75),F32.neg(0.75),0.25},color},
+   F.Vertex{C.Vec3{0.75,F32.neg(0.75),0.25},color},
+   F.Vertex{C.Vec3{0.75,0.75,0.25},color},
+   F.Vertex{C.Vec3{F32.neg(0.75),0.75,0.25},color}]
 
 def red() -> Create.Geometry:
   Create.Geometry{vertices(C.Vec3{1.0,0.0,0.0}),[0,1,2,2,3,0],[Create.Range{7,0,6}]}

@@ -1,5 +1,27 @@
 # Public creation design
 
+## Source ownership
+
+`src/content.bend` owns Vertex, Mesh, Material, validation, exact source identity,
+and tint semantics. Its only dependencies are Base and Components. Creation owns
+scene assembly, compilation, cameras, and ranges. Asset remains generic, and
+scene-geometry owns upload bytes and native residency.
+
+This boundary lets procedural producers and future importers validate and cache
+source data without importing a scene compiler. A types-only extraction would
+leave source meaning in Creation. Separate checked wrappers would add a second
+representation without enforcing opacity because Bend exports constructors.
+One source representation keeps both ownership and direct construction clear.
+
+The shared `Content.mesh_fits` predicate preserves current source and packed
+limits. Source overflow remains `BadMesh`, while packed overflow remains
+`TooLarge`. Structural float conversion keeps the universal white-identity
+proof reducible for arbitrary `F32` payloads. No lifecycle, shader, dependency,
+or parallelism change is needed. The [source reference](content.md) defines the
+contract and adapter obligations separately from GPU bytes.
+
+## Compilation and startup
+
 A startup description owns values rather than caller-assigned asset IDs.
 Compilation produces one set of ECS seeds and one immutable geometry catalog.
 This keeps the Core and Render callbacks consistent without another mutable

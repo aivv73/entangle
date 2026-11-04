@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import ../deps/bend-vulkan/tools/verification.bend as Native
 import ../src/scene-render.bend as Render
 import ../examples/scene-render.bend as RenderCheck
@@ -187,9 +188,9 @@ def topology() -> IO(Unit):
     Check.require(Topology.valid(Content.octahedron()) && Topology.valid(Content.tetrahedron()) && Topology.valid(Content.prism()) && Topology.valid(Content.platform()),"Actual mesh topology is not closed, outward, nondegenerate and connected")
     IO.print("Actual meshes: closed opposite edge incidence, distinct nondegenerate outward faces, connected vertices.")
 
-def shape_counts(mesh:Create.Mesh,vertices:Nat,triangles:Nat) -> Bool:
-  Create.Mesh{vs,indices} = mesh
-  Nat.is_eq(List.length(&2,Create.Vertex,vs),vertices) && Nat.is_eq(List.length(&2,U32,indices),Nat.mul(triangles,3n))
+def shape_counts(mesh:F.Mesh,vertices:Nat,triangles:Nat) -> Bool:
+  F.Mesh{vs,indices} = mesh
+  Nat.is_eq(List.length(&2,F.Vertex,vs),vertices) && Nat.is_eq(List.length(&2,U32,indices),Nat.mul(triangles,3n))
 
 def ranges(geometry:Create.Geometry) -> Bool:
   match geometry:

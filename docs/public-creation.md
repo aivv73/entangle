@@ -1,27 +1,28 @@
 # Public creation reference
 
-`src/creation.bend` defines immutable startup descriptions. Constructors create
-ordinary values. `compile(Scene)` is the checked entry point and returns
+`src/creation.bend` defines immutable scenes, instances, cameras, and compiled
+ranges. Mesh and material source values come from
+[`src/content.bend`](content.md). Constructors create ordinary unchecked values.
+`compile(Scene)` is the checked entry point and returns
 `Result<Error,Compiled>`. It needs neither Vulkan nor a window.
 
 ## Descriptions
 
-- `Vertex{position,color}` contains finite RGB and position coordinates.
-- `Mesh{vertices,indices}` contains triangle-list indices into its own vertices.
-  Empty meshes are valid. The index count must be divisible by three.
-- `Basic{tint}` multiplies vertex RGB componentwise. Each channel must be finite
-  and in `[0,1]`. The material is opaque and unlit. `white()` preserves every
-  source color bit, including signed zero.
+- `Content.Vertex`, `Content.Mesh`, and `Content.Basic` follow the
+  [mesh and material contract](content.md). RGB is finite but unrestricted in
+  magnitude. Tint is finite and bounded to `[0,1]`.
 - `Instance{mesh,material,transform}` creates one initial ECS entity.
   Translation and scale must be finite. Quaternion squared length must lie in
   `[0.9999,1.0001]`.
 - `Scene{instances}` preserves instance order through compilation and bootstrap.
 
-`compile` rejects invalid descriptions with `BadMesh`, `BadMaterial`, or
-`BadTransform`, each carrying the zero-based instance position. `TooLarge`
-rejects more than 100,000 instances, 699,050 packed vertices, or 3,000,000 packed
-indices. A source mesh also obeys the vertex and index limits. Validation and
-packing complete before any GPU allocation.
+`compile` first rejects more than 100,000 instances with `TooLarge`. It then
+validates instances in source order. Each instance reports `BadMesh` before
+`BadMaterial`, then `BadTransform`, carrying the zero-based instance position.
+A source mesh over the current 699,050-vertex or 3,000,000-index profile reports
+`BadMesh`. A new pair that overflows aggregate packed counts reports `TooLarge`.
+A duplicate pair reuses its range before any aggregate growth check. Validation
+and packing complete before any GPU allocation.
 
 Compilation materializes only used mesh/material pairs. Bitwise structural
 comparison identifies identical source values. First occurrences determine

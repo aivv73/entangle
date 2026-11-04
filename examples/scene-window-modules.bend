@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import ../src/creation.bend as Create
 import ./scene-seeds.bend as Seeds
 import Base
@@ -17,14 +18,14 @@ def core_start(seeds:List<&2,Create.Seed>) -> IO(Scene.Application()):
 def input_start(_:Unit) -> Create.Camera:
   Camera.initial()
 
-def instances(seeds:List<&2,Create.Seed>,+mesh:Create.Mesh) -> List<&2,Create.Instance>:
+def instances(seeds:List<&2,Create.Seed>,+mesh:F.Mesh) -> List<&2,Create.Instance>:
   match seeds:
     case []:[]
-    case Create.Seed{transform,_} <> rest:Create.Instance{mesh,Create.white(),transform} <> instances(rest,mesh)
+    case Create.Seed{transform,_} <> rest:Create.Instance{mesh,F.white(),transform} <> instances(rest,mesh)
 
 def content(geometry:Create.Geometry) -> Create.Scene:
   Create.Geometry{vertices,indices,_} = geometry
-  Create.Scene{instances(Seeds.defaults(),Create.Mesh{vertices,indices})}
+  Create.Scene{instances(Seeds.defaults(),F.Mesh{vertices,indices})}
 
 def asset_load(_:Unit) -> Create.Scene:content(SceneApp.mesh())
 

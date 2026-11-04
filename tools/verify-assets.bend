@@ -2,6 +2,8 @@ import Base
 import ../src/asset.bend as Asset
 import ../examples/assets.bend as Files
 import ../examples/asset-scene.bend as Scene
+import ../examples/content-assets.bend as Content
+import ../src/content.bend as F
 
 def Bytes() -> Data:List<&2,U32>
 
@@ -177,6 +179,38 @@ def limits(+path:String) -> IO(Unit):
     size_rejected(large)
     IO.print("Real file byte limit verified at zero, exactly 1 MiB, and one byte over.")
 
+def retained_sources(result:Result<&2,&1,Asset.Error,F.Mesh & F.Material>) -> IO(Unit):
+  match result:
+    case Fail{_}:IO.die(Unit,1,"Procedural source cache failed")
+    case Done{(+mesh,+material)}:
+      require(F.mesh_valid(mesh) && F.material_valid(material) && F.same_mesh(mesh,Content.triangle()) && F.same_material(material,Content.red()),"Released cache changed retained mesh or material")
+
+def command_result(result:U32 & (String & String)) -> IO(Unit):
+  (code,pair) = result
+  (out,err) = pair
+  +out:String = out
+  +err:String = err
+  do IO<Unit>:
+    require(U32.is_zero(code),out ++ err)
+    IO.write(out)
+    IO.write(err)
+
+def command(program:String,args:List<String>) -> IO(Unit):
+  do IO<Unit>:
+    result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(program,args,"",1048576,300000))
+    command_result(result)
+
+# Compilation with only this inventory proves the source dependency boundary.
+def source_only(+dest:String) -> IO(Unit):
+  do IO<Unit>:
+    command("mkdir",["-p",dest])
+    command("cp",["--parents","examples/content-assets.bend","src/content.bend","src/components.bend","src/asset.bend",dest])
+    command("bend",[dest ++ "/examples/content-assets.bend","-o",dest ++ "/content-assets"])
+    command(dest ++ "/content-assets",["+RTS","--threads","1","--gpu","off"])
+    result:Result<&2,&1,Asset.Error,F.Mesh & F.Material> <- Content.sources()
+    retained_sources(result)
+    IO.print("Mesh and material source caches verified after release; source-only closure compiled and ran without Creation or Vulkan.")
+
 def main() -> IO(Unit):
   do IO<Unit>:
     result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run("mktemp",["-d","build/verification/assets-XXXXXXXX"],"",4096,10000))
@@ -185,5 +219,6 @@ def main() -> IO(Unit):
     write(dest ++ "/source","w","A")
     loaded(Asset.request(Bytes(),Asset.new(Bytes(),"runtime-files"),dest ++ "/source"),dest ++ "/source")
     limits(dest ++ "/limit")
+    source_only(dest ++ "/source-only")
     Scene.main()
     IO.print("Asset API verified with real files and production scene execution.")

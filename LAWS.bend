@@ -1,3 +1,4 @@
+import ./src/content.bend as F
 import ./proofs/upload-range/spec.bend as UploadValue
 import ./deps/bend-vulkan/src/core.bend as UploadCore
 import ./deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as UploadWord
@@ -8,7 +9,6 @@ import ./src/scene.bend as Scene
 import ./src/time.bend as Time
 import ./src/input.bend as Input
 import ./src/measurement-counters.bend as Counts
-import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import ./examples/scene-seeds.bend as Seeds
 import Base
@@ -248,15 +248,15 @@ law render_indices_append:
   for +left:List<&2,U32>
   for +right:List<&2,U32>
   for +count:U32
-  {Mesh.indices_valid(List.append(&2,U32,left,right),count) ==
-    Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)) : Bool}
+  {F.indices_valid(List.append(&2,U32,left,right),count) ==
+    Bool.and(F.indices_valid(left,count),F.indices_valid(right,count)) : Bool}
 
 law render_indices_order:
   for +left:List<&2,U32>
   for +right:List<&2,U32>
   for +count:U32
-  {Mesh.indices_valid(List.append(&2,U32,left,right),count) ==
-    Mesh.indices_valid(List.append(&2,U32,right,left),count) : Bool}
+  {F.indices_valid(List.append(&2,U32,left,right),count) ==
+    F.indices_valid(List.append(&2,U32,right,left),count) : Bool}
 
 law render_float_word_bits:
   for +word:U32
@@ -400,15 +400,15 @@ law headless_scene_successor:
       next => Headless.advance(~Scene.Application(),~Scene.tick,remaining,next)) : IO(Scene.Application())}
 
 law creation_white:
-  for vertex:Create.Vertex
-  {Create.tint(vertex,Create.white()) == vertex : Create.Vertex}
+  for vertex:F.Vertex
+  {F.tint(vertex,F.white()) == vertex : F.Vertex}
 
 law creation_tint_position:
   for +position:C.Vec3
   for color:C.Vec3
-  for material:Create.Material
+  for material:F.Material
   exs tinted:C.Vec3
-  {Create.tint(Create.Vertex{position,color},material) == Create.Vertex{position,tinted} : Create.Vertex}
+  {F.tint(F.Vertex{position,color},material) == F.Vertex{position,tinted} : F.Vertex}
 
 law creation_bundle_order:
   for transform:C.Transform
@@ -443,8 +443,52 @@ law camera_reset_configuration:
   {Input.reset(Create.Camera{target,yaw,pitch,distance,projection}) == Create.Camera{target,0.65,0.45,7.0,projection} : Create.Camera}
 
 law creation_white_mesh:
-  for vertices:List<&2,Create.Vertex>
-  {Create.bake(vertices,Create.white()) == vertices : List<&2,Create.Vertex>}
+  for vertices:List<&2,F.Vertex>
+  {F.bake(vertices,F.white()) == vertices : List<&2,F.Vertex>}
+
+law content_mesh_identity:
+  for +mesh:F.Mesh
+  {F.same_mesh(mesh,mesh) == True{} : Bool}
+
+law content_material_identity:
+  for +material:F.Material
+  {F.same_material(material,material) == True{} : Bool}
+
+law content_bake_count:
+  for +vertices:List<&2,F.Vertex>
+  for material:F.Material
+  {List.length(&2,F.Vertex,F.bake(vertices,material)) == List.length(&2,F.Vertex,vertices) : Nat}
+
+law content_bake_append:
+  for left:List<&2,F.Vertex>
+  for right:List<&2,F.Vertex>
+  for +material:F.Material
+  {F.bake(List.append(&2,F.Vertex,left,right),material) ==
+    List.append(&2,F.Vertex,F.bake(left,material),F.bake(right,material)) : List<&2,F.Vertex>}
+
+law creation_bad_mesh_first:
+  for material:Bool
+  for transform:Bool
+  for +number:U32
+  {Create.validate(False{},material,transform,number) == Fail{Create.BadMesh{number}} : Result<&2,&2,Create.Error,Unit>}
+
+law creation_bad_material_second:
+  for transform:Bool
+  for +number:U32
+  {Create.validate(True{},False{},transform,number) == Fail{Create.BadMaterial{number}} : Result<&2,&2,Create.Error,Unit>}
+
+law creation_bad_transform_third:
+  for +number:U32
+  {Create.validate(True{},True{},False{},number) == Fail{Create.BadTransform{number}} : Result<&2,&2,Create.Error,Unit>}
+
+law creation_duplicate_preserves_geometry:
+  for +id:U32
+  for mesh:F.Mesh
+  for material:F.Material
+  for +pairs:List<&2,Create.Used>
+  for +geometry:Create.Geometry
+  for +next:U32
+  {Create.compile_pair(Some{id},mesh,material,pairs,geometry,next) == Done{Create.Plan{pairs,geometry,id,next}} : Result<&2,&2,Create.Error,Create.Plan>}
 
 law creation_bundle_count:
   for +seeds:List<&2,Create.Seed>

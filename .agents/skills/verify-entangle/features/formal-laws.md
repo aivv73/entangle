@@ -40,7 +40,7 @@ production definitions directly. There is no separate transition model.
 | Check | Covered production code | Scope |
 | --- | --- | --- |
 | Root component and scene laws | `src/components.bend`, `scene.bend`, `scene-step.bend`, `scene-motion.bend`, `scene-spawn.bend`, `scene-schema.bend`, `scene-draw.bend`, `scene-observe.bend`, `headless.bend`, `tools/component-consumer.bend`, `examples/scene-seeds.bend` | Field reconstruction, update/query behavior, ordered extraction, bootstrap, seeds, and batch recursion. Imported Bendvy definitions are pinned by `toolchain.bend`. |
-| Root creation and rendering laws | `src/creation.bend`, `scene-mesh.bend`, `scene-matrix.bend`, `measurement-counters.bend`, `scene-geometry-policy.bend` | Tinting, ranges, index validation, bit layouts, counter independence, and pure geometry-selection policy. |
+| Root content, creation, and rendering laws | `src/content.bend`, `creation.bend`, `scene-matrix.bend`, `measurement-counters.bend`, `scene-geometry-policy.bend` | Source equality reflexivity, universal white identity, tint position, ordered baking and count, validation error priority, duplicate reuse, ranges, index validation, bit layouts, counter independence, and pure geometry-selection policy. |
 | Root time, input, and player laws | `src/time.bend`, `input.bend`, `mesh-control.bend` | Fixed-step accounting and bounds, high-water clock samples, input draining, camera reset, movement intent, and query refusal. |
 | Root upload laws | `src/upload-size.bend`, `deps/bend-vulkan/src/core.bend` | Byte-list length, exact conversion under its stated premise, and the universal range theorem. |
 | Root asset laws | `src/asset.bend` | Request hit/miss, terminal states, key preservation, eviction, released lookup/load, scope rejection, and monotonic allocation counter preservation. |
@@ -69,6 +69,12 @@ based at `49a6adf`, adds 16 root claims and three mutation controls. Its root
 proof and seven-control mutation run pass in
 `build/verification/asset-api-VAx7I8tG`; the unchanged standalone upload checks
 pass in the same mutation run. This does not change the standalone kernel theorem.
+
+The source-format extraction moves existing claims to `src/content.bend` and
+adds eight root claims for equality reflexivity, baking, error priority, and
+duplicate reuse. Root proofs and real native execution pass. The
+[format verification record](../../../../docs/verification/2026-11-04-content-format/README.md)
+records these checks separately from the earlier mutation and kernel runs.
 
 Before this record existed, the audit used the last verification-file commits:
 `ea6743da89c0eaf134287dee4e3b0832ce41a6d8` for root laws and

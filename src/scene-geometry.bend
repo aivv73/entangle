@@ -1,3 +1,4 @@
+import ./content.bend as F
 import Base
 import ./scene-buffer.bend as B
 import ./scene-geometry-policy.bend as Policy
@@ -47,11 +48,11 @@ def bytes(words:List<U32>) -> List<&2,U32>:
     case []:[]
     case word <> rest:List.append(&2,U32,word_bytes(word),bytes(rest))
 
-def vertex_words(v:Create.Vertex) -> List<U32>:
-  Create.Vertex{C.Vec3{x,y,z},C.Vec3{r,g,b}} = v
+def vertex_words(v:F.Vertex) -> List<U32>:
+  F.Vertex{C.Vec3{x,y,z},C.Vec3{r,g,b}} = v
   [F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(r),F32.bits(g),F32.bits(b)]
 
-def vertices_bytes(vertices:List<&2,Create.Vertex>) -> List<&2,U32>:
+def vertices_bytes(vertices:List<&2,F.Vertex>) -> List<&2,U32>:
   match vertices:
     case []:[]
     case v <> rest:List.append(&2,U32,bytes(vertex_words(v)),vertices_bytes(rest))

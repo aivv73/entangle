@@ -23,6 +23,7 @@ is not yet a general-purpose game engine.
 - Render scenes in an interactive X11 or XWayland window, or to an image without a window.
 - Advance simulations without a window, Vulkan, or a GPU.
 - Cache source assets with typed handles, explicit loading/error state, and release rules.
+- Construct and validate importer-independent mesh and Basic material source values.
 - Check behavior with Bend laws and proofs, native execution, rendering checks, and resource cleanup checks.
 - Record CPU and GPU timings using documented workloads and measurement boundaries.
 
@@ -67,8 +68,9 @@ Camera controls are the same as in the cube demo.
 
 ## Create a scene
 
-Describe your scene with `Vertex`, `Mesh`, `Basic`, and `Instance` values, and
-configure its view with a `Camera`. `Create.compile` prepares initial entities
+Describe source geometry with `Vertex`, `Mesh`, and `Basic` from `src/content.bend`.
+Build `Instance` values and configure a `Camera` from `src/creation.bend`.
+`Create.compile` prepares initial entities
 and geometry without requiring your scene code to manage Vulkan handles.
 
 Try the [public creation example](examples/public-creation.bend):
@@ -87,9 +89,19 @@ ticks without opening a window. On success, it prints
 Both production renderers support [whole-mesh replacement](docs/mesh-replacement.md).
 Replacement returns the owner on rejection and defers old buffer destruction until native command references are released.
 
-The [Asset API](docs/assets.md) caches copyable source data independently of the
-renderer. Its examples load bytes from disk and compile a cached scene after
-releasing its source handle. File importers and texture loading remain future work.
+The [mesh and material reference](docs/content.md) defines local positions,
+finite RGB, ordered triangle indices, exact identity, and bounded Basic tint.
+The [Asset API](docs/assets.md) caches these source values independently of the
+renderer. Its [procedural example](examples/content-assets.bend) loads and releases
+mesh and material caches while retaining source values, without Creation or Vulkan.
+
+```sh
+bend examples/content-assets.bend -o build/content-assets
+./build/content-assets +RTS --threads 1 --gpu off
+```
+
+Other examples load bytes from disk and compile a cached scene after releasing
+its source handle. File importers and texture loading remain future work.
 
 ## Simulate without rendering
 
@@ -155,6 +167,7 @@ through small working examples backed by reproducible evidence.
 ## Explore the project
 
 - [Public scene creation](docs/public-creation.md)
+- [Mesh and material source format](docs/content.md)
 - [Asset cache and loading](docs/assets.md)
 - [Application module registration](docs/modules-registration.md)
 - [Headless execution](docs/headless-reference.md)

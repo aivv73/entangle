@@ -1,10 +1,10 @@
+import ./src/content.bend as F
 import ./proofs/upload-range/PROOF.bend as UploadProof
 import ./proofs/upload-range/LAWS.bend as UploadLaws
 import ./src/mesh-control.bend as Player
 import ./deps/bend-vulkan/deps/bend-collections/proofs/lib/u32.bend as U32Proof
 import ./src/creation.bend as Create
 import ./src/measurement-counters.bend as Counts
-import ./src/scene-mesh.bend as Mesh
 import ./src/scene-matrix.bend as Render
 import ./deps/bend-vulkan/PROOF.bend as Vulkan
 import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
@@ -146,29 +146,29 @@ def Laws.render_indices_append(left,right,count):
     case []:{==}
     case +head <> +tail:
       Equal.trans(Bool,
-        Mesh.indices_valid(List.append(&2,U32,head <> tail,right),count),
-        Bool.and(U32.is_lt(head,count),Bool.and(Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count))),
-        Bool.and(Mesh.indices_valid(head <> tail,count),Mesh.indices_valid(right,count)),
+        F.indices_valid(List.append(&2,U32,head <> tail,right),count),
+        Bool.and(U32.is_lt(head,count),Bool.and(F.indices_valid(tail,count),F.indices_valid(right,count))),
+        Bool.and(F.indices_valid(head <> tail,count),F.indices_valid(right,count)),
         Equal.cong(Bool,Bool,b => Bool.and(U32.is_lt(head,count),b),
-          Mesh.indices_valid(List.append(&2,U32,tail,right),count),
-          Bool.and(Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count)),
+          F.indices_valid(List.append(&2,U32,tail,right),count),
+          Bool.and(F.indices_valid(tail,count),F.indices_valid(right,count)),
           Laws.render_indices_append(tail,right,count)),
-        conjunction_associative(U32.is_lt(head,count),Mesh.indices_valid(tail,count),Mesh.indices_valid(right,count)))
+        conjunction_associative(U32.is_lt(head,count),F.indices_valid(tail,count),F.indices_valid(right,count)))
 
 def Laws.render_indices_order(left,right,count):
   Equal.trans(Bool,
-    Mesh.indices_valid(List.append(&2,U32,left,right),count),
-    Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
-    Mesh.indices_valid(List.append(&2,U32,right,left),count),
+    F.indices_valid(List.append(&2,U32,left,right),count),
+    Bool.and(F.indices_valid(left,count),F.indices_valid(right,count)),
+    F.indices_valid(List.append(&2,U32,right,left),count),
     Laws.render_indices_append(left,right,count),
     Equal.trans(Bool,
-      Bool.and(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
-      Bool.and(Mesh.indices_valid(right,count),Mesh.indices_valid(left,count)),
-      Mesh.indices_valid(List.append(&2,U32,right,left),count),
-      conjunction_commutative(Mesh.indices_valid(left,count),Mesh.indices_valid(right,count)),
+      Bool.and(F.indices_valid(left,count),F.indices_valid(right,count)),
+      Bool.and(F.indices_valid(right,count),F.indices_valid(left,count)),
+      F.indices_valid(List.append(&2,U32,right,left),count),
+      conjunction_commutative(F.indices_valid(left,count),F.indices_valid(right,count)),
       Equal.sym(Bool,
-        Mesh.indices_valid(List.append(&2,U32,right,left),count),
-        Bool.and(Mesh.indices_valid(right,count),Mesh.indices_valid(left,count)),
+        F.indices_valid(List.append(&2,U32,right,left),count),
+        Bool.and(F.indices_valid(right,count),F.indices_valid(left,count)),
         Laws.render_indices_append(right,left,count))))
 
 def Laws.render_float_word_bits(word):
@@ -273,12 +273,12 @@ def Laws.headless_scene_successor(remaining,app):{==}
 
 def Laws.creation_white(vertex):
   match vertex:
-    case Create.Vertex{position,C.Vec3{r,g,b}}:{==}
+    case F.Vertex{position,C.Vec3{r,g,b}}:{==}
 
 def Laws.creation_tint_position(position,color,material):
   match color material:
-    case C.Vec3{r,g,b} Create.Basic{C.Vec3{x,y,z}}:
-      (C.Vec3{Create.tint_channel(r,x),Create.tint_channel(g,y),Create.tint_channel(b,z)},{==})
+    case C.Vec3{r,g,b} F.Basic{C.Vec3{x,y,z}}:
+      (C.Vec3{F.tint_channel(r,x),F.tint_channel(g,y),F.tint_channel(b,z)},{==})
 
 def Laws.creation_bundle_order(transform,mesh,rest):{==}
 
@@ -297,9 +297,72 @@ def Laws.creation_white_mesh(vertices):
   match vertices:
     case []:{==}
     case +vertex <> +rest:
-      Equal.trans(List<&2,Create.Vertex>,Create.tint(vertex,Create.white()) <> Create.bake(rest,Create.white()),vertex <> Create.bake(rest,Create.white()),vertex <> rest,
-        Equal.cong(Create.Vertex,List<&2,Create.Vertex>,v => v <> Create.bake(rest,Create.white()),Create.tint(vertex,Create.white()),vertex,Laws.creation_white(vertex)),
-        Equal.cong(List<&2,Create.Vertex>,List<&2,Create.Vertex>,xs => vertex <> xs,Create.bake(rest,Create.white()),rest,Laws.creation_white_mesh(rest)))
+      Equal.trans(List<&2,F.Vertex>,F.tint(vertex,F.white()) <> F.bake(rest,F.white()),vertex <> F.bake(rest,F.white()),vertex <> rest,
+        Equal.cong(F.Vertex,List<&2,F.Vertex>,v => v <> F.bake(rest,F.white()),F.tint(vertex,F.white()),vertex,Laws.creation_white(vertex)),
+        Equal.cong(List<&2,F.Vertex>,List<&2,F.Vertex>,xs => vertex <> xs,F.bake(rest,F.white()),rest,Laws.creation_white_mesh(rest)))
+
+def conjunction_true(+a:Bool,+b:Bool,pa:{a == True{} : Bool},pb:{b == True{} : Bool}) -> {Bool.and(a,b) == True{} : Bool}:
+  Equal.trans(Bool,Bool.and(a,b),Bool.and(True{},b),True{},
+    Equal.cong(Bool,Bool,x => Bool.and(x,b),a,True{},pa),pb)
+
+def content_vec_identity(+v:C.Vec3) -> {F.same_vec(v,v) == True{} : Bool}:
+  match v:
+    case C.Vec3{+x,+y,+z}:
+      conjunction_true(Bool.and(U32.is_eq(F32.bits(x),F32.bits(x)),U32.is_eq(F32.bits(y),F32.bits(y))),U32.is_eq(F32.bits(z),F32.bits(z)),
+        conjunction_true(U32.is_eq(F32.bits(x),F32.bits(x)),U32.is_eq(F32.bits(y),F32.bits(y)),U32Proof.u32_eq_refl(F32.bits(x)),U32Proof.u32_eq_refl(F32.bits(y))),
+        U32Proof.u32_eq_refl(F32.bits(z)))
+
+def content_vertices_identity(+vertices:List<&2,F.Vertex>) -> {F.same_vertices(vertices,vertices) == True{} : Bool}:
+  match vertices:
+    case []:{==}
+    case F.Vertex{+p,+c} <> +rest:
+      conjunction_true(Bool.and(F.same_vec(p,p),F.same_vec(c,c)),F.same_vertices(rest,rest),
+        conjunction_true(F.same_vec(p,p),F.same_vec(c,c),content_vec_identity(p),content_vec_identity(c)),content_vertices_identity(rest))
+
+def content_indices_identity(+indices:List<&2,U32>) -> {F.same_indices(indices,indices) == True{} : Bool}:
+  match indices:
+    case []:{==}
+    case +i <> +rest:
+      conjunction_true(U32.is_eq(i,i),F.same_indices(rest,rest),U32Proof.u32_eq_refl(i),content_indices_identity(rest))
+
+def Laws.content_mesh_identity(mesh):
+  match mesh:
+    case F.Mesh{+vertices,+indices}:
+      conjunction_true(F.same_vertices(vertices,vertices),F.same_indices(indices,indices),content_vertices_identity(vertices),content_indices_identity(indices))
+
+def Laws.content_material_identity(material):
+  match material:
+    case F.Basic{+tint}:content_vec_identity(tint)
+
+def Laws.content_bake_count(vertices,material):
+  match vertices:
+    case []:{==}
+    case vertex <> +rest:
+      Equal.cong(Nat,Nat,n => 1n+n,List.length(&2,F.Vertex,F.bake(rest,material)),List.length(&2,F.Vertex,rest),Laws.content_bake_count(rest,material))
+
+def Laws.content_bake_append(left,right,material):
+  match left:
+    case []:{==}
+    case +vertex <> rest:
+      Equal.cong(List<&2,F.Vertex>,List<&2,F.Vertex>,xs => F.tint(vertex,material) <> xs,
+        F.bake(List.append(&2,F.Vertex,rest,right),material),
+        List.append(&2,F.Vertex,F.bake(rest,material),F.bake(right,material)),Laws.content_bake_append(rest,right,material))
+
+def Laws.creation_bad_mesh_first(material,transform,number):
+  match material transform:
+    case False{} False{}:{==}
+    case False{} True{}:{==}
+    case True{} False{}:{==}
+    case True{} True{}:{==}
+
+def Laws.creation_bad_material_second(transform,number):
+  match transform:
+    case False{}:{==}
+    case True{}:{==}
+
+def Laws.creation_bad_transform_third(number):{==}
+
+def Laws.creation_duplicate_preserves_geometry(id,mesh,material,pairs,geometry,next):{==}
 
 def Laws.creation_bundle_count(seeds):
   match seeds:

@@ -1,24 +1,20 @@
+import ../src/content.bend as F
 import Base
 import ../src/creation.bend as Create
 import ../src/components.bend as C
 import ../src/scene.bend as Scene
 import ../src/headless.bend as Headless
-
-def mesh() -> Create.Mesh:
-  Create.Mesh{[
-    Create.Vertex{C.Vec3{F32.neg(0.25),F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0}},
-    Create.Vertex{C.Vec3{0.25,F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0}},
-    Create.Vertex{C.Vec3{0.0,0.25,0.0},C.Vec3{1.0,1.0,1.0}}],[0,1,2]}
+import ./content-assets.bend as Source
 
 def transform(x:F32) -> C.Transform:
   C.Transform{C.Vec3{x,0.0,0.0},C.Quat{0.0,0.0,0.0,1.0},C.Vec3{1.0,1.0,1.0}}
 
 def content() -> Create.Scene:
-  +triangle:Create.Mesh = mesh()
+  +triangle:F.Mesh = Source.triangle()
   Create.Scene{[
-    Create.Instance{triangle,Create.Basic{C.Vec3{1.0,0.0,0.0}},transform(F32.neg(0.5))},
-    Create.Instance{triangle,Create.Basic{C.Vec3{0.0,1.0,0.0}},transform(0.5)},
-    Create.Instance{triangle,Create.Basic{C.Vec3{1.0,0.0,0.0}},transform(1.5)}]}
+    Create.Instance{triangle,F.Basic{C.Vec3{1.0,0.0,0.0}},transform(F32.neg(0.5))},
+    Create.Instance{triangle,F.Basic{C.Vec3{0.0,1.0,0.0}},transform(0.5)},
+    Create.Instance{triangle,F.Basic{C.Vec3{1.0,0.0,0.0}},transform(1.5)}]}
 
 def camera() -> Create.Camera:
   Create.Camera{C.Vec3{1.0,F32.neg(1.0),F32.neg(2.0)},0.65,0.45,7.0,Create.Perspective{1.7320508,0.1,100.0}}

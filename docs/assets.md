@@ -67,6 +67,17 @@ these guarantees assume caches and handles created and advanced through this API
 
 ## Executable examples
 
+The [procedural source example](../examples/content-assets.bend) loads
+`Content.Mesh` and `Content.Material` into separate production caches. It copies
+out both values, releases their handles, verifies that lookup returns missing,
+and returns the retained sources. Its dependency closure contains only Base,
+Asset, Content, and Components. It requires no scene compiler, ECS, or Vulkan.
+The public scene example reuses its procedural triangle.
+
+The [mesh and material reference](content.md) defines source validation, exact
+identity, tint semantics, and future importer adapter obligations. Asset stays
+generic and does not validate payloads or certify renderer admission.
+
 The [file example](../examples/assets.bend) reads a regular file with a 1 MiB
 limit, closes its file handle, and prints `Loading`, a byte count or error, then
 `Missing` after release. Its loader returns bytes without format decoding.
@@ -75,6 +86,8 @@ not promise a filesystem snapshot during concurrent writes.
 
 ```sh
 mkdir -p build
+bend examples/content-assets.bend -o build/content-assets
+./build/content-assets +RTS --threads 1 --gpu off
 bend examples/assets.bend -o build/assets
 ./build/assets README.md +RTS --threads 1 --gpu off
 bend examples/asset-scene.bend -o build/asset-scene
@@ -106,6 +119,9 @@ bend tools/verify-assets.bend -o build/verify-assets
 The runtime driver creates a fresh evidence directory, records real loader calls,
 and changes files to check caching and explicit retry. It rejects stale and
 wrong-scope handles, preserves an unrelated asset, then runs the scene example.
+It also compiles and runs the procedural example from an inventory containing
+only its four source files, proving that no Creation or Vulkan dependency is
+needed. Exact mesh and material comparison checks retained values after release.
 The default [`tools/verify.bend`](../tools/verify.bend) gate includes this driver.
 
 Storage uses a sequential list with linear lookup. Capacity policy, automatic

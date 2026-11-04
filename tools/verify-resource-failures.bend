@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import Base
 import ../src/scene-buffer.bend as B
 import ../src/scene-geometry.bend as G
@@ -77,9 +78,9 @@ def indices(n:Nat) -> List<&2,U32>:
 
 def mesh(+n:Nat) -> Create.Geometry:
   Create.Geometry{[
-    Create.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
-    Create.Vertex{C.Vec3{1.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
-    Create.Vertex{C.Vec3{0.0,1.0,0.0},C.Vec3{1.0,0.0,0.0}}],indices(n),[Create.Range{7,0,U32.from_nat(Nat.mul(3n,n))}]}
+    F.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
+    F.Vertex{C.Vec3{1.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
+    F.Vertex{C.Vec3{0.0,1.0,0.0},C.Vec3{1.0,0.0,0.0}}],indices(n),[Create.Range{7,0,U32.from_nat(Nat.mul(3n,n))}]}
 
 def counts(probe:Diag.Probe,writes:U32,bytes:U32) -> V.Action(Unit):
   match probe:

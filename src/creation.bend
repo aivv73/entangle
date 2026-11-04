@@ -1,16 +1,10 @@
 import Base
 import ./components.bend as C
 import ./scene-matrix.bend as M
-import ./scene-mesh.bend as Indices
+import ./content.bend as F
 
-type Vertex is Data:
-  Vertex{position:C.Vec3,color:C.Vec3}
-type Mesh is Data:
-  Mesh{vertices:List<&2,Vertex>,indices:List<&2,U32>}
-type Material is Data:
-  Basic{tint:C.Vec3}
 type Instance is Data:
-  Instance{mesh:Mesh,material:Material,transform:C.Transform}
+  Instance{mesh:F.Mesh,material:F.Material,transform:C.Transform}
 type Scene is Data:
   Scene{instances:List<&2,Instance>}
 type Seed is Data:
@@ -18,7 +12,7 @@ type Seed is Data:
 type Range is Data:
   Range{id:U32,first_index:U32,index_count:U32}
 type Geometry is Data:
-  Geometry{vertices:List<&2,Vertex>,indices:List<&2,U32>,ranges:List<&2,Range>}
+  Geometry{vertices:List<&2,F.Vertex>,indices:List<&2,U32>,ranges:List<&2,Range>}
 type Compiled is Data:
   Compiled{seeds:List<&2,Seed>,geometry:Geometry}
 type Error is Data:
@@ -27,18 +21,11 @@ type Error is Data:
   BadTransform{instance:U32}
   TooLarge{}
 type Used is Data:
-  Used{mesh:Mesh,material:Material,id:U32}
-
-def finite(x:F32) -> Bool:
-  U32.is_ne(U32.and(F32.bits(x),2139095040),2139095040)
-
-def vec_finite(v:C.Vec3) -> Bool:
-  C.Vec3{x,y,z} = v
-  finite(x) && finite(y) && finite(z)
+  Used{mesh:F.Mesh,material:F.Material,id:U32}
 
 def col_finite(v:M.Vec4) -> Bool:
   M.Vec4{x,y,z,w} = v
-  finite(x) && finite(y) && finite(z) && finite(w)
+  F.finite(x) && F.finite(y) && F.finite(z) && F.finite(w)
 
 def matrix_finite(m:M.Mat4) -> Bool:
   M.Mat4{a,b,c,d} = m
@@ -47,70 +34,18 @@ def matrix_finite(m:M.Mat4) -> Bool:
 def transform_valid(t:C.Transform) -> Bool:
   C.Transform{p,C.Quat{+x,+y,+z,+w},s} = t
   +n = (x * x + y * y + z * z + w * w : F32)
-  vec_finite(p) && vec_finite(s) && finite(x) && finite(y) && finite(z) && finite(w) && F32.is_ge(n,0.9999) && F32.is_le(n,1.0001)
-
-def vertices_valid(vertices:List<&2,Vertex>) -> Bool:
-  match vertices:
-    case []:True{}
-    case Vertex{p,c} <> rest:vec_finite(p) && vec_finite(c) && vertices_valid(rest)
-
-def mesh_valid(mesh:Mesh) -> Bool:
-  Mesh{+vertices,+indices} = mesh
-  +vc = List.length(&2,Vertex,vertices)
-  +ic = List.length(&2,U32,indices)
-  Nat.is_le(vc,699050n) && Nat.is_le(ic,3000000n) && U32.is_zero(U32.mod(U32.from_nat(ic),3)) && vertices_valid(vertices) && Indices.indices_valid(indices,U32.from_nat(vc))
-
-def channel(+x:F32) -> Bool:
-  finite(x) && F32.is_ge(x,0.0) && F32.is_le(x,1.0)
-
-def material_valid(material:Material) -> Bool:
-  Basic{C.Vec3{r,g,b}} = material
-  channel(r) && channel(g) && channel(b)
-
-def white() -> Material:Basic{C.Vec3{M.float_word(1065353216),M.float_word(1065353216),M.float_word(1065353216)}}
-
-def tint_channel(+value:F32,+tint:F32) -> F32:
-  Bool.pick(F32,U32.is_eq(M.float_bits(tint),1065353216),value,F32.mul(value,tint))
-
-def tint(vertex:Vertex,material:Material) -> Vertex:
-  Vertex{p,C.Vec3{r,g,b}} = vertex
-  Basic{C.Vec3{x,y,z}} = material
-  Vertex{p,C.Vec3{tint_channel(r,x),tint_channel(g,y),tint_channel(b,z)}}
-
-def bake(vertices:List<&2,Vertex>,+material:Material) -> List<&2,Vertex>:
-  match vertices:
-    case []:[]
-    case v <> rest:tint(v,material) <> bake(rest,material)
+  F.vec_finite(p) && F.vec_finite(s) && F.finite(x) && F.finite(y) && F.finite(z) && F.finite(w) && F32.is_ge(n,0.9999) && F32.is_le(n,1.0001)
 
 def rebase(indices:List<&2,U32>,+offset:U32) -> List<&2,U32>:
   match indices:
     case []:[]
     case i <> rest:U32.add(i,offset) <> rebase(rest,offset)
 
-def same_vec(a:C.Vec3,b:C.Vec3) -> Bool:
-  C.Vec3{x,y,z} = a
-  C.Vec3{u,v,w} = b
-  U32.is_eq(F32.bits(x),F32.bits(u)) && U32.is_eq(F32.bits(y),F32.bits(v)) && U32.is_eq(F32.bits(z),F32.bits(w))
-
-def same_vertices(a:List<&2,Vertex>,b:List<&2,Vertex>) -> Bool:
-  match a b:
-    case [], []:True{}
-    case Vertex{p,c} <> xs, Vertex{q,d} <> ys:same_vec(p,q) && same_vec(c,d) && same_vertices(xs,ys)
-    case _, _:False{}
-
-def same_indices(a:List<&2,U32>,b:List<&2,U32>) -> Bool:
-  match a b:
-    case [], []:True{}
-    case x <> xs, y <> ys:U32.is_eq(x,y) && same_indices(xs,ys)
-    case _, _:False{}
-
-def lookup(pairs:List<&2,Used>,+mesh:Mesh,+material:Material) -> Maybe<U32>:
+def lookup(pairs:List<&2,Used>,+mesh:F.Mesh,+material:F.Material) -> Maybe<U32>:
   match pairs:
     case []:None{}
-    case Used{Mesh{a,b},Basic{c},id} <> rest:
-      Mesh{+v,+i} = mesh
-      Basic{+t} = material
-      Bool.pick(Maybe<U32>,same_vec(c,t) && same_vertices(a,v) && same_indices(b,i),Some{id},lookup(rest,mesh,material))
+    case Used{other,tint,id} <> rest:
+      Bool.pick(Maybe<U32>,F.same_material(tint,material) && F.same_mesh(other,mesh),Some{id},lookup(rest,mesh,material))
 
 def resolve(ranges:List<&2,Range>,+id:U32) -> Maybe<Range>:
   match ranges:
@@ -139,18 +74,18 @@ def capacity(valid:Bool) -> Result<&2,&2,Error,Unit>:
 type Plan is Data:
   Plan{pairs:List<&2,Used>,geometry:Geometry,id:U32,next:U32}
 
-def compile_pair(found:Maybe<U32>,+mesh:Mesh,+material:Material,pairs:List<&2,Used>,geometry:Geometry,+next:U32) -> Result<&2,&2,Error,Plan>:
+def compile_pair(found:Maybe<U32>,+mesh:F.Mesh,+material:F.Material,pairs:List<&2,Used>,geometry:Geometry,+next:U32) -> Result<&2,&2,Error,Plan>:
   match found:
     case Some{id}:Done{Plan{pairs,geometry,id,next}}
     case None{}:
-      Mesh{+vertices,+indices} = mesh
+      F.Mesh{+vertices,+indices} = mesh
       Geometry{+vs,+packed_indices,ranges} = geometry
-      +vc = List.length(&2,Vertex,vs)
+      +vc = List.length(&2,F.Vertex,vs)
       +ic = List.length(&2,U32,packed_indices)
       do Result<&2,&2,Error,Plan>:
-        checked:Unit <- capacity(Nat.is_le(Nat.add(vc,List.length(&2,Vertex,vertices)),699050n) && Nat.is_le(Nat.add(ic,List.length(&2,U32,indices)),3000000n))
+        checked:Unit <- capacity(F.mesh_fits(Nat.add(vc,List.length(&2,F.Vertex,vertices)),Nat.add(ic,List.length(&2,U32,indices))))
         return Plan{Used{mesh,material,next} <> pairs,
-          Geometry{List.append(&2,Vertex,vs,bake(vertices,material)),List.append(&2,U32,packed_indices,rebase(indices,U32.from_nat(vc))),List.append(&2,Range,ranges,[Range{next,U32.from_nat(ic),U32.from_nat(List.length(&2,U32,indices))}])},next,U32.inc(next)}
+          Geometry{List.append(&2,F.Vertex,vs,F.bake(vertices,material)),List.append(&2,U32,packed_indices,rebase(indices,U32.from_nat(vc))),List.append(&2,Range,ranges,[Range{next,U32.from_nat(ic),U32.from_nat(List.length(&2,U32,indices))}])},next,U32.inc(next)}
 
 def apply_plan(-A:Data,plan:Plan,next:List<&2,Used> -> Geometry -> U32 -> U32 -> Result<&2,&2,Error,A>) -> Result<&2,&2,Error,A>:
   Plan{pairs,geometry,id,index} = plan
@@ -161,7 +96,7 @@ def compile_items(items:List<&2,Instance>,+pairs:List<&2,Used>,+geometry:Geometr
     case []:Done{Compiled{[],geometry}}
     case Instance{+mesh,+material,+transform} <> rest:
       do Result<&2,&2,Error,Compiled>:
-        checked:Unit <- validate(mesh_valid(mesh),material_valid(material),transform_valid(transform),number)
+        checked:Unit <- validate(F.mesh_valid(mesh),F.material_valid(material),transform_valid(transform),number)
         plan:Plan <- compile_pair(lookup(pairs,mesh,material),mesh,material,pairs,geometry,next)
         apply_plan(Compiled,plan,pairs => geometry => id => next => prepend(Seed{transform,C.MeshRef{id}},compile_items(rest,pairs,geometry,U32.inc(number),next)))
 
@@ -184,7 +119,7 @@ def ranges_valid(ranges:List<&2,Range>,+count:U32) -> Bool:
 
 def geometry_valid(geometry:Geometry) -> Bool:
   Geometry{+vertices,+indices,ranges} = geometry
-  mesh_valid(Mesh{vertices,indices}) && ranges_valid(ranges,U32.from_nat(List.length(&2,U32,indices)))
+  F.mesh_valid(F.Mesh{vertices,indices}) && ranges_valid(ranges,U32.from_nat(List.length(&2,U32,indices)))
 
 type Projection is Data:
   Perspective{scale:F32,near:F32,far:F32}
@@ -196,7 +131,7 @@ def default_camera() -> Camera:
 
 def camera_valid(camera:Camera) -> Bool:
   Camera{target,yaw,pitch,+distance,Perspective{+scale,+near,+far}} = camera
-  vec_finite(target) && finite(yaw) && finite(pitch) && finite(distance) && F32.is_gt(distance,0.0) && finite(scale) && F32.is_gt(scale,0.0) && finite(near) && finite(far) && F32.is_gt(near,0.0) && F32.is_gt(far,near)
+  F.vec_finite(target) && F.finite(yaw) && F.finite(pitch) && F.finite(distance) && F32.is_gt(distance,0.0) && F.finite(scale) && F32.is_gt(scale,0.0) && F.finite(near) && F.finite(far) && F32.is_gt(near,0.0) && F32.is_gt(far,near)
 
 def camera(camera:Camera) -> Maybe<Camera>:
   +camera = camera

@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import Base
 import ../src/creation.bend as Create
 import ../src/scene-window.bend as Win
@@ -21,10 +22,10 @@ import ./scene-render.bend as Extract
 type State is Type:
   State{app:Scene.Application(),inspector:I.Instance<D.Schema>,baseline:List<&2,Check.Identity>,rows:List<&2,Observe.Row>,draws:Draw.DrawList,retained:Draw.DrawList,saved:List<&2,Observe.Row>,tick:U32,clock:Time.Clock}
 
-def vertices(words:List<U32>) -> List<&2,Create.Vertex>:
+def vertices(words:List<U32>) -> List<&2,F.Vertex>:
   match words:
     case a <> b <> c <> r <> g <> b1 <> rest:
-      Create.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)}} <> vertices(rest)
+      F.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)}} <> vertices(rest)
     case _:[]
 
 def indices(words:List<U32>) -> List<&2,U32>:

@@ -25,7 +25,7 @@ A mesh pass covers the mesh entry of camera controls. It does not establish the 
 ## Features
 
 - [Formal laws](formal-laws.md): production Bend definitions, the universal upload-range theorem, mutation controls, and synchronization records.
-- [Source assets](../../../../docs/assets.md#verification-and-limits): typed cache handles, real file loading, cached failures, release/retry, and scene execution after source release.
+- [Source assets](../../../../docs/assets.md#verification-and-limits): typed cache handles, real file loading, cached failures, release/retry, exact retained mesh and material sources, source-only dependency closure, and scene execution after source release.
 - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
 - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.
 - [Native resource failures](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded proofs of production handlers for rare driver errors.

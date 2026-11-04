@@ -12,7 +12,17 @@ A Bend application describes meshes, colors, transforms, and a camera, compiles 
 
 ## How to get to it (user POV)
 
-Use `Vertex`, `Mesh`, `Basic`, `Instance`, `Scene`, and `Camera` from `src/creation.bend`, then call `Create.compile`. The runnable public entry is `examples/public-creation.bend`, linked from the root README. See `docs/public-creation.md` for accepted values and errors.
+Use `Vertex`, `Mesh`, and `Basic` from `src/content.bend`. Use `Instance`, `Scene`,
+and `Camera` from `src/creation.bend`, then call `Create.compile`. The runnable
+public entry is `examples/public-creation.bend`, linked from the root README.
+See `docs/content.md` for the source contract and `docs/public-creation.md` for
+compilation and errors.
+
+The source-only cache path is `examples/content-assets.bend`. Run
+`tools/verify-assets.bend` to check production loading, exact retained source
+values after release, and compilation from only Base, Asset, Content, and
+Components. The driver prints `Mesh and material source caches verified after
+release; source-only closure compiled and ran without Creation or Vulkan.`
 
 ## Driving it with native Bend executables
 

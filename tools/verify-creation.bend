@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import Base
 import ../src/creation.bend as Create
 import ../src/components.bend as C
@@ -15,23 +16,23 @@ import ../examples/scene-render.bend as Render
 import ../deps/bendvy/src/ecs/inspector.bend as I
 import ../deps/bend-vulkan/Vulkan.bend as V
 
-def vertices() -> List<&2,Create.Vertex>:
-  [Create.Vertex{C.Vec3{F32.neg(0.6),F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
-   Create.Vertex{C.Vec3{0.6,F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
-   Create.Vertex{C.Vec3{0.6,0.6,0.25},C.Vec3{1.0,1.0,1.0}},
-   Create.Vertex{C.Vec3{F32.neg(0.6),0.6,0.25},C.Vec3{1.0,1.0,1.0}}]
+def vertices() -> List<&2,F.Vertex>:
+  [F.Vertex{C.Vec3{F32.neg(0.6),F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
+   F.Vertex{C.Vec3{0.6,F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
+   F.Vertex{C.Vec3{0.6,0.6,0.25},C.Vec3{1.0,1.0,1.0}},
+   F.Vertex{C.Vec3{F32.neg(0.6),0.6,0.25},C.Vec3{1.0,1.0,1.0}}]
 
 def transform(x:F32) -> C.Transform:
   C.Transform{C.Vec3{x,0.0,0.0},C.Quat{0.0,0.0,0.0,1.0},C.Vec3{1.0,1.0,1.0}}
 
 def content(+white:Bool) -> Create.Scene:
-  +triangle:Create.Mesh = Create.Mesh{vertices(),[0,1,2]}
-  quad:Create.Mesh = Create.Mesh{vertices(),[0,1,2,2,3,0]}
+  +triangle:F.Mesh = F.Mesh{vertices(),[0,1,2]}
+  quad:F.Mesh = F.Mesh{vertices(),[0,1,2,2,3,0]}
   Create.Scene{[
-    Create.Instance{triangle,Bool.pick(Create.Material,white,Create.white(),Create.Basic{C.Vec3{1.0,0.0,0.0}}),transform(F32.neg(2.0))},
-    Create.Instance{triangle,Bool.pick(Create.Material,white,Create.white(),Create.Basic{C.Vec3{0.0,1.0,0.0}}),transform(0.0)},
-    Create.Instance{quad,Create.white(),transform(2.0)},
-    Create.Instance{triangle,Bool.pick(Create.Material,white,Create.white(),Create.Basic{C.Vec3{1.0,0.0,0.0}}),transform(F32.neg(2.0))}]}
+    Create.Instance{triangle,Bool.pick(F.Material,white,F.white(),F.Basic{C.Vec3{1.0,0.0,0.0}}),transform(F32.neg(2.0))},
+    Create.Instance{triangle,Bool.pick(F.Material,white,F.white(),F.Basic{C.Vec3{0.0,1.0,0.0}}),transform(0.0)},
+    Create.Instance{quad,F.white(),transform(2.0)},
+    Create.Instance{triangle,Bool.pick(F.Material,white,F.white(),F.Basic{C.Vec3{1.0,0.0,0.0}}),transform(F32.neg(2.0))}]}
 
 def compiled(result:Result<&2,&2,Create.Error,Create.Compiled>) -> IO(Create.Compiled):
   match result:
@@ -139,7 +140,7 @@ def lists(seeds:List<&2,Create.Seed>) -> IO(Draw.DrawList & Draw.DrawList):
 
 def plan_ok(geometry:Create.Geometry) -> Bool:
   match geometry:
-    case Create.Geometry{vs,is1,[Create.Range{7,0,3},Create.Range{8,3,3},Create.Range{9,6,6}]}:Nat.is_eq(List.length(&2,Create.Vertex,vs),12n) && Nat.is_eq(List.length(&2,U32,is1),12n)
+    case Create.Geometry{vs,is1,[Create.Range{7,0,3},Create.Range{8,3,3},Create.Range{9,6,6}]}:Nat.is_eq(List.length(&2,F.Vertex,vs),12n) && Nat.is_eq(List.length(&2,U32,is1),12n)
     case _:False{}
 
 def geometry_depth(rgba:List<&2,U32>,depth:List<&2,U32>,+expected:U32) -> Bool:
@@ -180,7 +181,7 @@ def run(tinted:Create.Compiled,white:Create.Compiled) -> IO(Unit):
     images(geometry,white_geometry,pair,white_pair)
 
 def empty_scene(instance:Bool) -> Create.Scene:
-  Create.Scene{Bool.pick(List<&2,Create.Instance>,instance,[Create.Instance{Create.Mesh{[],[]},Create.white(),C.Transform.identity()}],[])}
+  Create.Scene{Bool.pick(List<&2,Create.Instance>,instance,[Create.Instance{F.Mesh{[],[]},F.white(),C.Transform.identity()}],[])}
 
 def clear_depth(bytes:List<&2,U32>) -> Bool:
   match bytes:
@@ -218,9 +219,9 @@ def rejected(result:Result<&2,&2,Create.Error,Create.Compiled>) -> Bool:
     case Done{_}:False{}
 
 def boundary_checks() -> IO(Unit):
-  +bad:Create.Scene = Create.Scene{[Create.Instance{Create.Mesh{vertices(),[0,1,8]},Create.white(),C.Transform.identity()}]}
-  +bad_tint:Create.Scene = Create.Scene{[Create.Instance{Create.Mesh{vertices(),[0,1,2]},Create.Basic{C.Vec3{1.01,0.0,0.0}},C.Transform.identity()}]}
-  +bad_transform:Create.Scene = Create.Scene{[Create.Instance{Create.Mesh{vertices(),[0,1,2]},Create.white(),C.Transform{C.Vec3{0.0,0.0,0.0},C.Quat{0.0,0.0,0.0,0.0},C.Vec3{1.0,1.0,1.0}}}]}
+  +bad:Create.Scene = Create.Scene{[Create.Instance{F.Mesh{vertices(),[0,1,8]},F.white(),C.Transform.identity()}]}
+  +bad_tint:Create.Scene = Create.Scene{[Create.Instance{F.Mesh{vertices(),[0,1,2]},F.Basic{C.Vec3{1.01,0.0,0.0}},C.Transform.identity()}]}
+  +bad_transform:Create.Scene = Create.Scene{[Create.Instance{F.Mesh{vertices(),[0,1,2]},F.white(),C.Transform{C.Vec3{0.0,0.0,0.0},C.Quat{0.0,0.0,0.0,0.0},C.Vec3{1.0,1.0,1.0}}}]}
   do IO<Unit>:
     ECS.require(rejected(Create.compile(bad)) && rejected(Create.compile(bad_tint)) && rejected(Create.compile(bad_transform)),"Creation boundary accepted invalid description")
     empty(False{})

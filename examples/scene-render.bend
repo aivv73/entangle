@@ -1,3 +1,4 @@
+import ../src/content.bend as F
 import Base
 import ../src/creation.bend as Create
 import ./scene-seeds.bend as Seeds
@@ -17,14 +18,14 @@ import ./scene.bend as Check
 def camera() -> M.Mat4:
   M.Mat4{M.Vec4{0.015625,F32.neg(0.125),0.0,0.0},M.Vec4{0.0,0.0625,0.0,0.0},M.Vec4{0.0,0.0,0.00390625,0.0},M.Vec4{F32.neg(0.96875),0.25,0.5,1.0}}
 
-def quad(+z:F32,+color:C.Vec3) -> List<&2,Create.Vertex>:
-  [Create.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color},
-   Create.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color},
-   Create.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color},
-   Create.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color}]
+def quad(+z:F32,+color:C.Vec3) -> List<&2,F.Vertex>:
+  [F.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color},
+   F.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color},
+   F.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color},
+   F.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color}]
 
 def mesh(reverse:Bool) -> Create.Geometry:
-  vertices = List.append(&2,Create.Vertex,quad(0.03125,C.Vec3{1.0,0.0,0.0}),quad(0.09375,C.Vec3{0.0,1.0,0.0}))
+  vertices = List.append(&2,F.Vertex,quad(0.03125,C.Vec3{1.0,0.0,0.0}),quad(0.09375,C.Vec3{0.0,1.0,0.0}))
   +indices = Bool.pick(List<&2,U32>,reverse,[4,5,6,6,7,4,0,1,2,2,3,0],[0,1,2,2,3,0,4,5,6,6,7,4])
   Create.Geometry{vertices,indices,[Create.Range{7,0,U32.from_nat(List.length(&2,U32,indices))}]}
 
