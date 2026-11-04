@@ -20,6 +20,7 @@ import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/arith.bend a
 import ./deps/bend-vulkan/deps/bend-collections/proofs/math/natural/misc.bend as Misc
 import ./src/components.bend as C
 import ./LAWS.bend as Laws
+import ./src/asset.bend as Asset
 import ./src/scene-spawn.bend as Spawn
 import ./src/scene-schema.bend as SceneSchema
 import ./deps/bendvy/src/ecs/execution-command-removed.bend as Removed
@@ -388,3 +389,129 @@ def Laws.geometry_install_accept(A,old,fresh):{==}
 def Laws.geometry_install_reject(A,old,fresh):{==}
 def Laws.geometry_pair_allocations(A,vertices,indices):{==}
 def Laws.geometry_empty_allocations(A):{==}
+
+def asset_rewrite(-A:Type,-P:A -> Type,-x:A,-y:A,e:{x == y : A},p:P(y)) -> P(x):
+  %Equal.sym(A,x,y,e) : P(_)
+  p
+
+def asset_id_self(+id:Nat) -> {Nat.is_eq(id,id) == True{} : Bool}:
+  match id:
+    case 0n:{==}
+    case 1n+rest:asset_id_self(rest)
+
+def Laws.asset_release_entry(A,scope,next,key,id,state):
+  asset_rewrite(Bool,b => {Asset.Cache{scope,next,Asset.keep(A,Asset.Entry{key,id,state},[],b)} == Asset.Cache{scope,next,[]} : Asset.Cache<A>},Nat.is_eq(id,id),True{},asset_id_self(id),{==})
+
+def Laws.asset_request_hit(A,scope,next,entries,key,id,found):
+  asset_rewrite(Maybe<Nat>,m => {Asset.requested(A,scope,next,entries,key,m) == (Asset.Cache{scope,next,entries},Asset.Handle{scope,id}) : Asset.Cache<A> & Asset.Handle<A>},Asset.find_key(A,entries,key),Some{id},found,{==})
+
+def Laws.asset_request_miss(A,scope,next,entries,key,found):
+  asset_rewrite(Maybe<Nat>,m => {Asset.requested(A,scope,next,entries,key,m) == (Asset.Cache{scope,1n+next,Asset.Entry{key,next,Asset.Loading{}} <> entries},Asset.Handle{scope,next}) : Asset.Cache<A> & Asset.Handle<A>},Asset.find_key(A,entries,key),None{},found,{==})
+
+def Laws.asset_load_success(A,value):{==}
+def Laws.asset_load_failure(A,error):{==}
+def Laws.asset_loaded_stable(A,value,result):{==}
+def Laws.asset_failed_stable(A,error,result):{==}
+
+def Laws.asset_complete_preserves_keys(A,entries,id,key,result):
+  match entries:
+    case []:{==}
+    case Asset.Entry{+name,+serial,state} <> +rest:
+      Equal.cong(Maybe<Nat>,Maybe<Nat>,tail => Bool.pick(Maybe<Nat>,String.eq(key,name),Some{serial},tail),
+        Asset.find_key(A,Asset.complete(A,rest,id,result),key),Asset.find_key(A,rest,key),
+        Laws.asset_complete_preserves_keys(A,rest,id,key,result))
+
+def asset_remove_absent_step(-A:Data,+key:String,+other:Nat,+state:Asset.State<A>,+rest:List<&2,Asset.Entry<A>>,+id:Nat,+same:Bool,h:{Nat.is_eq(id,other) == same : Bool},ih:{Asset.find_id(A,rest,id) == None{} : Maybe<&2,Asset.State<A>>}) ->
+  {Asset.find_id(A,Asset.keep(A,Asset.Entry{key,other,state},rest,same),id) == None{} : Maybe<&2,Asset.State<A>>}:
+  match same:
+    case True{}:ih
+    case False{}:
+      asset_rewrite(Bool,b => {Bool.pick(Maybe<&2,Asset.State<A>>,b,Some{state},Asset.find_id(A,rest,id)) == None{} : Maybe<&2,Asset.State<A>>},Nat.is_eq(id,other),False{},h,ih)
+
+def Laws.asset_remove_absent(A,entries,id):
+  match entries:
+    case []:{==}
+    case Asset.Entry{key,+other,state} <> +rest:
+      asset_remove_absent_step(A,key,other,state,Asset.remove(A,rest,id),id,Nat.is_eq(id,other),{==},Laws.asset_remove_absent(A,rest,id))
+
+def asset_remove_work_step(-A:Data,+key:String,+other:Nat,+state:Asset.State<A>,+rest:List<&2,Asset.Entry<A>>,+id:Nat,+same:Bool,h:{Nat.is_eq(id,other) == same : Bool},ih:{Asset.pending(A,rest,id) == None{} : Maybe<String>}) ->
+  {Asset.pending(A,Asset.keep(A,Asset.Entry{key,other,state},rest,same),id) == None{} : Maybe<String>}:
+  match same:
+    case True{}:ih
+    case False{}:
+      asset_rewrite(Bool,b => {Bool.pick(Maybe<String>,b,Asset.pending_state(A,state,key),Asset.pending(A,rest,id)) == None{} : Maybe<String>},Nat.is_eq(id,other),False{},h,ih)
+
+def Laws.asset_remove_no_work(A,entries,id):
+  match entries:
+    case []:{==}
+    case Asset.Entry{key,+other,state} <> +rest:
+      asset_remove_work_step(A,key,other,state,Asset.remove(A,rest,id),id,Nat.is_eq(id,other),{==},Laws.asset_remove_no_work(A,rest,id))
+
+def asset_remove_twice_step(-A:Data,+key:String,+other:Nat,+state:Asset.State<A>,+rest:List<&2,Asset.Entry<A>>,+id:Nat,+same:Bool,h:{Nat.is_eq(id,other) == same : Bool},ih:{Asset.remove(A,rest,id) == rest : List<&2,Asset.Entry<A>>}) ->
+  {Asset.remove(A,Asset.keep(A,Asset.Entry{key,other,state},rest,same),id) == Asset.keep(A,Asset.Entry{key,other,state},rest,same) : List<&2,Asset.Entry<A>>}:
+  match same:
+    case True{}:ih
+    case False{}:
+      asset_rewrite(Bool,b => {Asset.keep(A,Asset.Entry{key,other,state},Asset.remove(A,rest,id),b) == Asset.Entry{key,other,state} <> rest : List<&2,Asset.Entry<A>>},Nat.is_eq(id,other),False{},h,
+        Equal.cong(List<&2,Asset.Entry<A>>,List<&2,Asset.Entry<A>>,tail => Asset.Entry{key,other,state} <> tail,Asset.remove(A,rest,id),rest,ih))
+
+def Laws.asset_remove_idempotent(A,entries,id):
+  match entries:
+    case []:{==}
+    case Asset.Entry{key,+other,state} <> +rest:
+      asset_remove_twice_step(A,key,other,state,Asset.remove(A,rest,id),id,Nat.is_eq(id,other),{==},Laws.asset_remove_idempotent(A,rest,id))
+
+def asset_release_twice(-A:Data,+scope:String,+next:Nat,+entries:List<&2,Asset.Entry<A>>,+other:String,+id:Nat,+same:Bool,h:{String.eq(scope,other) == same : Bool}) ->
+  {Asset.release(A,Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same),Asset.Handle{other,id}) == Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same) : Asset.Cache<A>}:
+  match same:
+    case False{}:
+      asset_rewrite(Bool,b => {Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,b) == Asset.Cache{scope,next,entries} : Asset.Cache<A>},String.eq(scope,other),False{},h,{==})
+    case True{}:
+      asset_rewrite(Bool,b => {Asset.release_scoped(A,Asset.Cache{scope,next,Asset.remove(A,entries,id)},id,b) == Asset.Cache{scope,next,Asset.remove(A,entries,id)} : Asset.Cache<A>},String.eq(scope,other),True{},h,
+        Equal.cong(List<&2,Asset.Entry<A>>,Asset.Cache<A>,tail => Asset.Cache{scope,next,tail},Asset.remove(A,Asset.remove(A,entries,id),id),Asset.remove(A,entries,id),Laws.asset_remove_idempotent(A,entries,id)))
+
+def Laws.asset_release_idempotent(A,cache,handle):
+  match cache handle:
+    case Asset.Cache{+scope,next,entries} Asset.Handle{+other,+id}:
+      asset_release_twice(A,scope,next,entries,other,id,String.eq(scope,other),{==})
+
+def asset_release_lookup(-A:Data,+scope:String,+next:Nat,+entries:List<&2,Asset.Entry<A>>,+other:String,+id:Nat,+same:Bool,h:{String.eq(scope,other) == same : Bool}) ->
+  {Asset.lookup(A,Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same),Asset.Handle{other,id}) == (Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same),None{}) : Asset.Cache<A> & Maybe<&2,Asset.State<A>>}:
+  match same:
+    case False{}:
+      asset_rewrite(Bool,b => {Asset.lookup_scoped(A,Asset.Cache{scope,next,entries},id,b) == (Asset.Cache{scope,next,entries},None{}) : Asset.Cache<A> & Maybe<&2,Asset.State<A>>},String.eq(scope,other),False{},h,{==})
+    case True{}:
+      asset_rewrite(Bool,b => {Asset.lookup_scoped(A,Asset.Cache{scope,next,Asset.remove(A,entries,id)},id,b) == (Asset.Cache{scope,next,Asset.remove(A,entries,id)},None{}) : Asset.Cache<A> & Maybe<&2,Asset.State<A>>},String.eq(scope,other),True{},h,
+        Equal.cong(Maybe<&2,Asset.State<A>>,Asset.Cache<A> & Maybe<&2,Asset.State<A>>,state => (Asset.Cache{scope,next,Asset.remove(A,entries,id)},state),Asset.find_id(A,Asset.remove(A,entries,id),id),None{},Laws.asset_remove_absent(A,entries,id)))
+
+def Laws.asset_released_lookup(A,cache,handle):
+  match cache handle:
+    case Asset.Cache{+scope,next,entries} Asset.Handle{+other,+id}:
+      asset_release_lookup(A,scope,next,entries,other,id,String.eq(scope,other),{==})
+
+def asset_release_load(-A:Data,+scope:String,+next:Nat,+entries:List<&2,Asset.Entry<A>>,+other:String,+id:Nat,loader:String -> IO(Result<&2,&2,Asset.Error,A>),+same:Bool,h:{String.eq(scope,other) == same : Bool}) ->
+  {Asset.load(A,Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same),Asset.Handle{other,id},loader) == IO.pure(Asset.Cache<A>,Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same)) : IO(Asset.Cache<A>)}:
+  match same:
+    case False{}:
+      asset_rewrite(Bool,b => {Asset.load_scoped(A,Asset.Cache{scope,next,entries},id,loader,b) == IO.pure(Asset.Cache<A>,Asset.Cache{scope,next,entries}) : IO(Asset.Cache<A>)},String.eq(scope,other),False{},h,{==})
+    case True{}:
+      asset_rewrite(Bool,b => {Asset.load_scoped(A,Asset.Cache{scope,next,Asset.remove(A,entries,id)},id,loader,b) == IO.pure(Asset.Cache<A>,Asset.Cache{scope,next,Asset.remove(A,entries,id)}) : IO(Asset.Cache<A>)},String.eq(scope,other),True{},h,
+        asset_rewrite(Maybe<String>,work => {Asset.load_pending(A,Asset.Cache{scope,next,Asset.remove(A,entries,id)},id,work,loader) == IO.pure(Asset.Cache<A>,Asset.Cache{scope,next,Asset.remove(A,entries,id)}) : IO(Asset.Cache<A>)},Asset.pending(A,Asset.remove(A,entries,id),id),None{},Laws.asset_remove_no_work(A,entries,id),{==}))
+
+def Laws.asset_released_load(A,cache,handle,loader):
+  match cache handle:
+    case Asset.Cache{+scope,next,entries} Asset.Handle{+other,+id}:
+      asset_release_load(A,scope,next,entries,other,id,loader,String.eq(scope,other),{==})
+
+def asset_counter(-A:Data,scope:String,+next:Nat,entries:List<&2,Asset.Entry<A>>,id:Nat,same:Bool) ->
+  &remaining:List<&2,Asset.Entry<A>> -> {Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,same) == Asset.Cache{scope,next,remaining} : Asset.Cache<A>}:
+  match same:
+    case False{}:(entries,{==})
+    case True{}:(Asset.remove(A,entries,id),{==})
+
+def Laws.asset_release_counter(A,scope,next,entries,handle):
+  match handle:
+    case Asset.Handle{other,id}:asset_counter(A,scope,next,entries,id,String.eq(scope,other))
+
+def Laws.asset_wrong_scope(A,scope,other,next,entries,id,different):
+  asset_rewrite(Bool,b => {Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,b) == Asset.Cache{scope,next,entries} : Asset.Cache<A>},String.eq(scope,other),False{},different,{==})

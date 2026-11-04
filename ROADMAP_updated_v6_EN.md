@@ -1,10 +1,10 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 4, 2026 · updated for E3 sampled-image retention verification and completion under the documented trust limits
+**Revision:** 6 · November 4, 2026 · updated for the minimal E4 Asset API
 
 **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
 
-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete in the working tree under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4–E7 and R0–R4 remain planned; `v0.1-alpha` remains an E5 milestone.
+**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete in the working tree under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has begun with the minimal [Asset API](docs/assets.md) in the working tree; its remaining tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -14,7 +14,7 @@
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
 
-**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. E4 asset integration is next; the stage order and alpha criteria are unchanged.
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. No candidate is integrated by this review. The minimal E4 [Asset API](docs/assets.md) is implemented in the working tree. Internal formats and importer integration are next; the stage order and alpha criteria are unchanged.
 
 ## E1 progress, November 3, 2026
 
@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** begin E4 with the minimal Asset API and internal mesh/material format. [Sampled-image retention verification](docs/verification/2026-11-04-sampled-retention/README.md) closes E3's remaining checklist item [S52]. Native failure handling combines real-runtime evidence with bounded proofs of production handlers [S50, S51]. Rare driver errors remain formally covered rather than observed hardware events. Texture sampling, asset loading, and textured materials remain E4 work.
+**Next action:** define the internal mesh/material format, then integrate E4 importers through the [Asset API](docs/assets.md). Typed source handles, synchronous loading/error state, caching, and explicit release are implemented in the working tree. [Sampled-image retention verification](docs/verification/2026-11-04-sampled-retention/README.md) closes E3's remaining checklist item [S52]. Native failure handling combines real-runtime evidence with bounded proofs of production handlers [S50, S51]. Rare driver errors remain formally covered rather than observed hardware events. Texture sampling, file importers, and textured materials remain E4 work.
 
 ---
 
@@ -449,7 +449,7 @@ Capacity pools such as `bend-kit-resources` do not track recorded commands, subm
 
 ### Tasks
 
-- [ ] Add a minimal Asset API: handles, loading/error state, a cache, and release rules.
+- [x] Add a minimal Asset API: handles, loading/error state, a cache, and release rules. Implemented in the working tree: [API reference](docs/assets.md), [source](src/asset.bend), and [trail 23](https://entire.com/et/bend-engine/-/trails/23). Root lifecycle laws, real file loading/retry, and scene execution after source release pass. Scope names must be unique across handle lifetimes; native resource ownership is unchanged.
 - [ ] Define an internal mesh and material format independent of the importer.
 - [ ] Select and integrate one image decoder. Compare Jonlib's standalone PNG decoder with `emerging-ezimg` on the prepared assets [S41, S43]. Record accepted variants, input and output limits, pixel layout, and errors. QOI is an optional narrow alternative, not a second required codec.
 - [ ] Start the static-model importer with Jonlib's `src/obj.bend`, subject to validation [S41]. Convert parser output into the engine's mesh and material types. Load synchronously through Assets; the importer does not own the ECS world or Vulkan handles.

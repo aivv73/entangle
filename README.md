@@ -22,6 +22,7 @@ is not yet a general-purpose game engine.
 - Run scheduled systems with Bendvy while keeping world state separate from rendering data.
 - Render scenes in an interactive X11 or XWayland window, or to an image without a window.
 - Advance simulations without a window, Vulkan, or a GPU.
+- Cache source assets with typed handles, explicit loading/error state, and release rules.
 - Check behavior with Bend laws and proofs, native execution, rendering checks, and resource cleanup checks.
 - Record CPU and GPU timings using documented workloads and measurement boundaries.
 
@@ -86,6 +87,10 @@ ticks without opening a window. On success, it prints
 Both production renderers support [whole-mesh replacement](docs/mesh-replacement.md).
 Replacement returns the owner on rejection and defers old buffer destruction until native command references are released.
 
+The [Asset API](docs/assets.md) caches copyable source data independently of the
+renderer. Its examples load bytes from disk and compile a cached scene after
+releasing its source handle. File importers and texture loading remain future work.
+
 ## Simulate without rendering
 
 Entangle can advance the same ECS world without a graphics stack. This lets you
@@ -140,7 +145,7 @@ documents performance workloads, timing boundaries, and results.
 Entangle is being developed toward:
 
 - A simpler public application API and reusable engine modules.
-- Asset loading, scene hierarchies, and more expressive materials.
+- Asset importers, scene hierarchies, and more expressive materials.
 - Bend-native simulation experiments, including parallel updates and interactions between entities.
 - Verifiable simulation workloads and AI-agent workflows that can build, check, and inspect worlds.
 
@@ -150,6 +155,7 @@ through small working examples backed by reproducible evidence.
 ## Explore the project
 
 - [Public scene creation](docs/public-creation.md)
+- [Asset cache and loading](docs/assets.md)
 - [Application module registration](docs/modules-registration.md)
 - [Headless execution](docs/headless-reference.md)
 - [Rendering verification](docs/render-verification.md)

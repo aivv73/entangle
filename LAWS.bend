@@ -14,6 +14,7 @@ import ./examples/scene-seeds.bend as Seeds
 import Base
 import ./src/upload-size.bend as UploadSize
 import ./src/scene-geometry-policy.bend as Geometry
+import ./src/asset.bend as Asset
 
 import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
 import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
@@ -608,3 +609,117 @@ law geometry_pair_allocations:
 law geometry_empty_allocations:
   for -A:Type
   {Geometry.allocations(A,None{}) == [] : List<A>}
+
+law asset_release_entry:
+  for -A:Data
+  for +scope:String
+  for +next:Nat
+  for key:String
+  for +id:Nat
+  for state:Asset.State<A>
+  {Asset.release_scoped(A,Asset.Cache{scope,next,[Asset.Entry{key,id,state}]},id,True{}) == Asset.Cache{scope,next,[]} : Asset.Cache<A>}
+
+law asset_request_hit:
+  for -A:Data
+  for +scope:String
+  for +next:Nat
+  for +entries:List<&2,Asset.Entry<A>>
+  for +key:String
+  for +id:Nat
+  for found:{Asset.find_key(A,entries,key) == Some{id} : Maybe<Nat>}
+  {Asset.request(A,Asset.Cache{scope,next,entries},key) == (Asset.Cache{scope,next,entries},Asset.Handle{scope,id}) : Asset.Cache<A> & Asset.Handle<A>}
+
+law asset_request_miss:
+  for -A:Data
+  for +scope:String
+  for +next:Nat
+  for +entries:List<&2,Asset.Entry<A>>
+  for +key:String
+  for found:{Asset.find_key(A,entries,key) == None{} : Maybe<Nat>}
+  {Asset.request(A,Asset.Cache{scope,next,entries},key) == (Asset.Cache{scope,1n+next,Asset.Entry{key,next,Asset.Loading{}} <> entries},Asset.Handle{scope,next}) : Asset.Cache<A> & Asset.Handle<A>}
+
+law asset_load_success:
+  for -A:Data
+  for +value:A
+  {Asset.settle(A,Asset.Loading{},Done{value}) == Asset.Loaded{value} : Asset.State<A>}
+
+law asset_load_failure:
+  for -A:Data
+  for +error:Asset.Error
+  {Asset.settle(A,Asset.Loading{},Fail{error}) == Asset.Failed{error} : Asset.State<A>}
+
+law asset_loaded_stable:
+  for -A:Data
+  for +value:A
+  for result:Result<&2,&2,Asset.Error,A>
+  {Asset.settle(A,Asset.Loaded{value},result) == Asset.Loaded{value} : Asset.State<A>}
+
+law asset_failed_stable:
+  for -A:Data
+  for +error:Asset.Error
+  for result:Result<&2,&2,Asset.Error,A>
+  {Asset.settle(A,Asset.Failed{error},result) == Asset.Failed{error} : Asset.State<A>}
+
+law asset_complete_preserves_keys:
+  for -A:Data
+  for +entries:List<&2,Asset.Entry<A>>
+  for id:Nat
+  for +key:String
+  for result:Result<&2,&2,Asset.Error,A>
+  {Asset.find_key(A,Asset.complete(A,entries,id,result),key) == Asset.find_key(A,entries,key) : Maybe<Nat>}
+
+law asset_remove_absent:
+  for -A:Data
+  for entries:List<&2,Asset.Entry<A>>
+  for +id:Nat
+  {Asset.find_id(A,Asset.remove(A,entries,id),id) == None{} : Maybe<&2,Asset.State<A>>}
+
+law asset_remove_no_work:
+  for -A:Data
+  for entries:List<&2,Asset.Entry<A>>
+  for +id:Nat
+  {Asset.pending(A,Asset.remove(A,entries,id),id) == None{} : Maybe<String>}
+
+law asset_remove_idempotent:
+  for -A:Data
+  for +entries:List<&2,Asset.Entry<A>>
+  for +id:Nat
+  {Asset.remove(A,Asset.remove(A,entries,id),id) == Asset.remove(A,entries,id) : List<&2,Asset.Entry<A>>}
+
+law asset_release_idempotent:
+  for -A:Data
+  for cache:Asset.Cache<A>
+  for +handle:Asset.Handle<A>
+  {Asset.release(A,Asset.release(A,cache,handle),handle) == Asset.release(A,cache,handle) : Asset.Cache<A>}
+
+law asset_released_lookup:
+  for -A:Data
+  for cache:Asset.Cache<A>
+  for +handle:Asset.Handle<A>
+  {Asset.lookup(A,Asset.release(A,cache,handle),handle) == (Asset.release(A,cache,handle),None{}) : Asset.Cache<A> & Maybe<&2,Asset.State<A>>}
+
+law asset_released_load:
+  for -A:Data
+  for cache:Asset.Cache<A>
+  for +handle:Asset.Handle<A>
+  for loader:String -> IO(Result<&2,&2,Asset.Error,A>)
+  {Asset.load(A,Asset.release(A,cache,handle),handle,loader) == IO.pure(Asset.Cache<A>,Asset.release(A,cache,handle)) : IO(Asset.Cache<A>)}
+
+law asset_release_counter:
+  for -A:Data
+  for +scope:String
+  for +next:Nat
+  for entries:List<&2,Asset.Entry<A>>
+  for handle:Asset.Handle<A>
+  exs remaining:List<&2,Asset.Entry<A>>
+  {Asset.release(A,Asset.Cache{scope,next,entries},handle) == Asset.Cache{scope,next,remaining} : Asset.Cache<A>}
+
+law asset_wrong_scope:
+  for -A:Data
+  for +scope:String
+  for +other:String
+  for next:Nat
+  for entries:List<&2,Asset.Entry<A>>
+  for id:Nat
+  for different:{String.eq(scope,other) == False{} : Bool}
+  {Asset.release(A,Asset.Cache{scope,next,entries},Asset.Handle{other,id}) == Asset.Cache{scope,next,entries} : Asset.Cache<A>}
