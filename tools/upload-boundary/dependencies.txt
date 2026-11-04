@@ -43,6 +43,7 @@ deps/bend-vulkan/Vulkan.bend DepthClear
 deps/bend-vulkan/Vulkan.bend DepthState
 deps/bend-vulkan/Vulkan.bend DescriptorBinding
 deps/bend-vulkan/Vulkan.bend DescriptorBuffer
+deps/bend-vulkan/Vulkan.bend DescriptorImage
 deps/bend-vulkan/Vulkan.bend DescriptorPool
 deps/bend-vulkan/Vulkan.bend DescriptorPoolCreateInfo
 deps/bend-vulkan/Vulkan.bend DescriptorPoolSize
@@ -68,6 +69,7 @@ deps/bend-vulkan/Vulkan.bend Device.create_image
 deps/bend-vulkan/Vulkan.bend Device.create_image_view
 deps/bend-vulkan/Vulkan.bend Device.create_pipeline_layout
 deps/bend-vulkan/Vulkan.bend Device.create_render_pass
+deps/bend-vulkan/Vulkan.bend Device.create_sampler
 deps/bend-vulkan/Vulkan.bend Device.create_semaphore
 deps/bend-vulkan/Vulkan.bend Device.create_shader_module
 deps/bend-vulkan/Vulkan.bend Device.create_timestamp_pool
@@ -77,9 +79,12 @@ deps/bend-vulkan/Vulkan.bend Device.destroy_descriptor_pool
 deps/bend-vulkan/Vulkan.bend Device.destroy_descriptor_set_layout
 deps/bend-vulkan/Vulkan.bend Device.destroy_fence
 deps/bend-vulkan/Vulkan.bend Device.destroy_graphics_pipeline
+deps/bend-vulkan/Vulkan.bend Device.destroy_image
+deps/bend-vulkan/Vulkan.bend Device.destroy_image_view
 deps/bend-vulkan/Vulkan.bend Device.destroy_pipeline_layout
 deps/bend-vulkan/Vulkan.bend Device.destroy_query_pool
 deps/bend-vulkan/Vulkan.bend Device.destroy_render_pass
+deps/bend-vulkan/Vulkan.bend Device.destroy_sampler
 deps/bend-vulkan/Vulkan.bend Device.destroy_shader_module
 deps/bend-vulkan/Vulkan.bend Device.free_descriptor_set
 deps/bend-vulkan/Vulkan.bend Device.free_memory
@@ -149,6 +154,10 @@ deps/bend-vulkan/Vulkan.bend RasterState
 deps/bend-vulkan/Vulkan.bend RenderArea
 deps/bend-vulkan/Vulkan.bend RenderPass
 deps/bend-vulkan/Vulkan.bend RenderPassCreateInfo
+deps/bend-vulkan/Vulkan.bend SampledDescriptor
+deps/bend-vulkan/Vulkan.bend SampledWrite
+deps/bend-vulkan/Vulkan.bend Sampler
+deps/bend-vulkan/Vulkan.bend SamplerCreateInfo
 deps/bend-vulkan/Vulkan.bend Semaphore
 deps/bend-vulkan/Vulkan.bend ShaderModule
 deps/bend-vulkan/Vulkan.bend Timestamp
@@ -227,6 +236,7 @@ deps/bend-vulkan/src/constants.bend VK_ACCESS_TRANSFER_WRITE_BIT
 deps/bend-vulkan/src/constants.bend VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT
 deps/bend-vulkan/src/constants.bend VK_ATTACHMENT_LOAD_OP_CLEAR
 deps/bend-vulkan/src/constants.bend VK_ATTACHMENT_STORE_OP_STORE
+deps/bend-vulkan/src/constants.bend VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK
 deps/bend-vulkan/src/constants.bend VK_BUFFER_USAGE_INDEX_BUFFER_BIT
 deps/bend-vulkan/src/constants.bend VK_BUFFER_USAGE_TRANSFER_DST_BIT
 deps/bend-vulkan/src/constants.bend VK_BUFFER_USAGE_TRANSFER_SRC_BIT
@@ -234,6 +244,7 @@ deps/bend-vulkan/src/constants.bend VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 deps/bend-vulkan/src/constants.bend VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 deps/bend-vulkan/src/constants.bend VK_COMPARE_OP_LESS
 deps/bend-vulkan/src/constants.bend VK_CULL_MODE_NONE
+deps/bend-vulkan/src/constants.bend VK_FILTER_NEAREST
 deps/bend-vulkan/src/constants.bend VK_FORMAT_D32_SFLOAT
 deps/bend-vulkan/src/constants.bend VK_FORMAT_R32G32B32_SFLOAT
 deps/bend-vulkan/src/constants.bend VK_FORMAT_R8G8B8A8_UNORM
@@ -243,12 +254,14 @@ deps/bend-vulkan/src/constants.bend VK_IMAGE_ASPECT_DEPTH_BIT
 deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
 deps/bend-vulkan/src/constants.bend VK_IMAGE_LAYOUT_UNDEFINED
 deps/bend-vulkan/src/constants.bend VK_IMAGE_TILING_OPTIMAL
 deps/bend-vulkan/src/constants.bend VK_IMAGE_TYPE_2D
 deps/bend-vulkan/src/constants.bend VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
 deps/bend-vulkan/src/constants.bend VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+deps/bend-vulkan/src/constants.bend VK_IMAGE_USAGE_SAMPLED_BIT
 deps/bend-vulkan/src/constants.bend VK_IMAGE_USAGE_TRANSFER_SRC_BIT
 deps/bend-vulkan/src/constants.bend VK_INDEX_TYPE_UINT32
 deps/bend-vulkan/src/constants.bend VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
@@ -261,6 +274,9 @@ deps/bend-vulkan/src/constants.bend VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
 deps/bend-vulkan/src/constants.bend VK_PIPELINE_STAGE_TRANSFER_BIT
 deps/bend-vulkan/src/constants.bend VK_PIPELINE_STAGE_VERTEX_INPUT_BIT
 deps/bend-vulkan/src/constants.bend VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+deps/bend-vulkan/src/constants.bend VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
+deps/bend-vulkan/src/constants.bend VK_SAMPLER_MIPMAP_MODE_NEAREST
+deps/bend-vulkan/src/constants.bend VK_SHADER_STAGE_FRAGMENT_BIT
 deps/bend-vulkan/src/constants.bend VK_SHADER_STAGE_VERTEX_BIT
 deps/bend-vulkan/src/constants.bend VK_VERTEX_INPUT_RATE_VERTEX
 deps/bend-vulkan/src/core.bend MemoryType

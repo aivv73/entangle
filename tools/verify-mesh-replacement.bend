@@ -10,6 +10,7 @@ import ../src/error.bend as Error
 import ../src/app.bend as Scope
 import ../examples/scene-render.bend as Existing
 import ./verify-buffer-retention.bend as Retention
+import ./verify-sampled-retention.bend as Sampled
 import ../deps/bend-vulkan/Vulkan.bend as V
 import ../deps/bend-vulkan/src/core.bend as Core
 import ../deps/bend-vulkan/src/constants.bend as vk
@@ -234,6 +235,7 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
     V.Device.destroy_fence(device,wait)
     V.Device.destroy_fence(device,unused)
     Retention.verify(context)
+    Sampled.verify(context)
     V.Action.lift(Unit,IO.print("Real recording rejection cleaned candidate; both old allocations readable. Pending, completed and unsubmitted commands retained both old buffers and memories until every command reset plus collection. Changed ranges, removed IDs, repeated empty transitions and exact RGBA passed."))
 
 def invalid_checked(renderer:R.Renderer,+first:R.Readback) -> V.Action(Unit):
