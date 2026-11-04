@@ -121,7 +121,10 @@ bend tools/verify.bend
 ```
 
 These commands check component and scene laws, native ECS behavior, Vulkan
-output, and resource cleanup. They do not prove the Bend compiler, Vulkan
+output, resource cleanup, and [bounded native failure properties](proofs/native-failures/README.md).
+The native failure checker downloads a pinned CBMC package into `build/`
+on first use; it needs curl, ar, tar, sha256sum, and Vulkan headers.
+These checks do not prove the Bend compiler, Vulkan
 driver, or arbitrary game simulations correct. The native verifier requires
 a working Vulkan device, but its rendering checks need no display.
 

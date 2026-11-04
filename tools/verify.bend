@@ -71,6 +71,8 @@ def main() -> IO(Unit):
     command("bend",["tools/verify-upload-boundary.bend","-o","build/verify-upload-boundary"])
     command("./build/verify-upload-boundary",[])
     command("bend",["PROOF.bend"])
+    command("bend",["tools/verify-native-failures.bend","-o","build/verify-native-failures"])
+    command("./build/verify-native-failures",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-upload-runtime.bend","-o","build/verify-upload-runtime"])
     command("./build/verify-upload-runtime",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-upload-native-limit.bend","-o","build/verify-upload-native-limit"])
