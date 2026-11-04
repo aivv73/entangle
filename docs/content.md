@@ -87,3 +87,15 @@ handles, and returns retained source values without importing Creation or Vulkan
 
 The [verification record](verification/2026-11-04-content-format/README.md)
 separates formal claims, native execution, window evidence, and their limits.
+
+## Image sources
+
+`SourceImage{width:U32,height:U32,pixels:List<&2,U32>}` is also `Data`.
+`image_valid` checks positive dimensions and an exact Nat pixel count.
+The layout is top-left row-major, with numerical `0xRRGGBBAA` words and straight
+alpha. The source predicate has no PNG-specific limits. Source constructors
+remain unchecked, and Asset does not revalidate them.
+
+The [PNG reference](image-decoder.md) specifies importer limits, variants,
+errors, native-extension tolerances, and verification. Image source storage does
+not establish a Vulkan texture, upload layout, or textured material.

@@ -1,0 +1,12 @@
+bend 2.0.39
+Version: ImageMagick 7.1.2-35 Q16-HDRI x86_64 acaf7e418:20261031 https://imagemagick.org
+Copyright: (C) 1999 ImageMagick Studio LLC
+License: https://imagemagick.org/license/
+Features: Cipher DPC HDRI Modules OpenCL OpenMP
+Delegates (built-in): bzlib cairo djvu fftw fontconfig freetype heic jbig jng jp2 jpeg jxl lcms lqr ltdl lzma openexr pangocairo png raqm raw rsvg tiff uhdr webp wmf x xml zip zlib zstd
+Compiler: gcc (16.2)
+Linux x86_64
+clang version 23.1.4
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin

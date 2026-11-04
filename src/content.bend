@@ -92,3 +92,11 @@ def same_material(a:Material,b:Material) -> Bool:
   Basic{x} = a
   Basic{y} = b
   same_vec(x,y)
+
+type SourceImage is Data:
+  SourceImage{width:U32,height:U32,pixels:List<&2,U32>}
+
+# Positive dimensions and exact storage are source rules, independent of PNG.
+def image_valid(image:SourceImage) -> Bool:
+  SourceImage{+width,+height,+pixels} = image
+  U32.is_gt(width,0) && U32.is_gt(height,0) && Nat.is_eq(List.length(&2,U32,pixels),Nat.mul(U32.to_nat(width),U32.to_nat(height)))

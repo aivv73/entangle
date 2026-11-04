@@ -1,0 +1,90 @@
+june-rgb8 jonlib exit=0 exact 320x260 pixels=83200
+june-rgb8 ezimg terminated status=137
+june-adam7 jonlib exit=0 exact 320x260 pixels=83200
+june-adam7 ezimg exit=0 rejected None
+tabby-rgb8 jonlib exit=0 exact 192x256 pixels=49152
+tabby-rgb8 ezimg exit=0 exact 192x256 pixels=49152
+tabby-palette4 jonlib exit=0 exact 192x256 pixels=49152
+tabby-palette4 ezimg exit=0 rejected None
+cat-gray8 jonlib exit=0 exact 37x29 pixels=1073
+cat-gray8 ezimg exit=0 exact 37x29 pixels=1073
+cat-ga8 jonlib exit=0 exact 37x29 pixels=1073
+cat-ga8 ezimg exit=0 exact 37x29 pixels=1073
+cat-rgba8 jonlib exit=0 exact 37x29 pixels=1073
+cat-rgba8 ezimg exit=0 exact 37x29 pixels=1073
+cat-palette-trns jonlib exit=0 exact 37x29 pixels=1073
+cat-palette-trns ezimg exit=0 exact 37x29 pixels=1073
+cat-gray1 jonlib exit=0 exact 37x29 pixels=1073
+cat-gray1 ezimg exit=0 rejected None
+cat-gray2 jonlib exit=0 exact 37x29 pixels=1073
+cat-gray2 ezimg exit=0 rejected None
+cat-gray4 jonlib exit=0 exact 37x29 pixels=1073
+cat-gray4 ezimg exit=0 rejected None
+cat-palette1 jonlib exit=0 exact 37x29 pixels=1073
+cat-palette1 ezimg exit=0 rejected None
+cat-palette2 jonlib exit=0 exact 37x29 pixels=1073
+cat-palette2 ezimg exit=0 rejected None
+cat-gray16 jonlib exit=0 exact 37x29 pixels=1073
+cat-gray16 ezimg exit=0 rejected None
+cat-ga16 jonlib exit=0 exact 37x29 pixels=1073
+cat-ga16 ezimg exit=0 rejected None
+cat-rgb16 jonlib exit=0 exact 37x29 pixels=1073
+cat-rgb16 ezimg exit=0 rejected None
+cat-rgba16 jonlib exit=0 exact 37x29 pixels=1073
+cat-rgba16 ezimg exit=0 rejected None
+cat-rgba-adam7 jonlib exit=0 exact 37x29 pixels=1073
+cat-rgba-adam7 ezimg exit=0 rejected None
+layout jonlib exit=0 exact 3x2 pixels=6
+layout ezimg exit=0 exact 3x2 pixels=6
+width4096 jonlib exit=0 exact 4096x1 pixels=4096
+width4096 ezimg exit=0 exact 4096x1 pixels=4096
+height4096 jonlib exit=0 exact 1x4096 pixels=4096
+height4096 ezimg exit=0 exact 1x4096 pixels=4096
+mesh-palette4 jonlib exit=0 exact 640x480 pixels=307200
+mesh-palette4 ezimg exit=0 rejected None
+materials-palette2 jonlib exit=0 exact 640x480 pixels=307200
+materials-palette2 ezimg exit=0 rejected None
+scene-palette1 jonlib exit=0 exact 1024x256 pixels=262144
+scene-palette1 ezimg exit=0 rejected None
+survivors-rgb8 jonlib exit=0 exact 800x394 pixels=315200
+survivors-rgb8 ezimg terminated status=137
+stored jonlib exit=0 exact 1x1 pixels=1
+stored ezimg exit=0 exact 1x1 pixels=1
+bad-byte jonlib exit=0 rejected BadByte
+bad-byte ezimg exit=0 rejected None
+bad-crc jonlib exit=0 exact 1x1 pixels=1
+bad-crc ezimg exit=0 rejected None
+bad-adler jonlib exit=0 exact 1x1 pixels=1
+bad-adler ezimg exit=0 rejected None
+trailing jonlib exit=0 exact 1x1 pixels=1
+trailing ezimg exit=0 rejected None
+duplicate-ihdr jonlib exit=0 rejected BadHeader
+duplicate-ihdr ezimg exit=0 rejected None
+cgbi jonlib exit=0 exact 1x1 pixels=1
+cgbi ezimg exit=0 rejected None
+empty jonlib exit=0 rejected BadHeader
+empty ezimg exit=0 rejected None
+truncated jonlib exit=0 rejected BadHeader
+truncated ezimg exit=0 rejected None
+bad-signature jonlib exit=0 rejected BadHeader
+bad-signature ezimg exit=0 rejected None
+unsupported jonlib exit=0 rejected BadHeader
+unsupported ezimg exit=0 rejected None
+zero-width jonlib exit=0 rejected BadSize
+zero-width ezimg exit=0 rejected None
+width4097 jonlib exit=0 rejected BadSize
+width4097 ezimg exit=0 rejected None
+height4097 jonlib exit=0 rejected BadSize
+height4097 ezimg exit=0 rejected None
+filtered-over-limit jonlib exit=0 rejected BadSize
+filtered-over-limit ezimg exit=0 rejected None
+inflate-overrun jonlib exit=0 rejected BadStream
+inflate-overrun ezimg exit=0 rejected None
+inflate-short jonlib exit=0 rejected BadStream
+inflate-short ezimg exit=0 rejected None
+bad-filter jonlib exit=0 rejected BadStream
+bad-filter ezimg exit=0 rejected None
+input-at-limit jonlib exit=0 exact 1x1 pixels=1
+input-at-limit ezimg exit=0 rejected None
+input-over-limit jonlib exit=0 rejected BadSize
+input-over-limit ezimg exit=0 rejected None

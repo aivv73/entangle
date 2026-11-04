@@ -1,3 +1,6 @@
+import ./proofs/image-array.bend as ImageArray
+import ./src/image-png.bend as Png
+import ./deps/jonlib-png/codec.bend as PngCodec
 import ./src/content.bend as F
 import ./proofs/upload-range/PROOF.bend as UploadProof
 import ./proofs/upload-range/LAWS.bend as UploadLaws
@@ -578,3 +581,54 @@ def Laws.asset_release_counter(A,scope,next,entries,handle):
 
 def Laws.asset_wrong_scope(A,scope,other,next,entries,id,different):
   asset_rewrite(Bool,b => {Asset.release_scoped(A,Asset.Cache{scope,next,entries},id,b) == Asset.Cache{scope,next,entries} : Asset.Cache<A>},String.eq(scope,other),False{},different,{==})
+
+def Laws.image_array_leaf(value,tail):{==}
+def Laws.image_array_order(left,right,tail):{==}
+
+def image_append_assoc(xs:List<&2,U32>,+ys:List<&2,U32>,+zs:List<&2,U32>) ->
+  {List.append(&2,U32,List.append(&2,U32,xs,ys),zs) == List.append(&2,U32,xs,List.append(&2,U32,ys,zs)) : List<&2,U32>}:
+  match xs:
+    case []:{==}
+    case +x <> rest:Equal.cong(List<&2,U32>,List<&2,U32>,t => x <> t,List.append(&2,U32,List.append(&2,U32,rest,ys),zs),List.append(&2,U32,rest,List.append(&2,U32,ys,zs)),image_append_assoc(rest,ys,zs))
+
+def Laws.image_array_tail(array,tail):
+  match array:
+    case ImageArray.Leaf{value}:{==}
+    case ImageArray.Node{left,right}:
+      Equal.trans(List<&2,U32>,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),tail)),List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),tail)),List.append(&2,U32,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[])),tail),
+        Laws.image_array_tail(left,Png.array_words(ImageArray.array(right),tail)),
+        Equal.trans(List<&2,U32>,List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),tail)),List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),List.append(&2,U32,Png.array_words(ImageArray.array(right),[]),tail)),List.append(&2,U32,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[])),tail),
+          Equal.cong(List<&2,U32>,List<&2,U32>,xs => List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),xs),Png.array_words(ImageArray.array(right),tail),List.append(&2,U32,Png.array_words(ImageArray.array(right),[]),tail),Laws.image_array_tail(right,tail)),
+          Equal.trans(List<&2,U32>,List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),List.append(&2,U32,Png.array_words(ImageArray.array(right),[]),tail)),List.append(&2,U32,List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),[])),tail),List.append(&2,U32,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[])),tail),
+            Equal.sym(List<&2,U32>,List.append(&2,U32,List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),[])),tail),List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),List.append(&2,U32,Png.array_words(ImageArray.array(right),[]),tail)),image_append_assoc(Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),[]),tail)),
+            Equal.cong(List<&2,U32>,List<&2,U32>,xs => List.append(&2,U32,xs,tail),List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),[])),Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[])),Equal.sym(List<&2,U32>,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[])),List.append(&2,U32,Png.array_words(ImageArray.array(left),[]),Png.array_words(ImageArray.array(right),[])),Laws.image_array_tail(left,Png.array_words(ImageArray.array(right),[])))))))
+
+def image_append_length(xs:List<&2,U32>,+ys:List<&2,U32>) ->
+  {List.length(&2,U32,List.append(&2,U32,xs,ys)) == Nat.add(List.length(&2,U32,xs),List.length(&2,U32,ys)) : Nat}:
+  match xs:
+    case []:{==}
+    case _ <> rest:Equal.cong(Nat,Nat,n => 1n+n,List.length(&2,U32,List.append(&2,U32,rest,ys)),Nat.add(List.length(&2,U32,rest),List.length(&2,U32,ys)),image_append_length(rest,ys))
+
+def Laws.image_array_count(array,tail):
+  Equal.trans(Nat,List.length(&2,U32,Png.array_words(ImageArray.array(array),tail)),List.length(&2,U32,List.append(&2,U32,Png.array_words(ImageArray.array(array),[]),tail)),Nat.add(List.length(&2,U32,Png.array_words(ImageArray.array(array),[])),List.length(&2,U32,tail)),
+    Equal.cong(List<&2,U32>,Nat,xs => List.length(&2,U32,xs),Png.array_words(ImageArray.array(array),tail),List.append(&2,U32,Png.array_words(ImageArray.array(array),[]),tail),Laws.image_array_tail(array,tail)),
+    image_append_length(Png.array_words(ImageArray.array(array),[]),tail))
+
+def Laws.image_array_capacity(tree):
+  match tree:
+    case ImageArray.Leaf{_}:{==}
+    case ImageArray.Node{left,right}:
+      Equal.trans(Nat,List.length(&2,U32,Png.array_words(ImageArray.array(left),Png.array_words(ImageArray.array(right),[]))),Nat.add(List.length(&2,U32,Png.array_words(ImageArray.array(left),[])),List.length(&2,U32,Png.array_words(ImageArray.array(right),[]))),Nat.add(ImageArray.count(left),ImageArray.count(right)),
+        Laws.image_array_count(left,Png.array_words(ImageArray.array(right),[])),
+        Equal.trans(Nat,Nat.add(List.length(&2,U32,Png.array_words(ImageArray.array(left),[])),List.length(&2,U32,Png.array_words(ImageArray.array(right),[]))),Nat.add(ImageArray.count(left),List.length(&2,U32,Png.array_words(ImageArray.array(right),[]))),Nat.add(ImageArray.count(left),ImageArray.count(right)),
+          Equal.cong(Nat,Nat,n => Nat.add(n,List.length(&2,U32,Png.array_words(ImageArray.array(right),[]))),List.length(&2,U32,Png.array_words(ImageArray.array(left),[])),ImageArray.count(left),Laws.image_array_capacity(left)),
+          Equal.cong(Nat,Nat,n => Nat.add(ImageArray.count(left),n),List.length(&2,U32,Png.array_words(ImageArray.array(right),[])),ImageArray.count(right),Laws.image_array_capacity(right))))
+
+def Laws.image_storage_rule(width,height,pixels):{==}
+def Laws.image_padding(a,b,c,padding):{==}
+def Laws.image_exact_read(bytes):{==}
+def Laws.image_error_header():{==}
+def Laws.image_error_byte():{==}
+def Laws.image_error_size():{==}
+def Laws.image_error_truncated():{==}
+def Laws.image_error_stream():{==}

@@ -1,0 +1,19 @@
+Downloaded 2026-11-04 for the decoder comparison, following the user's direction to download cat photos.
+
+june.jpg
+Title: June odd-eyed-cat.jpg
+Author: Keith Kissel
+Source page: https://commons.wikimedia.org/wiki/File:June_odd-eyed-cat.jpg
+Original: https://upload.wikimedia.org/wikipedia/commons/a/a3/June_odd-eyed-cat.jpg
+License: CC BY 2.0, https://creativecommons.org/licenses/by/2.0/
+Derived PNGs are resized, stripped of metadata, and optionally interlaced or reduced in palette/depth for decoder verification. Attribute Keith Kissel and link the source and license wherever retained derivatives are distributed.
+
+tabby.jpg
+Title: Cat November 2010-1a.jpg
+Author: Alvesgaspar
+Source page: https://commons.wikimedia.org/wiki/File:Cat_November_2010-1a.jpg
+Original: https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg
+Selected license: CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/
+Derived PNGs are resized, stripped of metadata, and optionally interlaced or reduced in palette/depth for decoder verification. These derivatives retain CC BY-SA 3.0 and attribution to Alvesgaspar with source and license links.
+
+Cat03.jpg was inspected but not used or downloaded.

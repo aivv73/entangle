@@ -1,0 +1,9 @@
+Asset runtime evidence: build/verification/assets-943NYrCy
+Wrong scope rejected; released Loading entry performs no IO.
+Loaded data cached; release is idempotent; reacquisition has fresh identity.
+Failed load cached; explicit retry recovered; unrelated asset preserved.
+Real file byte limit verified at zero, exactly 1 MiB, and one byte over.
+Procedural mesh and material loaded; source values retained after cache release.
+Mesh and material source caches verified after release; source-only closure compiled and ran without Creation or Vulkan.
+Public instances completed two production ECS ticks.
+Asset API verified with real files and production scene execution.

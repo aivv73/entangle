@@ -1,3 +1,6 @@
+import ./proofs/image-array.bend as ImageArray
+import ./src/image-png.bend as Png
+import ./deps/jonlib-png/codec.bend as PngCodec
 import ./src/content.bend as F
 import ./proofs/upload-range/spec.bend as UploadValue
 import ./deps/bend-vulkan/src/core.bend as UploadCore
@@ -767,3 +770,56 @@ law asset_wrong_scope:
   for id:Nat
   for different:{String.eq(scope,other) == False{} : Bool}
   {Asset.release(A,Asset.Cache{scope,next,entries},Asset.Handle{other,id}) == Asset.Cache{scope,next,entries} : Asset.Cache<A>}
+
+law image_array_leaf:
+  for value:U32
+  for tail:List<&2,U32>
+  {Png.array_words(ALeaf{value},tail) == value <> tail : List<&2,U32>}
+
+law image_array_order:
+  for left:Array<U32>
+  for right:Array<U32>
+  for tail:List<&2,U32>
+  {Png.array_words(ANode{left,right},tail) == Png.array_words(left,Png.array_words(right,tail)) : List<&2,U32>}
+
+law image_array_tail:
+  for +array:ImageArray.Tree
+  for +tail:List<&2,U32>
+  {Png.array_words(ImageArray.array(array),tail) == List.append(&2,U32,Png.array_words(ImageArray.array(array),[]),tail) : List<&2,U32>}
+
+law image_array_count:
+  for +array:ImageArray.Tree
+  for +tail:List<&2,U32>
+  {List.length(&2,U32,Png.array_words(ImageArray.array(array),tail)) == Nat.add(List.length(&2,U32,Png.array_words(ImageArray.array(array),[])),List.length(&2,U32,tail)) : Nat}
+
+law image_array_capacity:
+  for +tree:ImageArray.Tree
+  {List.length(&2,U32,Png.array_words(ImageArray.array(tree),[])) == ImageArray.count(tree) : Nat}
+
+law image_storage_rule:
+  for +width:U32
+  for +height:U32
+  for +pixels:List<&2,U32>
+  {F.image_valid(F.SourceImage{width,height,pixels}) == (U32.is_gt(width,0) && U32.is_gt(height,0) && Nat.is_eq(List.length(&2,U32,pixels),Nat.mul(U32.to_nat(width),U32.to_nat(height)))) : Bool}
+
+law image_padding:
+  for +a:U32
+  for +b:U32
+  for +c:U32
+  for padding:U32
+  {Png.picture(Done{PngCodec.Picture{3,1,4,ANode{ANode{ALeaf{a},ALeaf{b}},ANode{ALeaf{c},ALeaf{padding}}}}}) == Done{F.SourceImage{3,1,[a,b,c]}} : Result<&2,&2,Asset.Error,F.SourceImage>}
+
+law image_exact_read:
+  for bytes:List<&2,U32>
+  {Png.exact(bytes,False{}) == Fail{Asset.Error{2147483655,"PNG file size changed or read was incomplete"}} : Result<&2,&2,Asset.Error,F.SourceImage>}
+
+law image_error_header:
+  {Png.decoder_error(PngCodec.BadHeader{}) == Asset.Error{2147483649,"PNG BadHeader"} : Asset.Error}
+law image_error_byte:
+  {Png.decoder_error(PngCodec.BadByte{}) == Asset.Error{2147483650,"PNG BadByte"} : Asset.Error}
+law image_error_size:
+  {Png.decoder_error(PngCodec.BadSize{}) == Asset.Error{2147483651,"PNG BadSize"} : Asset.Error}
+law image_error_truncated:
+  {Png.decoder_error(PngCodec.Truncated{}) == Asset.Error{2147483652,"PNG Truncated"} : Asset.Error}
+law image_error_stream:
+  {Png.decoder_error(PngCodec.BadStream{}) == Asset.Error{2147483653,"PNG BadStream"} : Asset.Error}
