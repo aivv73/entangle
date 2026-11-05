@@ -36,14 +36,13 @@ The current native build requires:
 - Node.js or Bun for Bend's default runner.
 - Vulkan development headers, `libvulkan.so.1`, and a Vulkan driver with a graphics queue.
 - X11 development headers and an X11 or XWayland display with Vulkan presentation support.
-- Entire Git transport and access to the bend-vulkan repository.
 
 The exact toolchain and dependency versions are recorded in
-[toolchain.bend](toolchain.bend). After cloning, run from the repository root:
+[toolchain.bend](toolchain.bend). Clone the repository and its pinned dependencies:
 
 ```sh
-git -c protocol.entire.allow=always submodule update --init deps/bendvy deps/bend-vulkan
-git -C deps/bend-vulkan submodule update --init deps/bend-collections
+git clone --recurse-submodules https://github.com/aivv73/entangle.git
+cd entangle
 mkdir -p build
 bend examples/scene-window.bend -o build/indexed-window
 ./build/indexed-window

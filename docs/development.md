@@ -60,6 +60,6 @@ The receipt includes the root revision, dirty diff and status, dependency revisi
 
 Update code, applicable laws, sensitivity controls, coverage and task state together. Link the receipt and state its limits. Re-run only checks invalidated by a relevant edit or unresolved failure; do not add a generic review panel after acceptance passes.
 
-Refresh the roadmap's current summary, next action, and affected checklist. Read live Entire change state before reporting publication or merge. Record implementation completion, task closure, and merged code separately. Preserve historical evidence at its original revision. Publishing and merging remain subject to the user's existing authorization.
+Refresh the roadmap's current summary, next action, and affected checklist. Read live GitHub branch and pull request state before reporting publication or merge. For historical Entire changes, read their live state on Entire. Record implementation completion, task closure, and merged code separately. Preserve historical evidence at its original revision. Publishing and merging remain subject to the user's existing authorization.
 
 The [workflow verification record](verification/2026-11-04-development-workflow/README.md) records the rollout, failure controls, and scoped full run.

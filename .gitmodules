@@ -4,4 +4,4 @@
 	shallow = true
 [submodule "deps/bend-vulkan"]
 	path = deps/bend-vulkan
-	url = entire://aws-eu-central-1.entire.io/et/bend-engine/bend-vulkan
+	url = https://github.com/aivv73/bend-vulkan.git
