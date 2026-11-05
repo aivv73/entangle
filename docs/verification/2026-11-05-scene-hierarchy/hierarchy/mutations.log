@@ -1,0 +1,9 @@
+Hierarchy sensitivity evidence: build/verification/hierarchy-controls-lJ4oLfEx
+cycle-detection rejected at named property; restored source passed
+composition rejected at named property; restored source passed
+bounds rejected at named property; restored source passed
+propagation rejected at named property; restored source passed
+json-parent rejected at named property; restored source passed
+normal-matrix rejected at named property; restored source passed
+static-consumer rejected at named property; restored source passed
+Hierarchy baseline, seven production regressions and seven restored baselines passed

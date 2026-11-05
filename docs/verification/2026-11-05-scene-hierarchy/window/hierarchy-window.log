@@ -1,0 +1,20 @@
+initial 640x480 geometry-pixels=16584
+key-49 640x480 geometry-pixels=16584
+key=49 geometry-moved=true R=exact
+key-50 640x480 geometry-pixels=15578
+key=50 geometry-moved=true R=exact
+key-51 640x480 geometry-pixels=16424
+key=51 geometry-moved=true R=exact
+key-52 640x480 geometry-pixels=11400
+key=52 geometry-moved=true R=exact
+key-53 640x480 geometry-pixels=16800
+key=53 geometry-moved=true R=exact
+rejected-54 640x480 geometry-pixels=16584
+rejected-55 640x480 geometry-pixels=16584
+rejected-56 640x480 geometry-pixels=16584
+rejected-57 640x480 geometry-pixels=16584
+resize-800x600 800x600 geometry-pixels=25748
+resize-480x640 480x640 geometry-pixels=16386
+resize-640x480 640x480 geometry-pixels=16584
+reset 640x480 geometry-pixels=16584
+Hierarchy X11 parent translation/rotation/scale, reparent/detach, invalid edits, exact reset, resize, restore and Close passed

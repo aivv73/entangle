@@ -41,19 +41,21 @@ def steps(n:Nat,app:Play.Application(),+trace:Bool) -> IO(Play.Application()):
         app:Play.Application() <- trace_tick(trace,app)
         steps(rest,app,trace)
 
-def draw_items(rows:List<&2,Old.Row>) -> List<&2,Draw.DrawItem>:
-  match rows:
-    case []:[]
-    case Old.Row{_,t,m} <> rest:Draw.DrawItem{t,m} <> draw_items(rest)
+def drawing(renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Create.Camera,clock:Time.Clock,trace:Bool,pair:Play.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> V.Action(Maybe<Running>):
+  match pair:
+    case (app,(inspector,Done{draws})):
+      do V.Action<Maybe<Running>>:
+        rendered:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,snapshot,w => h => Create.view(camera,w,h),draws)
+        renderer:Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,rendered,"Mesh frame refused")
+        return Some{Running{renderer,app,inspector,camera,clock,trace}}
+    case _:IO.pure(V.VkResult(Maybe<Running>),Fail{(1,"Mesh drawing extraction refused")})
 
 def extracted(renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Create.Camera,clock:Time.Clock,+trace:Bool,pair:Play.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Old.Snapshot>)) -> V.Action(Maybe<Running>):
   match pair:
     case (app,(inspector,Done{Old.Snapshot{_,_,_,_,+rows}})):
       do V.Action<Maybe<Running>>:
         V.Action.lift(Unit,Evidence.print(trace,"mesh-state " ++ Evidence.rows(rows)))
-        rendered:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,snapshot,w => h => Create.view(camera,w,h),Draw.DrawList{draw_items(rows)})
-        renderer:Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,rendered,"Mesh frame refused")
-        return Some{Running{renderer,app,inspector,camera,clock,trace}}
+        drawing(renderer,snapshot,camera,clock,trace,Observe.draw_list(app,inspector))
     case _:IO.pure(V.VkResult(Maybe<Running>),Fail{(1,"Mesh extraction refused")})
 
 def scheduled(renderer:Win.Renderer,app:Play.Application(),inspector:I.Instance<D.Schema>,camera:Create.Camera,snapshot:V.WindowSnapshot,+trace:Bool,batch:Time.Batch) -> V.Action(Maybe<Running>):

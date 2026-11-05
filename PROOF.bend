@@ -1,3 +1,4 @@
+import ./src/hierarchy.bend as H
 import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as JsonBytes
 import ./src/json-boundary.bend as Json
 import ./src/scene-file.bend as SceneFile
@@ -297,7 +298,7 @@ def Laws.creation_tint_position(position,color,uv,normal,material):
     case C.Vec3{r,g,b} F.Textured{C.Vec3{x,y,z},_}:
       (C.Vec3{F.tint_channel(r,x),F.tint_channel(g,y),F.tint_channel(b,z)},{==})
 
-def Laws.creation_bundle_order(transform,mesh,rest):{==}
+def Laws.creation_bundle_order(transform,mesh,spatial,rest):{==}
 
 def Laws.creation_empty():{==}
 
@@ -396,7 +397,7 @@ def Laws.creation_duplicate_preserves_geometry(id,mesh,material,pairs,geometry,n
 def Laws.creation_bundle_count(seeds):
   match seeds:
     case []:{==}
-    case Create.Seed{transform,mesh} <> +rest:
+    case Create.Seed{transform,mesh,spatial} <> +rest:
       Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(rest)),List.length(&2,Create.Seed,rest),Laws.creation_bundle_count(rest))
 
 def Laws.player_key_106_last_state(a,b,keys):
@@ -769,3 +770,19 @@ def Laws.texture_zero_width(height,pixels):
 
 def Laws.light_requires_direction(direction,color,ambient,intensity,invalid):
   Equal.cong(Bool,Bool,b => b && F.tint_valid(color) && F.channel(ambient) && F.channel(intensity),F.normal_valid(direction),False{},invalid)
+
+def Laws.hierarchy_root_matrix(local):{==}
+def Laws.hierarchy_root_draw(local,mesh,global):{==}
+def Laws.hierarchy_child_draw(parent,local,mesh,global):{==}
+def Laws.hierarchy_parent_composition(parent,local):{==}
+def Laws.hierarchy_empty_bounds(global):
+  match global:
+    case H.GlobalTransform{matrix}:{==}
+def Laws.hierarchy_derived_bounds(global,local):
+  match global:
+    case H.GlobalTransform{matrix}:{==}
+def Laws.hierarchy_visiting_rejected(array,index,next):{==}
+def Laws.hierarchy_missing_rejected(array,index,next):{==}
+def Laws.hierarchy_invalid_derived_rejected(index,local,global,bounds):{==}
+def Laws.hierarchy_parent_rejection_preserves_world(entity,parent,world,rows,error):{==}
+def Laws.hierarchy_transform_rejection_preserves_world(entity,transform,world,rows,error):{==}

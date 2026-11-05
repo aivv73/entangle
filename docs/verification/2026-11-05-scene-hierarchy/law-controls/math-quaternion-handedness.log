@@ -1,0 +1,20 @@
+SOME PROOFS FAIL
+Error:
+- expected : Render.Mat4{Render.Vec4{F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(y, y), F32.mul(z, z)))), sx), F32.mul(F32.mul(2.0, F32.sub(F32.mul(x, y), F32.mul(z, w))), sx), F32.mul(F32.mul(2.0, F32.sub(F32.mul(x, z), F32.mul(y, w))), sx), 0.0}, Render.Vec4{F32.mul(F32.mul(2.0, F32.sub(F32.mul(x, y), F32.mul(z, w))), sy), F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(x, x), F32.mul(z, z)))), sy), F32.mul(F32.mul(2.0, F32.add(F32.mul(y, z), F32.mul(x, w))), sy), 0.0}, Render.Vec4{F32.mul(F32.mul(2.0, F32.add(F32.mul(x, z), F32.mul(y, w))), sz), F32.mul(F32.mul(2.0, F32.sub(F32.mul(y, z), F32.mul(x, w))), sz), F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(x, x), F32.mul(y, y)))), sz), 0.0}, Render.Vec4{tx, ty, tz, 1.0}}
+- observed : Render.Mat4{Render.Vec4{F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(y, y), F32.mul(z, z)))), sx), F32.mul(F32.mul(2.0, F32.add(F32.mul(x, y), F32.mul(z, w))), sx), F32.mul(F32.mul(2.0, F32.sub(F32.mul(x, z), F32.mul(y, w))), sx), 0.0}, Render.Vec4{F32.mul(F32.mul(2.0, F32.sub(F32.mul(x, y), F32.mul(z, w))), sy), F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(x, x), F32.mul(z, z)))), sy), F32.mul(F32.mul(2.0, F32.add(F32.mul(y, z), F32.mul(x, w))), sy), 0.0}, Render.Vec4{F32.mul(F32.mul(2.0, F32.add(F32.mul(x, z), F32.mul(y, w))), sz), F32.mul(F32.mul(2.0, F32.sub(F32.mul(y, z), F32.mul(x, w))), sz), F32.mul(F32.sub(1.0, F32.mul(2.0, F32.add(F32.mul(x, x), F32.mul(y, y)))), sz), 0.0}, Render.Vec4{tx, ty, tz, 1.0}}
+Context:
+- tx : F32
+- ty : F32
+- tz : F32
+- x  : F32
+- y  : F32
+- z  : F32
+- w  : F32
+- sx : F32
+- sy : F32
+- sz : F32
+Location: Laws.render_model_contract
+143 | 
+144>| def Laws.render_model_contract(tx,ty,tz,x,y,z,w,sx,sy,sz):{==}
+    |                                                           ^^^^
+145 | 

@@ -29,7 +29,7 @@ def selection(~Permit:Data,~F:(Type -> Type),~H:Type,~B:Type,~cr:Build.Component
   ~R(),~F,~H,~B),~life:Build.Lifecycle(~D.Schema,~D.Columns(),~C(),~R(),~H,~B),book:B) -> B & Ops(Permit,
   F,H):
   Build.general_query(~D.Schema,~D.Columns(),~C(),~R(),~F,~D.components(),~L.InLeft{L.AtLeaf{}},~{==},
-    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.AtLeaf{}}},~Match.Required{},~any_transform,
+    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.InLeft{L.AtLeaf{}}}},~Match.Required{},~any_transform,
     ~H,~B,~q,book)
 
 def program(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~B:Type,~builder:Build.Builder(~D.Schema,

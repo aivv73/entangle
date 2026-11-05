@@ -1,0 +1,14 @@
+SOME PROOFS FAIL
+Error:
+- expected : src/scene-draw.DrawItem{local, mesh}
+- observed : src/scene-draw.GlobalItem{global, mesh}
+Context:
+- parent : U32
+- local  : C.Transform
+- mesh   : C.MeshRef
+- global : H.GlobalTransform
+Location: Laws.hierarchy_child_draw
+775 | def Laws.hierarchy_root_draw(local,mesh,global):{==}
+776>| def Laws.hierarchy_child_draw(parent,local,mesh,global):{==}
+    |                                                         ^^^^
+777 | def Laws.hierarchy_parent_composition(parent,local):{==}

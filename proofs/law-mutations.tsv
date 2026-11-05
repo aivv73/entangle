@@ -12,3 +12,8 @@ math-sum-regrouped	src/scene-matrix.bend	PROOF.bend	  Vec4{(a * x + e * y + i * 
 math-quaternion-handedness	src/scene-matrix.bend	PROOF.bend	    Vec4{((1.0 - 2.0 * (y * y + z * z)) * sx : F32),(2.0 * (x * y + z * w) * sx : F32),(2.0 * (x * z - y * w) * sx : F32),0.0},	    Vec4{((1.0 - 2.0 * (y * y + z * z)) * sx : F32),(2.0 * (x * y - z * w) * sx : F32),(2.0 * (x * z - y * w) * sx : F32),0.0},	render_model_contract
 texture-byte-order	src/render-format.bend	PROOF.bend	  [Core.word_byte(pixel,3),Core.word_byte(pixel,2),Core.word_byte(pixel,1),Core.word_byte(pixel,0)]	  [Core.word_byte(pixel,0),Core.word_byte(pixel,1),Core.word_byte(pixel,2),Core.word_byte(pixel,3)]	texture_rgba_bytes
 vertex-stride	src/content.bend	PROOF.bend	def vertex_stride() -> U32:44	def vertex_stride() -> U32:24	vertex_upload_stride
+hierarchy-compose	src/hierarchy.bend	PROOF.bend	    case Some{GlobalTransform{matrix}}:GlobalTransform{M.multiply(matrix,M.model(local))}	    case Some{GlobalTransform{matrix}}:GlobalTransform{M.model(local)}	hierarchy_parent_composition
+hierarchy-cycle	src/hierarchy.bend	PROOF.bend	    case (array,Visiting{}):Fail{Cycle{index}}	    case (array,Visiting{}):Fail{MissingParent{index}}	hierarchy_visiting_rejected
+hierarchy-bounds	src/hierarchy.bend	PROOF.bend	  transformed(corners(bounds),matrix,Empty{})	  bounds	hierarchy_derived_bounds
+hierarchy-rejected-write	src/scene-hierarchy.bend	PROOF.bend	    case _:(world,Fail{error})	    case _:(commit(world,rows,rollback(rows)),Fail{error})	hierarchy_parent_rejection_preserves_world
+hierarchy-child-extraction	src/scene-draw.bend	PROOF.bend	    case Some{_}:GlobalItem{global,mesh}	    case Some{_}:DrawItem{local,mesh}	hierarchy_child_draw

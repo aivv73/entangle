@@ -1,0 +1,4 @@
+bend
+tools/verify-upload-mutations.bend
+-o
+build/workflow-upload-mutations

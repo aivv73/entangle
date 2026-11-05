@@ -14,6 +14,10 @@ ranges. Mesh and material source values come from
 - `Instance{mesh,material,transform}` creates one initial ECS entity.
   Translation and scale must be finite. Quaternion squared length must lie in
   `[0.9999,1.0001]`.
+- `Parented{mesh,material,transform,parent}` attaches it to a zero-based source
+  instance index. `Creation.parent(instance, Some{index})` sets that relationship;
+  `None{}` detaches it. Forward references are allowed. See
+  [scene hierarchy](scene-hierarchy.md) for composition and transactional edits.
 - `Scene{instances}` preserves instance order through compilation and bootstrap.
 
 `compile` first rejects more than 100,000 instances with `TooLarge`. It then
@@ -22,7 +26,8 @@ validates instances in source order. Each instance reports `BadMesh` before
 A source mesh over the current 381,300-vertex or 3,000,000-index profile reports
 `BadMesh`. A new pair that overflows aggregate packed counts reports `TooLarge`.
 A duplicate pair reuses its range before any aggregate growth check. Validation
-and packing complete before any GPU allocation.
+and packing complete before any GPU allocation. Hierarchy derivation then rejects
+missing parents, cycles, and invalid world transforms or bounds with `BadHierarchy`.
 
 Compilation materializes only used mesh/material pairs. Bitwise structural
 comparison identifies identical source values. First occurrences determine
@@ -30,16 +35,26 @@ range order. Repeated pairs share a range while retaining separate ECS entities.
 References start at 7 to preserve the existing demonstration's mesh reference.
 Applications consume generated references instead of selecting them.
 
-`Compiled{seeds,geometry}` is the single result. Each `Seed{transform,mesh}`
+`Compiled{seeds,geometry}` is the single result. Each `Seed{transform,mesh,spatial}`
 contains the existing `MeshRef`, which identifies baked geometry. It is not an
-entity identity. `Geometry{vertices,indices,ranges}` contains tinted vertices,
+entity identity. `spatial` contains the validated local relationship/source bounds,
+global matrix, and world bounds. `Geometry{vertices,indices,ranges}` contains tinted vertices,
 rebased indices, and `Range{id,first_index,index_count,texture}` values.
 The texture is `None` for Basic materials and `Some{SourceImage}` for textured materials.
 Positions, UVs, and normals remain unchanged. `resolve(ranges,id)` returns the matching range or `None`.
 
+Use `compile` to obtain geometry-derived bounds and lighting requirements.
+The source-free `seed(transform, mesh_ref)` helper exists for legacy numerical
+fixtures: it has no vertices or material and therefore carries empty source
+bounds and an unlit requirement. Bootstrap rederives globals from seed metadata;
+it cannot reconstruct missing mesh metadata from a numeric reference.
+
 `Scene.create(seeds)` registers the existing Bendvy application. The first tick
 queues and publishes initial entities, then runs the existing movement system.
-Bendvy handles identify entities. A second tick moves existing entities without
+Bendvy handles identify entities. Completed ticks derive globals and bounds before
+observation. `Scene.set_transform` and `Scene.set_parent` consume and return the
+application beside a `Result<Hierarchy.Error,Unit>`; rejected edits preserve it.
+`Observe.spatial` returns detached entity/local/global/bounds rows. A second tick moves existing entities without
 spawning them again. Reservation refusal retains ownership through the existing
 bootstrap error path. There is no new runtime asset service or material column.
 

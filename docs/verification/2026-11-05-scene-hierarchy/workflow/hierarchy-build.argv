@@ -1,0 +1,4 @@
+bend
+tools/verify-hierarchy.bend
+-o
+build/workflow-hierarchy

@@ -1,0 +1,16 @@
+stage	kind	status
+toolchain	precondition	0
+boundary-build	build	0
+boundary	source-policy	0
+hierarchy-build	build	0
+hierarchy	ecs-render-replay-and-sensitivity	0
+native-build	build	0
+native	native-baseline	0
+textured-window	all-renderer-windows-and-replay	0
+upload-kernel	kernel	0
+law-mutations-build	build	0
+law-mutations	sensitivity	0
+upload-mutations-build	build	0
+upload-mutations	sensitivity	0
+native-failures-build	build	0
+native-failures	bounded-proof-and-sensitivity	0

@@ -2,13 +2,15 @@ import Base
 import ./components.bend as C
 import ./scene-matrix.bend as M
 import ./content.bend as F
+import ./hierarchy.bend as H
 
 type Instance is Data:
   Instance{mesh:F.Mesh,material:F.Material,transform:C.Transform}
+  Parented{mesh:F.Mesh,material:F.Material,transform:C.Transform,parent:U32}
 type Scene is Data:
   Scene{instances:List<&2,Instance>}
 type Seed is Data:
-  Seed{transform:C.Transform,mesh:C.MeshRef}
+  Seed{transform:C.Transform,mesh:C.MeshRef,spatial:H.Spatial}
 type Range is Data:
   Range{id:U32,first_index:U32,index_count:U32,texture:Maybe<&2,F.SourceImage>}
 type Geometry is Data:
@@ -19,6 +21,7 @@ type Error is Data:
   BadMesh{instance:U32}
   BadMaterial{instance:U32}
   BadTransform{instance:U32}
+  BadHierarchy{error:H.Error}
   TooLarge{}
 type Used is Data:
   Used{mesh:F.Mesh,material:F.Material,id:U32}
@@ -32,9 +35,63 @@ def matrix_finite(m:M.Mat4) -> Bool:
   col_finite(a) && col_finite(b) && col_finite(c) && col_finite(d)
 
 def transform_valid(t:C.Transform) -> Bool:
-  C.Transform{p,C.Quat{+x,+y,+z,+w},s} = t
-  +n = (x * x + y * y + z * z + w * w : F32)
-  F.vec_finite(p) && F.vec_finite(s) && F.finite(x) && F.finite(y) && F.finite(z) && F.finite(w) && F32.is_ge(n,0.9999) && F32.is_le(n,1.0001)
+  H.transform_valid(t)
+
+def attached(parent:Maybe<&2,U32>,mesh:F.Mesh,material:F.Material,transform:C.Transform) -> Instance:
+  match parent:
+    case None{}:Instance{mesh,material,transform}
+    case Some{index}:Parented{mesh,material,transform,index}
+
+def parent(instance:Instance,parent:Maybe<&2,U32>) -> Instance:
+  match instance:
+    case Instance{mesh,material,t}:attached(parent,mesh,material,t)
+    case Parented{mesh,material,t,_}:attached(parent,mesh,material,t)
+
+def lit(material:F.Material) -> Bool:
+  match material:
+    case F.Basic{_}:False{}
+    case F.Textured{_,_}:True{}
+
+def local(mesh:F.Mesh,material:F.Material,t:C.Transform,parent:Maybe<&2,U32>) -> H.Local:
+  H.Local{t,parent,H.mesh_bounds(mesh),lit(material)}
+
+def locals(items:List<&2,Instance>) -> List<&2,H.Local>:
+  match items:
+    case []:[]
+    case Instance{mesh,material,t} <> rest:local(mesh,material,t,None{}) <> locals(rest)
+    case Parented{mesh,material,t,p} <> rest:local(mesh,material,t,Some{p}) <> locals(rest)
+
+def plain(items:List<&2,Instance>) -> List<&2,Instance>:
+  match items:
+    case []:[]
+    case Instance{mesh,material,t} <> rest:Instance{mesh,material,t} <> plain(rest)
+    case Parented{mesh,material,t,_} <> rest:Instance{mesh,material,t} <> plain(rest)
+
+def seed(+transform:C.Transform,mesh:C.MeshRef) -> Seed:
+  Seed{transform,mesh,H.initialized(H.Local{transform,None{},H.Empty{},False{}})}
+
+def derived_seeds(seeds:List<&2,Seed>,values:List<&2,H.Spatial>) -> List<&2,Seed>:
+  match seeds values:
+    case Seed{t,m,_} <> rest,value <> tail:Seed{t,m,value} <> derived_seeds(rest,tail)
+    case _ _:[]
+
+def seed_locals(seeds:List<&2,Seed>) -> List<&2,H.Local>:
+  match seeds:
+    case []:[]
+    case Seed{t,_,s} <> rest:H.with_transform(t,s) <> seed_locals(rest)
+
+def validated_seeds(seeds:List<&2,Seed>,result:Result<&2,&2,H.Error,List<&2,H.Spatial>>) -> IO(List<&2,Seed>):
+  match result:
+    case Fail{_}:IO.die(List<&2,Seed>,1,"Scene seed hierarchy rejected before bootstrap")
+    case Done{values}:IO.pure(List<&2,Seed>,derived_seeds(seeds,values))
+
+def check_seeds(+seeds:List<&2,Seed>) -> IO(List<&2,Seed>):
+  validated_seeds(seeds,H.evaluate(seed_locals(seeds)))
+
+def hierarchy(compiled:Compiled,result:Result<&2,&2,H.Error,List<&2,H.Spatial>>) -> Result<&2,&2,Error,Compiled>:
+  match compiled result:
+    case _ Fail{error}:Fail{BadHierarchy{error}}
+    case Compiled{seeds,geometry} Done{values}:Done{Compiled{derived_seeds(seeds,values),geometry}}
 
 def rebase(indices:List<&2,U32>,+offset:U32) -> List<&2,U32>:
   match indices:
@@ -98,13 +155,15 @@ def compile_items(items:List<&2,Instance>,+pairs:List<&2,Used>,+geometry:Geometr
       do Result<&2,&2,Error,Compiled>:
         checked:Unit <- validate(F.mesh_valid(mesh),F.material_valid(material),transform_valid(transform),number)
         plan:Plan <- compile_pair(lookup(pairs,mesh,material),mesh,material,pairs,geometry,next)
-        apply_plan(Compiled,plan,pairs => geometry => id => next => prepend(Seed{transform,C.MeshRef{id}},compile_items(rest,pairs,geometry,U32.inc(number),next)))
+        apply_plan(Compiled,plan,pairs => geometry => id => next => prepend(seed(transform,C.MeshRef{id}),compile_items(rest,pairs,geometry,U32.inc(number),next)))
+    case Parented{_,_,_,_} <> _:Fail{BadTransform{number}}
 
 def compile(scene:Scene) -> Result<&2,&2,Error,Compiled>:
   Scene{+items} = scene
   do Result<&2,&2,Error,Compiled>:
     checked:Unit <- capacity(Nat.is_le(List.length(&2,Instance,items),100000n))
-    compile_items(items,[],Geometry{[],[],[]},0,7)
+    compiled:Compiled <- compile_items(plain(items),[],Geometry{[],[],[]},0,7)
+    hierarchy(compiled,H.evaluate(locals(items)))
 
 def unique(ranges:List<&2,Range>,+id:U32) -> Bool:
   match ranges:

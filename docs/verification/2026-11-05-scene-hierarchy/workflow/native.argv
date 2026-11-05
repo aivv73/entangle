@@ -1,0 +1,6 @@
+./build/workflow-native
++RTS
+--threads
+1
+--gpu
+off

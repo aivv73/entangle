@@ -1,0 +1,11 @@
+SOME PROOFS FAIL
+Error:
+- expected : [U32.and(pixel, 255), U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))), 255), U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))))))))))), 255), U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))))))))))))))))))), 255)]
+- observed : [U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))))))))))))))))))), 255), U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))))))))))), 255), U32.and(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(U32.shr(pixel)))))))), 255), U32.and(pixel, 255)]
+Context:
+- pixel : U32
+Location: Laws.texture_rgba_bytes
+758 | 
+759>| def Laws.texture_rgba_bytes(pixel):{==}
+    |                                    ^^^^
+760 | 

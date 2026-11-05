@@ -35,7 +35,9 @@ component handle also identifies an entity without granting access to its storag
 ## Current write path
 
 [`scene-schema.bend`](../src/scene-schema.bend) registers ordinary `Transform` and
-`MeshRef` columns. Its payload-to-view projections copy values for observation.
+`MeshRef` columns and a `Spatial` column. `Spatial` holds the accepted parent,
+source bounds, rollback checkpoint, and derived global matrix/world bounds.
+Its payload-to-view projections copy values for observation.
 They do not transfer component storage to the reader.
 
 [`scene.bend`](../src/scene.bend) retains the world inside `Scene.Application()`.
@@ -56,12 +58,18 @@ computed from an earlier observation without an explicit conflict policy.
 Numerical writes are immediate. A refused query returns the incoming scope.
 A refused write stops movement and retains earlier accepted writes. Structural
 commands publish at the schedule's apply boundaries. Ownership transfer must not
-silently turn these operations into an atomic batch or add rollback. See the
+silently turn these operations into an atomic batch or add rollback. The explicit
+[hierarchy publication contract](scene-hierarchy.md) adds a domain validation
+boundary after the schedule: invalid derived spatial state restores the previously
+accepted local transforms while retaining schedule administrative progress. Public
+transform/parent edits instead validate the complete candidate before any write.
+This does not roll back unrelated scheduled state. See the
 [headless reference](headless-reference.md) and
 [schedule visibility contract](schedule-visibility.md).
 
 [`scene-observe.bend`](../src/scene-observe.bend) consumes and reconstructs the
-application around a read-only inspector. Snapshots and drawing data may outlive
+application around read-only inspection. Spatial extraction captures live handles
+once and uses checked ECS access. Snapshots and drawing data may outlive
 the observation. Rendering or replaying them cannot restore an older scene.
 
 ## Future chunk integration

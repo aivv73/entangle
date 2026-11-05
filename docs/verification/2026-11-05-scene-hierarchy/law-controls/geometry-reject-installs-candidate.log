@@ -1,0 +1,13 @@
+SOME PROOFS FAIL
+Error:
+- expected : fresh
+- observed : old
+Context:
+- A     : Data
+- old   : A
+- fresh : A
+Location: Laws.geometry_install_reject
+481 | def Laws.geometry_install_accept(A,old,fresh):{==}
+482>| def Laws.geometry_install_reject(A,old,fresh):{==}
+    |                                               ^^^^
+483 | def Laws.geometry_pair_allocations(A,vertices,indices):{==}

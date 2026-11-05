@@ -1,0 +1,19 @@
+Hierarchy stage: runtime
+Invalid scheduled derived state restores accepted local/global/bounds state
+Flat, deep and branching real ECS point/bounds oracle passed
+Hierarchy ECS complete-state verification passed
+Hierarchy JSON forward references, model-part anchors and invalid graph rejection passed
+Hierarchy stage: replay
+Hierarchy deterministic replay matched 17 commands and complete entity/local/parent/global/bounds bits
+Hierarchy stage: render
+Hierarchy ECS affine/shear rendering matches independently baked geometry; complete RGBA/D32; live Vulkan objects=0
+Hierarchy stage: mutations
+Hierarchy sensitivity evidence: build/verification/hierarchy-controls-lJ4oLfEx
+cycle-detection rejected at named property; restored source passed
+composition rejected at named property; restored source passed
+bounds rejected at named property; restored source passed
+propagation rejected at named property; restored source passed
+json-parent rejected at named property; restored source passed
+normal-matrix rejected at named property; restored source passed
+static-consumer rejected at named property; restored source passed
+Hierarchy baseline, seven production regressions and seven restored baselines passed

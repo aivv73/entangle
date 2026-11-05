@@ -1,0 +1,14 @@
+baseline passed
+raw-alias-value rejected
+raw-words-value rejected
+forged-constructor rejected
+internal-helper rejected
+staging-import rejected
+dependency-helper rejected
+foreign-effect rejected
+outside-scope-import rejected
+raw-hidden-wrapper rejected
+trusted-capsule-change rejected
+trusted-native-change rejected
+restored passed
+Isolated source mutation evidence: build/verification/upload-mutations-hpbwjwhm

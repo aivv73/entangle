@@ -1,0 +1,49 @@
+ M .agents/skills/verify-entangle/features/README.md
+ M .agents/skills/verify-entangle/features/formal-laws.md
+ M LAWS.bend
+ M PROOF.bend
+ M ROADMAP_updated_v6_EN.md
+ M docs/development.md
+ M docs/json-scene.md
+ M docs/public-creation.md
+ M docs/state-ownership.md
+ M docs/textured-materials.md
+ M examples/mesh-playground.bend
+ M examples/scene-seeds.bend
+ M examples/scene-window-app.bend
+ M examples/scene-window-modules.bend
+ M examples/scene.bend
+ M examples/textured-content.bend
+ M proofs/law-mutations.tsv
+ M src/creation.bend
+ M src/lighting.bend
+ M src/mesh-control.bend
+ M src/mesh-observe.bend
+ M src/mesh-playground.bend
+ M src/scene-draw.bend
+ M src/scene-file.bend
+ M src/scene-motion.bend
+ M src/scene-observe.bend
+ M src/scene-render.bend
+ M src/scene-schema.bend
+ M src/scene-spawn.bend
+ M src/scene.bend
+ M src/shaders/spirv.bend
+ M src/shaders/textured.frag
+ M src/shaders/textured.vert
+ M tools/jonmath/qualify.bend.in
+ M tools/model-obj/native.bend
+ M tools/upload-boundary/dependencies.txt
+ M tools/verify-creation.bend
+ M tools/verify-law-mutations.bend
+ M tools/verify-mesh-window.bend
+ M tools/verify-texture-mutations.bend
+ M tools/verify-window-session.sh
+ M tools/verify-workflow.bend
+?? .agents/skills/verify-entangle/features/scene-hierarchy.md
+?? docs/scene-hierarchy.md
+?? docs/verification/2026-11-05-scene-hierarchy/
+?? src/hierarchy.bend
+?? src/scene-hierarchy.bend
+?? tools/hierarchy/
+?? tools/verify-hierarchy.bend

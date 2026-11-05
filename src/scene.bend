@@ -1,4 +1,7 @@
 import Base
+import ./hierarchy.bend as H
+import ./components.bend as Value
+import ./scene-hierarchy.bend as Hierarchy
 import ./creation.bend as Create
 import ../deps/bendvy/src/ecs/world.bend as W
 import ../deps/bendvy/src/ecs/execution-composer-schema.bend as Setup
@@ -98,9 +101,27 @@ def apply(ids:List<&2,U32>,world:D.World(),nodes:Nodes()) -> D.World() & (Nodes(
 def guard_dispatch() -> Unit -> D.World() -> U32 -> Unit & (D.World() & Exec.Invocation<String,Bool>):
   Reg.empty_dispatch(~D.World(),~String,~Bool)
 
+def settled(result:Application() & App.Report<String,Unit>) -> Application() & App.Report<String,Unit>:
+  (Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},report) = result
+  (Scheduled.Scheduled{App.State{Hierarchy.propagate(world),nodes,guards,handler,stateBindings},settings,bindings,deferred},report)
+
 def run(app:Application()) -> Application() & App.Report<String,Unit>:
-  Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
-    ~guard_dispatch(),~handle,~apply,app)
+  settled(Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
+    ~guard_dispatch(),~handle,~apply,app))
+
+def edited(rebuild:D.World() -> Application(),pair:D.World() & Result<&2,&2,H.Error,Unit>) -> Application() & Result<&2,&2,H.Error,Unit>:
+  (world,result) = pair
+  (rebuild(world),result)
+
+def edit(app:Application(),request:Hierarchy.Edit) -> Application() & Result<&2,&2,H.Error,Unit>:
+  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
+  edited(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.update(world,request))
+
+def set_parent(app:Application(),entity:W.Handle<D.Schema>,parent:Maybe<&2,W.Handle<D.Schema>>) -> Application() & Result<&2,&2,H.Error,Unit>:
+  edit(app,Hierarchy.SetParent{entity,parent})
+
+def set_transform(app:Application(),entity:W.Handle<D.Schema>,transform:Value.Transform) -> Application() & Result<&2,&2,H.Error,Unit>:
+  edit(app,Hierarchy.SetTransform{entity,transform})
 
 def configure(id:U32,app:Application()) -> Application():Scheduled.configure(~State(),Settings.Settings{False{},
   True{},[],[Settings.Explicit{id,None{}}]},app)
@@ -156,7 +177,10 @@ def created(seeds:List<&2,Create.Seed>,result:Setup.Initialized<D.Schema,D.compo
     case Setup.SchemaCreated{_,world}:attach(seeds,world)
     case _:IO.die(Application(),1,"scene schema creation refused")
 
-def create(seeds:List<&2,Create.Seed>) -> IO(Application()):created(seeds,D.create(W.factory()))
+def create(seeds:List<&2,Create.Seed>) -> IO(Application()):
+  do IO<Application()>:
+    seeds:List<&2,Create.Seed> <- Create.check_seeds(seeds)
+    created(seeds,D.create(W.factory()))
 
 def distinct_systems(same:Bool) -> IO(Unit):
   match same:

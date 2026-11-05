@@ -1,0 +1,7 @@
+./build/workflow-native-failures
+--mutations
++RTS
+--threads
+1
+--gpu
+off

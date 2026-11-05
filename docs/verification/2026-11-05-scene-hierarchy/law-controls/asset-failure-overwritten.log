@@ -1,0 +1,13 @@
+SOME PROOFS FAIL
+Error:
+- expected : Asset.settled(A, result)
+- observed : Asset.Failed{error}
+Context:
+- A      : Data
+- error  : Asset.Error
+- result : Result<&2, &2, Asset.Error, A>
+Location: Laws.asset_failed_stable
+506 | def Laws.asset_loaded_stable(A,value,result):{==}
+507>| def Laws.asset_failed_stable(A,error,result):{==}
+    |                                              ^^^^
+508 | 

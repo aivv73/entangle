@@ -1,0 +1,4 @@
+bend
+tools/verify-upload-boundary.bend
+-o
+build/verify-upload-boundary

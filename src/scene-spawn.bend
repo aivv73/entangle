@@ -27,7 +27,7 @@ type User is Type:
 def bundles(seeds:List<&2,Create.Seed>) -> List<Removed.Removed(D.components())>:
   match seeds:
     case []:[]
-    case Create.Seed{transform,mesh} <> rest:Product.Owner{Some{transform},Some{mesh}} <> bundles(rest)
+    case Create.Seed{transform,mesh,spatial} <> rest:Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> bundles(rest)
 
 def initial(seeds:List<&2,Create.Seed>) -> User:User{bundles(seeds),[],[]}
 

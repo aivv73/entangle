@@ -1,0 +1,1 @@
+Linux cachyos-x8664 7.3.1-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 31 Oct 2026 15:33:05 +0000 x86_64 GNU/Linux

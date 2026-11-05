@@ -1,5 +1,6 @@
 import Base
 import ./components.bend as C
+import ./hierarchy.bend as H
 import ../deps/bendvy/src/ecs/world.bend as W
 import ../deps/bendvy/src/ecs/execution-composer-layout.bend as L
 import ../deps/bendvy/src/ecs/execution-resource-policy.bend as Policy
@@ -15,8 +16,12 @@ def mesh(value:C.MeshRef) -> C.MeshRef & C.MeshRef:
   +value : C.MeshRef = value
   (value,value)
 
+def spatial(value:H.Spatial) -> H.Spatial & H.Spatial:
+  +value:H.Spatial = value
+  (value,value)
+
 def components() -> L.Layout:
-  L.LayoutPair{L.LayoutLeaf{C.Transform,C.Transform,transform,"transform",Policy.Ordinary{}},L.LayoutLeaf{C.MeshRef,C.MeshRef,mesh,"mesh-ref",Policy.Ordinary{}}}
+  L.LayoutPair{L.LayoutLeaf{C.Transform,C.Transform,transform,"transform",Policy.Ordinary{}},L.LayoutPair{L.LayoutLeaf{C.MeshRef,C.MeshRef,mesh,"mesh-ref",Policy.Ordinary{}},L.LayoutLeaf{H.Spatial,H.Spatial,spatial,"spatial",Policy.Ordinary{}}}}
 
 def resources() -> L.Layout:L.EmptyLayout{}
 

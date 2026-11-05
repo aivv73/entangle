@@ -49,6 +49,7 @@ production definitions directly. There is no separate transition model.
 | Root time, input, and player laws | `src/time.bend`, `input.bend`, `mesh-control.bend` | Fixed-step accounting and bounds, high-water clock samples, input draining, camera reset, movement intent, and query refusal. |
 | Root upload laws | `src/upload-size.bend`, `deps/bend-vulkan/src/core.bend` | Byte-list length, exact conversion under its stated premise, and the universal range theorem. |
 | Root asset laws | `src/asset.bend` | Request hit/miss, terminal states, key preservation, eviction, released lookup/load, scope rejection, and monotonic allocation counter preservation. |
+| Root hierarchy laws | `src/hierarchy.bend`, `scene-hierarchy.bend`, `scene-draw.bend` | Root and parent matrix expressions, root/child extraction, empty/derived bounds, visiting/missing/invalid rejection, and unchanged world after rejected public edits. Five source mutations bind these claims to production behavior. Numerical and graph coverage additionally use the real ECS/render/replay drivers. |
 | Standalone upload kernel verdict | `proofs/upload-range/*.bend`, `deps/bend-vulkan/src/core.bend`, imported bend-collections arithmetic | All three U64 inputs, all limb bit patterns, and unbounded natural arithmetic. No offset or no-overflow premise. |
 
 Count root claims with `rg -c '^law ' LAWS.bend`. Quantifiers and premises in

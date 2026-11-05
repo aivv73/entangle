@@ -1,0 +1,42 @@
+Native formal evidence: build/verification/native-formal-AZEYmNQ5
+verify_device_loss proved
+verify_record_reset_failure proved
+verify_submit_result proved
+verify_synced_submission proved
+verify_uncertain_guards proved
+verify_lost_guards proved
+verify_descriptor_failure proved
+verify_fence_reset_failure proved
+verify_idle_failure proved
+verify_completion proved
+verify_idle_success proved
+loss-revival rejected (expected counterexample)
+reset-retention rejected (expected counterexample)
+submit-uncertainty rejected (expected counterexample)
+uncertain-reset-guard rejected (expected counterexample)
+lost-reset-guard rejected (expected counterexample)
+descriptor-free-quarantine rejected (expected counterexample)
+descriptor-reset-quarantine rejected (expected counterexample)
+cleanup-error-swallowed rejected (expected counterexample)
+completion-releases-recording rejected (expected counterexample)
+begin-failure-still-recording rejected (expected counterexample)
+end-failure-still-executable rejected (expected counterexample)
+fence-reset-error-swallowed rejected (expected counterexample)
+synced-uncertain-edges-dropped rejected (expected counterexample)
+uncertain-device-resubmit rejected (expected counterexample)
+quarantine-free-bypass rejected (expected counterexample)
+idle-fails-to-complete rejected (expected counterexample)
+loss-leaves-fence-storage rejected (expected counterexample)
+loss-crosses-owner rejected (expected counterexample)
+restored-verify_device_loss proved
+restored-verify_record_reset_failure proved
+restored-verify_submit_result proved
+restored-verify_synced_submission proved
+restored-verify_uncertain_guards proved
+restored-verify_lost_guards proved
+restored-verify_descriptor_failure proved
+restored-verify_fence_reset_failure proved
+restored-verify_idle_failure proved
+restored-verify_completion proved
+restored-verify_idle_success proved
+Production native failure properties verified within the documented bounds.

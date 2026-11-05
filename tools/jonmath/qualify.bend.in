@@ -33,7 +33,7 @@ def transform(+t:C.Transform) -> IO(Unit):
     product(Create.orbit(Create.default_camera(),640,480),M.model(t))
 
 def seed(value:Create.Seed) -> IO(Unit):
-  Create.Seed{t,_} = value
+  Create.Seed{t,_,_} = value
   transform(t)
 
 def seeds(values:List<&2,Create.Seed>) -> IO(Unit):

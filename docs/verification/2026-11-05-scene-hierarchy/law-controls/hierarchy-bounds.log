@@ -1,0 +1,12 @@
+SOME PROOFS FAIL
+Error:
+- expected : local
+- observed : H.transformed(H.corners(local), matrix, H.Empty{})
+Context:
+- matrix : Render.Mat4
+- local  : H.Bounds
+Location: Laws.hierarchy_derived_bounds
+782 |   match global:
+783>|     case H.GlobalTransform{matrix}:{==}
+    |                                    ^^^^
+784 | def Laws.hierarchy_visiting_rejected(array,index,next):{==}

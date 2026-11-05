@@ -1,0 +1,16 @@
+SOME PROOFS FAIL
+Error:
+- expected : {Asset.Cache{scope, next, [Asset.Entry{key, id, state}]} == Asset.Cache{scope, next, []} : Asset.Cache<A>}
+- observed : {Asset.Cache{scope, next, Asset.keep(A, Asset.Entry{key, id, state}, [], Cmp.is_eq(Nat.cmp(id, id)))} == Asset.Cache{scope, next, []} : Asset.Cache<A>}
+Context:
+- A     : Data
+- scope : String
+- next  : Nat
+- key   : String
+- id    : Nat
+- state : Asset.State<A>
+Location: Laws.asset_release_entry
+495 | def Laws.asset_release_entry(A,scope,next,key,id,state):
+496>|   asset_rewrite(Bool,b => {Asset.Cache{scope,next,Asset.keep(A,Asset.Entry{key,id,state},[],b)} == Asset.Cache{scope,next,[]} : Asset.Cache<A>},Nat.is_eq(id,id),True{},asset_id_self(id),{==})
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497 | 

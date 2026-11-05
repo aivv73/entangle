@@ -1,0 +1,4 @@
+bend
+tools/verify.bend
+-o
+build/workflow-native

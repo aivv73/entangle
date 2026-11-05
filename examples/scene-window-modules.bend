@@ -21,7 +21,7 @@ def input_start(_:Unit) -> Create.Camera:
 def instances(seeds:List<&2,Create.Seed>,+mesh:F.Mesh) -> List<&2,Create.Instance>:
   match seeds:
     case []:[]
-    case Create.Seed{transform,_} <> rest:Create.Instance{mesh,F.white(),transform} <> instances(rest,mesh)
+    case Create.Seed{transform,_,_} <> rest:Create.Instance{mesh,F.white(),transform} <> instances(rest,mesh)
 
 def content(geometry:Create.Geometry) -> Create.Scene:
   Create.Geometry{vertices,indices,_} = geometry

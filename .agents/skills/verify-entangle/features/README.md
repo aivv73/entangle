@@ -34,6 +34,7 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [PNG source images](images.md): pinned decoder, retained real images, complete-pixel comparison, file/cache/retry behavior and production mutation controls.
 - [Static OBJ sources](models.md): pinned parser, exact mesh/material/label conversion, file/cache/retry, source-only closure, real ECS/offscreen geometry, and owned X11 culling evidence.
 - [JSON scene files and manifests](json-scene.md): one pinned parser, strict schema and reference validation, bounded loading, cache/retry, source preservation, and real ECS/offscreen evidence.
+- [Scene hierarchy](scene-hierarchy.md): parent validation, complete affine globals and world bounds, transactional edits, lighting, actual ECS replay, X11 controls, sensitivity controls, and measured sequential propagation.
 - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
 - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.
 - [Native resource failures](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded proofs of production handlers for rare driver errors.

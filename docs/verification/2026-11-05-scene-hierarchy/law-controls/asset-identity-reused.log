@@ -1,0 +1,16 @@
+SOME PROOFS FAIL
+Error:
+- expected : (Asset.Cache{scope, next, Asset.Entry{key, next, Asset.Loading{}} <> entries}, Asset.Handle{scope, next})
+- observed : (Asset.Cache{scope, 1n+next, Asset.Entry{key, next, Asset.Loading{}} <> entries}, Asset.Handle{scope, next})
+Context:
+- A       : Data
+- scope   : String
+- next    : Nat
+- entries : List<&2, Asset.Entry<A>>
+- key     : String
+- found   : {Asset.find_key(A, entries, key) == None{} : Maybe<&1, Nat>}
+Location: Laws.asset_request_miss
+501 | def Laws.asset_request_miss(A,scope,next,entries,key,found):
+502>|   asset_rewrite(Maybe<Nat>,m => {Asset.requested(A,scope,next,entries,key,m) == (Asset.Cache{scope,1n+next,Asset.Entry{key,next,Asset.Loading{}} <> entries},Asset.Handle{scope,next}) : Asset.Cache<A> & Asset.Handle<A>},Asset.find_key(A,entries,key),None{},found,{==})
+    |                                                                                                                                                                                                                                                                       ^^^^
+503 | 

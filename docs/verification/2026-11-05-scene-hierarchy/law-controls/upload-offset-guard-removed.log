@@ -1,0 +1,13 @@
+SOME PROOFS FAIL
+Error:
+- expected : {Bool.not(Core.size_less(W.add(c, W.neg(o)), l)) == Bool.and(Cmp.is_le(Nat.cmp(../../deps/bend-vulkan/deps/bend-collections/spec/lib/numeric.unsigned(64n, ../../deps/bend-vulkan/deps/bend-collections/spec/math/u64.bits(o)), ../../deps/bend-vulkan/deps/bend-collections/spec/lib/numeric.unsigned(64n, ../../deps/bend-vulkan/deps/bend-collections/spec/math/u64.bits(c)))), Bool.not(Core.size_less(W.add(c, W.neg(o)), l))) : Bool}
+- observed : {Bool.and(Bool.not(Core.size_less(c, o)), Bool.not(Core.size_less(W.add(c, W.neg(o)), l))) == Bool.and(Cmp.is_le(Nat.cmp(../../deps/bend-vulkan/deps/bend-collections/spec/lib/numeric.unsigned(64n, ../../deps/bend-vulkan/deps/bend-collections/spec/math/u64.bits(o)), ../../deps/bend-vulkan/deps/bend-collections/spec/lib/numeric.unsigned(64n, ../../deps/bend-vulkan/deps/bend-collections/spec/math/u64.bits(c)))), Bool.not(Core.size_less(W.add(c, W.neg(o)), l))) : Bool}
+Context:
+- c : W.U64
+- o : W.U64
+- l : W.U64
+Location: Laws.universal
+20 |   Equal.trans(Bool,Core.subrange_contains(c,o,l),Bool.and(Nat.is_le(V.value(o),V.value(c)),Bool.not(Core.size_less(W.add(c,W.neg(o)),l))),Bool.and(Nat.is_le(V.value(o),V.value(c)),Nat.is_le(Nat.add(V.value(o),V.value(l)),V.value(c))),
+21>|     Equal.cong(Bool,Bool,b => Bool.and(b,Bool.not(Core.size_less(W.add(c,W.neg(o)),l))),Bool.not(Core.size_less(c,o)),Nat.is_le(V.value(o),V.value(c)),Bridge.not_less(c,o)),
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 |     guarded(Nat.is_le(V.value(o),V.value(c)),c,o,l,{==}))

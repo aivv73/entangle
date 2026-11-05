@@ -1,0 +1,1642 @@
+diff --git a/.agents/skills/verify-entangle/features/README.md b/.agents/skills/verify-entangle/features/README.md
+index 5c64c64..5c4b0d0 100644
+--- a/.agents/skills/verify-entangle/features/README.md
++++ b/.agents/skills/verify-entangle/features/README.md
+@@ -34,6 +34,7 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
+ - [PNG source images](images.md): pinned decoder, retained real images, complete-pixel comparison, file/cache/retry behavior and production mutation controls.
+ - [Static OBJ sources](models.md): pinned parser, exact mesh/material/label conversion, file/cache/retry, source-only closure, real ECS/offscreen geometry, and owned X11 culling evidence.
+ - [JSON scene files and manifests](json-scene.md): one pinned parser, strict schema and reference validation, bounded loading, cache/retry, source preservation, and real ECS/offscreen evidence.
++- [Scene hierarchy](scene-hierarchy.md): parent validation, complete affine globals and world bounds, transactional edits, lighting, actual ECS replay, X11 controls, sensitivity controls, and measured sequential propagation.
+ - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
+ - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.
+ - [Native resource failures](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded proofs of production handlers for rare driver errors.
+diff --git a/.agents/skills/verify-entangle/features/formal-laws.md b/.agents/skills/verify-entangle/features/formal-laws.md
+index 9f9e057..c5b73b2 100644
+--- a/.agents/skills/verify-entangle/features/formal-laws.md
++++ b/.agents/skills/verify-entangle/features/formal-laws.md
+@@ -49,6 +49,7 @@ production definitions directly. There is no separate transition model.
+ | Root time, input, and player laws | `src/time.bend`, `input.bend`, `mesh-control.bend` | Fixed-step accounting and bounds, high-water clock samples, input draining, camera reset, movement intent, and query refusal. |
+ | Root upload laws | `src/upload-size.bend`, `deps/bend-vulkan/src/core.bend` | Byte-list length, exact conversion under its stated premise, and the universal range theorem. |
+ | Root asset laws | `src/asset.bend` | Request hit/miss, terminal states, key preservation, eviction, released lookup/load, scope rejection, and monotonic allocation counter preservation. |
++| Root hierarchy laws | `src/hierarchy.bend`, `scene-hierarchy.bend`, `scene-draw.bend` | Root and parent matrix expressions, root/child extraction, empty/derived bounds, visiting/missing/invalid rejection, and unchanged world after rejected public edits. Five source mutations bind these claims to production behavior. Numerical and graph coverage additionally use the real ECS/render/replay drivers. |
+ | Standalone upload kernel verdict | `proofs/upload-range/*.bend`, `deps/bend-vulkan/src/core.bend`, imported bend-collections arithmetic | All three U64 inputs, all limb bit patterns, and unbounded natural arithmetic. No offset or no-overflow premise. |
+ 
+ Count root claims with `rg -c '^law ' LAWS.bend`. Quantifiers and premises in
+diff --git a/LAWS.bend b/LAWS.bend
+index 7b33b7f..5b95b95 100644
+--- a/LAWS.bend
++++ b/LAWS.bend
+@@ -1,4 +1,6 @@
+ import ./src/json-boundary.bend as Json
++import ./src/hierarchy.bend as H
++import ./src/scene-hierarchy.bend as Hierarchy
+ import ./src/scene-file.bend as SceneFile
+ import 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend as JsonParser
+ import ./deps/jonlib-obj/obj.bend as ModelParser
+@@ -173,7 +175,7 @@ law scene_rotation_scale:
+ 
+ law scene_seed:
+   for +index:U32
+-  {Seeds.seed(index) == Create.Seed{C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}},C.MeshRef{7}} : Create.Seed}
++  {Seeds.seed(index) == Create.seed(C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}},C.MeshRef{7}) : Create.Seed}
+ 
+ law scene_seed_count:
+   for +count:Nat
+@@ -246,7 +248,7 @@ law draw_finish_order:
+   {Observe.values(~Draw.DrawItem,~Observe.draw_item,
+     ~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,
+     ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
+-      ~SceneSchema.components(),~Layout.InRight{Layout.AtLeaf{}},~{==}),[],frame,acc) ==
++      ~SceneSchema.components(),~Layout.InRight{Layout.InLeft{Layout.AtLeaf{}}},~{==}),[],frame,acc) ==
+     (frame,Done{List.reverse(&2,Draw.DrawItem,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+ 
+ 
+@@ -473,8 +475,9 @@ law creation_tint_position:
+ law creation_bundle_order:
+   for transform:C.Transform
+   for mesh:C.MeshRef
++  for spatial:H.Spatial
+   for rest:List<&2,Create.Seed>
+-  {Spawn.bundles(Create.Seed{transform,mesh} <> rest) == Product.Owner{Some{transform},Some{mesh}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
++  {Spawn.bundles(Create.Seed{transform,mesh,spatial} <> rest) == Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
+ 
+ law creation_empty:
+   {Create.compile(Create.Scene{[]}) == Done{Create.Compiled{[],Create.Geometry{[],[],[]}}} : Result<&2,&2,Create.Error,Create.Compiled>}
+@@ -1095,3 +1098,69 @@ law light_requires_direction:
+   for +intensity:F32
+   for invalid:{F.normal_valid(direction) == False{} : Bool}
+   {Light.valid(Light.Directional{direction,color,ambient,intensity}) == False{} : Bool}
++
++law hierarchy_root_matrix:
++  for local:C.Transform
++  {H.compose(None{},local) == H.GlobalTransform{Render.model(local)} : H.GlobalTransform}
++
++law hierarchy_root_draw:
++  for local:C.Transform
++  for mesh:C.MeshRef
++  for global:H.GlobalTransform
++  {Draw.item(None{},local,mesh,global) == Draw.DrawItem{local,mesh} : Draw.DrawItem}
++
++law hierarchy_child_draw:
++  for parent:U32
++  for local:C.Transform
++  for mesh:C.MeshRef
++  for global:H.GlobalTransform
++  {Draw.item(Some{parent},local,mesh,global) == Draw.GlobalItem{global,mesh} : Draw.DrawItem}
++
++law hierarchy_parent_composition:
++  for parent:Render.Mat4
++  for local:C.Transform
++  {H.compose(Some{H.GlobalTransform{parent}},local) == H.GlobalTransform{Render.multiply(parent,Render.model(local))} : H.GlobalTransform}
++
++law hierarchy_empty_bounds:
++  for global:H.GlobalTransform
++  {H.world_bounds(global,H.Empty{}) == H.Empty{} : H.Bounds}
++
++law hierarchy_derived_bounds:
++  for global:H.GlobalTransform
++  for local:H.Bounds
++  {H.world_bounds(global,local) == H.transformed(H.corners(local),H.matrix(global),H.Empty{}) : H.Bounds}
++
++law hierarchy_visiting_rejected:
++  for array:Array<H.Mark>
++  for index:U32
++  for next:U32 -> Array<H.Mark> -> Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>
++  {H.visit_mark((array,H.Visiting{}),index,next) == Fail{H.Cycle{index}} : Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>}
++
++law hierarchy_missing_rejected:
++  for array:Array<H.Mark>
++  for index:U32
++  for next:U32 -> Array<H.Mark> -> Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>
++  {H.visit_checked(False{},index,array,next) == Fail{H.MissingParent{index}} : Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>}
++
++law hierarchy_invalid_derived_rejected:
++  for index:U32
++  for local:H.Local
++  for global:H.GlobalTransform
++  for bounds:H.Bounds
++  {H.derived(False{},index,local,global,bounds) == Fail{H.InvalidTransform{index}} : Result<&2,&2,H.Error,H.Spatial>}
++
++law hierarchy_parent_rejection_preserves_world:
++  for entity:W.Handle<SceneSchema.Schema>
++  for parent:Maybe<&2,W.Handle<SceneSchema.Schema>>
++  for world:SceneSchema.World()
++  for rows:List<&2,Hierarchy.Row>
++  for error:H.Error
++  {Hierarchy.evaluated(Hierarchy.SetParent{entity,parent},world,rows,Fail{error}) == (world,Fail{error}) : SceneSchema.World() & Result<&2,&2,H.Error,Unit>}
++
++law hierarchy_transform_rejection_preserves_world:
++  for entity:W.Handle<SceneSchema.Schema>
++  for transform:C.Transform
++  for world:SceneSchema.World()
++  for rows:List<&2,Hierarchy.Row>
++  for error:H.Error
++  {Hierarchy.evaluated(Hierarchy.SetTransform{entity,transform},world,rows,Fail{error}) == (world,Fail{error}) : SceneSchema.World() & Result<&2,&2,H.Error,Unit>}
+diff --git a/PROOF.bend b/PROOF.bend
+index 77d6eba..a2f1268 100644
+--- a/PROOF.bend
++++ b/PROOF.bend
+@@ -1,3 +1,4 @@
++import ./src/hierarchy.bend as H
+ import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as JsonBytes
+ import ./src/json-boundary.bend as Json
+ import ./src/scene-file.bend as SceneFile
+@@ -297,7 +298,7 @@ def Laws.creation_tint_position(position,color,uv,normal,material):
+     case C.Vec3{r,g,b} F.Textured{C.Vec3{x,y,z},_}:
+       (C.Vec3{F.tint_channel(r,x),F.tint_channel(g,y),F.tint_channel(b,z)},{==})
+ 
+-def Laws.creation_bundle_order(transform,mesh,rest):{==}
++def Laws.creation_bundle_order(transform,mesh,spatial,rest):{==}
+ 
+ def Laws.creation_empty():{==}
+ 
+@@ -396,7 +397,7 @@ def Laws.creation_duplicate_preserves_geometry(id,mesh,material,pairs,geometry,n
+ def Laws.creation_bundle_count(seeds):
+   match seeds:
+     case []:{==}
+-    case Create.Seed{transform,mesh} <> +rest:
++    case Create.Seed{transform,mesh,spatial} <> +rest:
+       Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(rest)),List.length(&2,Create.Seed,rest),Laws.creation_bundle_count(rest))
+ 
+ def Laws.player_key_106_last_state(a,b,keys):
+@@ -769,3 +770,19 @@ def Laws.texture_zero_width(height,pixels):
+ 
+ def Laws.light_requires_direction(direction,color,ambient,intensity,invalid):
+   Equal.cong(Bool,Bool,b => b && F.tint_valid(color) && F.channel(ambient) && F.channel(intensity),F.normal_valid(direction),False{},invalid)
++
++def Laws.hierarchy_root_matrix(local):{==}
++def Laws.hierarchy_root_draw(local,mesh,global):{==}
++def Laws.hierarchy_child_draw(parent,local,mesh,global):{==}
++def Laws.hierarchy_parent_composition(parent,local):{==}
++def Laws.hierarchy_empty_bounds(global):
++  match global:
++    case H.GlobalTransform{matrix}:{==}
++def Laws.hierarchy_derived_bounds(global,local):
++  match global:
++    case H.GlobalTransform{matrix}:{==}
++def Laws.hierarchy_visiting_rejected(array,index,next):{==}
++def Laws.hierarchy_missing_rejected(array,index,next):{==}
++def Laws.hierarchy_invalid_derived_rejected(index,local,global,bounds):{==}
++def Laws.hierarchy_parent_rejection_preserves_world(entity,parent,world,rows,error):{==}
++def Laws.hierarchy_transform_rejection_preserves_world(entity,transform,world,rows,error):{==}
+diff --git a/ROADMAP_updated_v6_EN.md b/ROADMAP_updated_v6_EN.md
+index 4af481a..3dbc1a7 100644
+--- a/ROADMAP_updated_v6_EN.md
++++ b/ROADMAP_updated_v6_EN.md
+@@ -1,10 +1,10 @@
+ # Game Engine in Bend — Roadmap
+ 
+-**Revision:** 6 · November 5, 2026 · updated for bounded E4 JSON scene and manifest loading
++**Revision:** 6 · November 5, 2026 · updated for E4 scene hierarchy
+ 
+ **Engine repository:** [Entangle on Entire](https://entire.com/et/bend-engine/entangle). **Vulkan library:** [bend-vulkan on Entire](https://entire.com/et/bend-engine/bend-vulkan).
+ 
+-**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete on `main` under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is verified and merged on `main` through `a016c6b`. The [S44 JSON loader](docs/json-scene.md) is implemented and verified in the local working tree, with no published or merged change. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
++**Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete on `main` under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is verified and merged on `main` through `a016c6b`. The [S44 JSON loader](docs/json-scene.md) is on `main` at `ac805c7`; [textured rendering](docs/textured-materials.md) is on `main` at `dc70d54` [S53]. [Scene hierarchy](docs/scene-hierarchy.md) is implemented locally; its final source-specific verification is in progress under [Trail 31](https://entire.com/et/bend-engine/-/trails/31) [S54]. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
+ 
+ **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
+ 
+@@ -85,7 +85,7 @@
+ - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
+ - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
+ 
+-**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The [S44 JSON loader](docs/json-scene.md) is on `main` at `ac805c7`, following the PNG and [OBJ importer](docs/model-obj.md) work. The [S41 math evaluation](docs/verification/2026-11-05-jonmath/README.md) is complete under [Trail 29](https://entire.com/et/bend-engine/-/trails/29), with production math retained. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
++**Next action:** finish the source-specific E4 hierarchy verification [S54], then implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Hierarchy is implemented locally; its verification and publication states are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+ 
+ ---
+ 
+@@ -829,7 +829,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
+ 
+ **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
+ 
+-**Next action:** continue E4 with the Transform → GlobalTransform hierarchy, parent-cycle rejection, and dependent transform/bounds updates. Texture upload, textured materials, directional lighting, and camera behavior are implemented and verified [S53], following the PNG, OBJ, and JSON work. Publication state is recorded under [Trail 30](https://entire.com/et/bend-engine/-/trails/30). The required model viewer and gameplay consumer also remain open. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
++**Next action:** finish the source-specific E4 hierarchy verification [S54], then implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Hierarchy is implemented locally; its verification and publication states are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+ 
+ ---
+ 
+@@ -974,4 +974,8 @@ Tracked by [trail 21](https://entire.com/et/bend-engine/-/trails/21).
+ 
+ - [S53] Implementation and verification based on `36b5729`, November 5, 2026, tracked by [Trail 30](https://entire.com/et/bend-engine/-/trails/30). The [reference](docs/textured-materials.md) describes the 44-byte vertex format, RGBA8 upload, material ownership, inverse-scale normal transformation, one directional light, and camera updates. The source-specific `native textured-window` [receipt](build/verification/workflow-eVD1CUqA/manifest.tsv) is complete with every required stage at zero. Its retained snapshot covers frontend laws, the upload kernel verdict, all seven texture mutations, law and upload-policy controls, bounded native-handler proofs and mutations, real readbacks, genuine allocation failure and rollback, and all extended X11 scenarios. The [final capture](build/verification/textured-lighting/textured-final.png) was inspected. Camera controls, exact reset, repeated extents, restore, and Close pass with zero live Vulkan objects and clean validation. The [decision trail](build/verification/textured-lighting/decisions.tsv) retains the failed intermediate receipts and corrections. This is available-device Linux Vulkan evidence, not a performance, other-backend, unbounded lifetime, or device-recovery claim. Sampling is opaque, nearest, clamp-to-edge, and one mip level. OBJ texture import remains outside its existing profile. Implementation and the independent evidence audit are complete; the Trail records the commit and publication state.
+ 
++### Entangle E4 scene hierarchy
++
++- [S54] Local implementation on `dc70d54`, November 5, 2026, tracked by [Trail 31](https://entire.com/et/bend-engine/-/trails/31). The [contract](docs/scene-hierarchy.md) defines keep-local reparenting, full affine composition, derived bounds and inverse-transpose normals, ECS ownership, transactional rejection, and sequential propagation. The [verification record](docs/verification/2026-11-05-scene-hierarchy/README.md) distinguishes implementation, proofs/runtime/replay/sensitivity evidence, the one measured read-path improvement, and remaining limitations. Final source-specific verification is in progress. No commit, publication, merge, or E4-wide completion is claimed.
++
+ Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], mesh replacement [S48], buffer-retention verification [S49], failure-handler verification [S50–S51], and sampled-image retention [S52] complete E3 under the recorded verification limits. Dependency research [S41–S47] narrows future candidates without changing those statuses. Textured rendering [S53] completes one E4 task. E4–E7 and R0–R4 remain incomplete.
+diff --git a/docs/development.md b/docs/development.md
+index e670d8d..fb48011 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -33,11 +33,13 @@ bend tools/verify-workflow.bend -o build/verify-workflow
+ | `json` | Assets plus strict scene/manifest files, reference and resource limits, cache/retry, parser qualification, production mutations and real ECS/offscreen comparison. |
+ | `math` | Pinned S41 adapter qualification, exact numerical contracts, production projection and adapter controls, root law mutations, and retained native scene/state/readback comparisons. Downloads the rejected candidate for evaluation only. |
+ | `textures` | Source laws, shader regeneration, real RGBA/D32 sampling and lighting, camera updates, texture rollback/retention/replacement, production mutations, and the native failure profile. |
++| `hierarchy` | Root frontend laws and mutations, actual ECS forest/edit/rollback checks, JSON anchors, full-state replay, independent geometry/lighting readbacks, and seven production sensitivity controls. |
++| `hierarchy-window` | Owned Xwayland hierarchy edits, pixel reset, rejection, resize/restore/Close, complete-state replay, plus mesh controls/replay. |
+ | `upload` | Root frontend proofs, upload kernel verdict, law and source-policy mutations, real production/native upload boundaries and readback. |
+ | `native-failures` | Root frontend proofs and law mutations, bounded production-handler proofs with all mutations, real resource failure/rollback/retry. |
+ | `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler sensitivity controls. |
+ | `window` | Owned Xwayland mesh controls, focus/resize/Close, captures and full-state replay. Requires the parent Wayland session and validation layer. |
+-| `textured-window` | Owned Xwayland mesh, cube, creation, replacement, and textured windows. Includes camera controls, resize, restore, cleanup, and mesh replay. |
++| `textured-window` | Owned Xwayland mesh, cube, creation, replacement, textured, and hierarchy windows. Includes camera controls, resize, restore, cleanup, and full-state replay. |
+ | `all` | `native` and the extended window scenarios. This covers the registered profiles, not every feature-map scenario or backend. |
+ 
+ No arguments selects `native`. Profiles combine by union. Run affected profiles during implementation and include their dependent consumers before completion. Use the [feature map](../.agents/skills/verify-entangle/features/README.md) for other scenarios, including cube/public-creation windows and replacement windows. Add a required scenario when a change introduces a new behavior; do not treat the current profile list as exhaustive. The merged OBJ importer is covered by `verify-models` within the default native gate. Its supported profile and additional X11 evidence are recorded in the feature map; there is no separate `models` profile.
+diff --git a/docs/json-scene.md b/docs/json-scene.md
+index 7e9e38a..84880de 100644
+--- a/docs/json-scene.md
++++ b/docs/json-scene.md
+@@ -1,6 +1,6 @@
+ # JSON scene files and manifests
+ 
+-`SceneFile.load(path)` reads a flat scene, resolves its manifest, validates every
++`SceneFile.load(path)` reads a scene, resolves its manifest, validates every
+ declared OBJ and PNG source, and returns `Creation.Scene`. Errors are
+ `Asset.Error` values. Loading creates no ECS or Vulkan resources. The caller can
+ cache the result through `Asset.load` and compile it through `Creation.compile`.
+@@ -22,7 +22,7 @@ returned on failure.
+ 
+ ## Version 1 schema
+ 
+-Every listed field is required. Unknown fields and wrong types are errors at
++Every listed field is required except `parent`. Unknown fields and wrong types are errors at
+ all object levels. Object field order is irrelevant. Array order is preserved.
+ Version is the exact JSON integer token `1`.
+ 
+@@ -70,10 +70,20 @@ are rejected. These are lexical path rules. They do not confine symlink targets
+ or provide a filesystem sandbox. Root paths must be nonempty, contain no NUL,
+ and fit within 4096 UTF-8 bytes. Joined paths have the same limit.
+ 
+-A model's parts expand in order at each placement. Meshes, materials, winding,
+-and transforms are preserved. Existing Creation compilation shares identical
+-mesh/material pairs. Images remain source assets. This schema adds no texture
+-binding, cameras, parent hierarchy, animation, or new model format.
++A placement may include `"parent": 0`, referring to a zero-based placement index,
++or `"parent": null`, denoting a root. Omission also denotes a root. Parent numbers
++must be canonical unsigned integer tokens, not fractions or exponent notation.
++Forward references are allowed; missing parents, self-links, and cycles fail
++before source files load. Reparenting and matrix composition follow
++[scene hierarchy](scene-hierarchy.md).
++
++A model's parts expand in order at each placement. When any parent link exists,
++the first part is the placement anchor with its authored transform; remaining
++parts are identity children of that anchor. Parent links address another
++placement's anchor. Empty models are rejected in a scene containing parent links.
++Scenes without links retain their previous expansion and per-part transforms.
++Meshes, materials, winding, and shared mesh/material ranges are preserved. This
++schema adds no texture binding, cameras, animation, or new model format.
+ 
+ ## Parser and limits
+ 
+@@ -92,7 +102,8 @@ token length check. The resulting F32 must be finite and within
+ zero. Position and scale contain exactly three numbers. Rotation contains
+ exactly four numbers in x/y/z/w order. Its squared norm must be within
+ `[0.9999,1.0001]`. Loading does not normalize it. Zero and negative scale remain
+-valid under the existing Creation contract.
++valid for unlit geometry. Textured geometry additionally requires a usable world
++normal matrix; a singular ancestor therefore rejects the scene.
+ 
+ | Boundary | Limit |
+ | --- | --- |
+@@ -128,6 +139,8 @@ Run `bend tools/verify-workflow.bend -o build/verify-workflow`, inspect
+ `./build/verify-workflow --plan json`, then run
+ `./build/verify-workflow json +RTS --threads 1 --gpu off`.
+ The JSON profile includes the existing asset checks and root law checks.
++The `hierarchy` profile adds parent parsing, forward-reference/model-part
++expansion, real ECS propagation, rendering, replay, and sensitivity controls.
+ `tools/verify-json.bend` retains parser qualification, real file rejection
+ checks, cache behavior, six production mutations, a restored runtime baseline,
+ and real ECS/offscreen comparison against an independently authored scene.
+diff --git a/docs/public-creation.md b/docs/public-creation.md
+index 5f72431..21bb811 100644
+--- a/docs/public-creation.md
++++ b/docs/public-creation.md
+@@ -14,6 +14,10 @@ ranges. Mesh and material source values come from
+ - `Instance{mesh,material,transform}` creates one initial ECS entity.
+   Translation and scale must be finite. Quaternion squared length must lie in
+   `[0.9999,1.0001]`.
++- `Parented{mesh,material,transform,parent}` attaches it to a zero-based source
++  instance index. `Creation.parent(instance, Some{index})` sets that relationship;
++  `None{}` detaches it. Forward references are allowed. See
++  [scene hierarchy](scene-hierarchy.md) for composition and transactional edits.
+ - `Scene{instances}` preserves instance order through compilation and bootstrap.
+ 
+ `compile` first rejects more than 100,000 instances with `TooLarge`. It then
+@@ -22,7 +26,8 @@ validates instances in source order. Each instance reports `BadMesh` before
+ A source mesh over the current 381,300-vertex or 3,000,000-index profile reports
+ `BadMesh`. A new pair that overflows aggregate packed counts reports `TooLarge`.
+ A duplicate pair reuses its range before any aggregate growth check. Validation
+-and packing complete before any GPU allocation.
++and packing complete before any GPU allocation. Hierarchy derivation then rejects
++missing parents, cycles, and invalid world transforms or bounds with `BadHierarchy`.
+ 
+ Compilation materializes only used mesh/material pairs. Bitwise structural
+ comparison identifies identical source values. First occurrences determine
+@@ -30,16 +35,20 @@ range order. Repeated pairs share a range while retaining separate ECS entities.
+ References start at 7 to preserve the existing demonstration's mesh reference.
+ Applications consume generated references instead of selecting them.
+ 
+-`Compiled{seeds,geometry}` is the single result. Each `Seed{transform,mesh}`
++`Compiled{seeds,geometry}` is the single result. Each `Seed{transform,mesh,spatial}`
+ contains the existing `MeshRef`, which identifies baked geometry. It is not an
+-entity identity. `Geometry{vertices,indices,ranges}` contains tinted vertices,
++entity identity. `spatial` contains the validated local relationship/source bounds,
++global matrix, and world bounds. `Geometry{vertices,indices,ranges}` contains tinted vertices,
+ rebased indices, and `Range{id,first_index,index_count,texture}` values.
+ The texture is `None` for Basic materials and `Some{SourceImage}` for textured materials.
+ Positions, UVs, and normals remain unchanged. `resolve(ranges,id)` returns the matching range or `None`.
+ 
+ `Scene.create(seeds)` registers the existing Bendvy application. The first tick
+ queues and publishes initial entities, then runs the existing movement system.
+-Bendvy handles identify entities. A second tick moves existing entities without
++Bendvy handles identify entities. Completed ticks derive globals and bounds before
++observation. `Scene.set_transform` and `Scene.set_parent` consume and return the
++application beside a `Result<Hierarchy.Error,Unit>`; rejected edits preserve it.
++`Observe.spatial` returns detached entity/local/global/bounds rows. A second tick moves existing entities without
+ spawning them again. Reservation refusal retains ownership through the existing
+ bootstrap error path. There is no new runtime asset service or material column.
+ 
+diff --git a/docs/state-ownership.md b/docs/state-ownership.md
+index 12c85d7..ad4b5d4 100644
+--- a/docs/state-ownership.md
++++ b/docs/state-ownership.md
+@@ -35,7 +35,9 @@ component handle also identifies an entity without granting access to its storag
+ ## Current write path
+ 
+ [`scene-schema.bend`](../src/scene-schema.bend) registers ordinary `Transform` and
+-`MeshRef` columns. Its payload-to-view projections copy values for observation.
++`MeshRef` columns and a `Spatial` column. `Spatial` holds the accepted parent,
++source bounds, rollback checkpoint, and derived global matrix/world bounds.
++Its payload-to-view projections copy values for observation.
+ They do not transfer component storage to the reader.
+ 
+ [`scene.bend`](../src/scene.bend) retains the world inside `Scene.Application()`.
+@@ -56,12 +58,18 @@ computed from an earlier observation without an explicit conflict policy.
+ Numerical writes are immediate. A refused query returns the incoming scope.
+ A refused write stops movement and retains earlier accepted writes. Structural
+ commands publish at the schedule's apply boundaries. Ownership transfer must not
+-silently turn these operations into an atomic batch or add rollback. See the
++silently turn these operations into an atomic batch or add rollback. The explicit
++[hierarchy publication contract](scene-hierarchy.md) adds a domain validation
++boundary after the schedule: invalid derived spatial state restores the previously
++accepted local transforms while retaining schedule administrative progress. Public
++transform/parent edits instead validate the complete candidate before any write.
++This does not roll back unrelated scheduled state. See the
+ [headless reference](headless-reference.md) and
+ [schedule visibility contract](schedule-visibility.md).
+ 
+ [`scene-observe.bend`](../src/scene-observe.bend) consumes and reconstructs the
+-application around a read-only inspector. Snapshots and drawing data may outlive
++application around read-only inspection. Spatial extraction captures live handles
++once and uses checked ECS access. Snapshots and drawing data may outlive
+ the observation. Rendering or replaying them cannot restore an older scene.
+ 
+ ## Future chunk integration
+diff --git a/docs/textured-materials.md b/docs/textured-materials.md
+index f8dc693..001bff2 100644
+--- a/docs/textured-materials.md
++++ b/docs/textured-materials.md
+@@ -37,8 +37,10 @@ image separately.
+ `Lighting.Directional{toward,color,ambient,intensity}` points from the surface
+ toward the light. Its color, ambient, and intensity channels lie in `[0,1]`.
+ The default direction is `(0.4,0.7,1)`, with white light, ambient `0.2`, and
+-intensity `0.8`. Normal transforms apply inverse scale followed by quaternion
+-rotation. Textured draws reject scale magnitudes outside `[1e-6,1e6]`.
++intensity `0.8`. Normals use the inverse transpose of the complete world linear
++transform, preserving correct lighting under parent rotation, nonuniform scale,
++and shear. Legacy flat draws retain the scale range `[1e-6,1e6]`. Affine hierarchy
++draws require a finite, usable inverse as specified by [scene hierarchy](scene-hierarchy.md).
+ Interpolated zero normals receive ambient light without a normalization singularity.
+ 
+ Offscreen configuration is `Render.Config{width,height,camera,light}`.
+@@ -50,7 +52,9 @@ preserves the previous configuration on rejection. Window frames continue to use
+ `Creation.view(camera,width,height)`. Camera or light changes do not upload meshes
+ or textures again.
+ 
+-The native shaders use at most 128 push-constant bytes. Shader source and generated
++The native shaders use 128 push-constant bytes: MVP, three normal-matrix columns
++with light direction packed in their fourth lanes, then light RGB times intensity
++and ambient. Shader source and generated
+ SPIR-V live under `src/shaders`. Rebuild with `bend tools/build-scene-shaders.bend`.
+ For a read-only regeneration check, compile that tool and run its binary with
+ `--check`. The generator uses `glslc` targeting Vulkan 1.0 and runs `spirv-val`.
+@@ -104,7 +108,7 @@ bend tools/verify-workflow.bend -o build/verify-workflow
+ 
+ The smaller `textures` profile runs the texture checks and native failure checks.
+ `textured-window` invokes the existing owned Xwayland launcher in `extended` mode.
+-It also runs cube, public-creation, mesh-replacement, and mesh movement/replay
++It also runs hierarchy, cube, public-creation, mesh-replacement, and mesh movement/replay
+ scenarios because they consume the changed vertex and pipeline paths.
+ 
+ The runtime drivers check the complete 64×64 RGBA/D32 readback, UV orientation,
+diff --git a/examples/mesh-playground.bend b/examples/mesh-playground.bend
+index 67afaa0..f45f70f 100644
+--- a/examples/mesh-playground.bend
++++ b/examples/mesh-playground.bend
+@@ -41,19 +41,21 @@ def steps(n:Nat,app:Play.Application(),+trace:Bool) -> IO(Play.Application()):
+         app:Play.Application() <- trace_tick(trace,app)
+         steps(rest,app,trace)
+ 
+-def draw_items(rows:List<&2,Old.Row>) -> List<&2,Draw.DrawItem>:
+-  match rows:
+-    case []:[]
+-    case Old.Row{_,t,m} <> rest:Draw.DrawItem{t,m} <> draw_items(rest)
++def drawing(renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Create.Camera,clock:Time.Clock,trace:Bool,pair:Play.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> V.Action(Maybe<Running>):
++  match pair:
++    case (app,(inspector,Done{draws})):
++      do V.Action<Maybe<Running>>:
++        rendered:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,snapshot,w => h => Create.view(camera,w,h),draws)
++        renderer:Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,rendered,"Mesh frame refused")
++        return Some{Running{renderer,app,inspector,camera,clock,trace}}
++    case _:IO.pure(V.VkResult(Maybe<Running>),Fail{(1,"Mesh drawing extraction refused")})
+ 
+ def extracted(renderer:Win.Renderer,snapshot:V.WindowSnapshot,+camera:Create.Camera,clock:Time.Clock,+trace:Bool,pair:Play.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Old.Snapshot>)) -> V.Action(Maybe<Running>):
+   match pair:
+     case (app,(inspector,Done{Old.Snapshot{_,_,_,_,+rows}})):
+       do V.Action<Maybe<Running>>:
+         V.Action.lift(Unit,Evidence.print(trace,"mesh-state " ++ Evidence.rows(rows)))
+-        rendered:Win.Renderer & Result<&2,&2,Win.InputError,Unit> <- Win.frame(renderer,snapshot,w => h => Create.view(camera,w,h),Draw.DrawList{draw_items(rows)})
+-        renderer:Win.Renderer <- Error.owner(Win.Renderer,Win.InputError,Unit,rendered,"Mesh frame refused")
+-        return Some{Running{renderer,app,inspector,camera,clock,trace}}
++        drawing(renderer,snapshot,camera,clock,trace,Observe.draw_list(app,inspector))
+     case _:IO.pure(V.VkResult(Maybe<Running>),Fail{(1,"Mesh extraction refused")})
+ 
+ def scheduled(renderer:Win.Renderer,app:Play.Application(),inspector:I.Instance<D.Schema>,camera:Create.Camera,snapshot:V.WindowSnapshot,+trace:Bool,batch:Time.Batch) -> V.Action(Maybe<Running>):
+diff --git a/examples/scene-seeds.bend b/examples/scene-seeds.bend
+index 3352eae..1e2835d 100644
+--- a/examples/scene-seeds.bend
++++ b/examples/scene-seeds.bend
+@@ -4,7 +4,7 @@ import ../src/components.bend as V
+ 
+ def seed(+index:U32) -> Create.Seed:
+   +i = U32.to_f32(index)
+-  Create.Seed{V.Transform{V.Vec3{i,F32.mul(2.0,i),F32.neg(i)},V.Quat{0.0,0.0,0.6,0.8},V.Vec3{2.0,3.0,4.0}},V.MeshRef{7}}
++  Create.seed(V.Transform{V.Vec3{i,F32.mul(2.0,i),F32.neg(i)},V.Quat{0.0,0.0,0.6,0.8},V.Vec3{2.0,3.0,4.0}},V.MeshRef{7})
+ 
+ def values(count:Nat,+index:U32) -> List<&2,Create.Seed>:
+   match count:
+diff --git a/examples/scene-window-app.bend b/examples/scene-window-app.bend
+index 83a6602..ff94a88 100644
+--- a/examples/scene-window-app.bend
++++ b/examples/scene-window-app.bend
+@@ -1,5 +1,6 @@
+ import ../src/content.bend as F
+ import Base
++import ../src/hierarchy.bend as Hierarchy
+ import ../src/creation.bend as Create
+ import ../src/scene-window.bend as Win
+ import ../src/scene-render.bend as R
+@@ -61,6 +62,7 @@ def digest(items:List<&2,Draw.DrawItem>,hash:U32) -> U32:
+     case []:hash
+     case Draw.DrawItem{C.Transform{C.Vec3{x,y,z},C.Quat{a,b,c,d},C.Vec3{sx,sy,sz}},C.MeshRef{id}} <> rest:
+       digest(rest,fold([F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(a),F32.bits(b),F32.bits(c),F32.bits(d),F32.bits(sx),F32.bits(sy),F32.bits(sz),id],hash))
++    case Draw.GlobalItem{global,C.MeshRef{id}} <> rest:digest(rest,fold(id <> M.matrix_words(Hierarchy.matrix(global)),hash))
+ 
+ def extracted(pair:Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList),+baseline:List<&2,Check.Identity>,+rows:List<&2,Observe.Row>,+tick:U32,clock:Time.Clock,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
+   (app,(inspector,Draw.DrawList{+items})) = pair
+diff --git a/examples/scene-window-modules.bend b/examples/scene-window-modules.bend
+index 9b5c3fb..0c1b2f1 100644
+--- a/examples/scene-window-modules.bend
++++ b/examples/scene-window-modules.bend
+@@ -21,7 +21,7 @@ def input_start(_:Unit) -> Create.Camera:
+ def instances(seeds:List<&2,Create.Seed>,+mesh:F.Mesh) -> List<&2,Create.Instance>:
+   match seeds:
+     case []:[]
+-    case Create.Seed{transform,_} <> rest:Create.Instance{mesh,F.white(),transform} <> instances(rest,mesh)
++    case Create.Seed{transform,_,_} <> rest:Create.Instance{mesh,F.white(),transform} <> instances(rest,mesh)
+ 
+ def content(geometry:Create.Geometry) -> Create.Scene:
+   Create.Geometry{vertices,indices,_} = geometry
+diff --git a/examples/scene.bend b/examples/scene.bend
+index 3a9e9b8..81814d0 100644
+--- a/examples/scene.bend
++++ b/examples/scene.bend
+@@ -52,8 +52,8 @@ def receipt_cons(head:Observe.Receipt(),+handle:W.Handle<D.Schema>,
+ def receipt_summary(values:List<Observe.Receipt()>) -> List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool):
+   match values:
+     case []:([],([],True{}))
+-    case Buffer.Spawned{+handle,Product.Owner{None{},None{}}} <> rest:
+-      receipt_cons(Buffer.Spawned{handle,Product.Owner{None{},None{}}},handle,receipt_summary(rest))
++    case Buffer.Spawned{+handle,Product.Owner{None{},Product.Owner{None{},None{}}}} <> rest:
++      receipt_cons(Buffer.Spawned{handle,Product.Owner{None{},Product.Owner{None{},None{}}}},handle,receipt_summary(rest))
+     case head <> rest:(head <> rest,([],False{}))
+ 
+ def summarized(restore:List<Observe.Receipt()> -> Scene.Owner(),id:U32,exhausted:Bool,
+@@ -236,7 +236,7 @@ def previous_transform(values:List<&2,Observe.Row>,+target:W.Handle<D.Schema>) -
+       Bool.pick(Maybe<&2,C.Transform>,equal(handle,target),Some{value},previous_transform(rest,target))
+ 
+ def seeded_transform(seed:Create.Seed) -> Maybe<&2,C.Transform>:
+-  Create.Seed{value,_} = seed
++  Create.Seed{value,_,_} = seed
+   Some{value}
+ 
+ def seed_transform(index:U32) -> Maybe<&2,C.Transform>:seeded_transform(Seeds.seed(index))
+diff --git a/examples/textured-content.bend b/examples/textured-content.bend
+index 58f2d1c..0c8f79c 100644
+--- a/examples/textured-content.bend
++++ b/examples/textured-content.bend
+@@ -5,6 +5,7 @@ import ../src/image-png.bend as Png
+ import ../src/components.bend as C
+ import ../src/creation.bend as Create
+ import ../src/scene-draw.bend as Draw
++import ../src/hierarchy.bend as H
+ 
+ def released(pair:Asset.Cache<F.SourceImage> & Maybe<&2,Asset.State<F.SourceImage>>,image:F.SourceImage) -> IO(F.SourceImage):
+   match pair:
+@@ -43,7 +44,7 @@ def compiled(result:Result<&2,&2,Create.Error,Create.Compiled>) -> IO(Create.Com
+ def draws(seeds:List<&2,Create.Seed>) -> List<&2,Draw.DrawItem>:
+   match seeds:
+     case []:[]
+-    case Create.Seed{t,m} <> rest:Draw.DrawItem{t,m} <> draws(rest)
++    case Create.Seed{t,m,H.Spatial{H.Local{_,p,_,_},g,_}} <> rest:Draw.item(p,t,m,g) <> draws(rest)
+ 
+ def face_vertex(center:C.Vec3,uaxis:C.Vec3,vaxis:C.Vec3,normal:C.Vec3,+u:F32,+v:F32) -> F.Vertex:
+   C.Vec3{x,y,z} = center
+diff --git a/proofs/law-mutations.tsv b/proofs/law-mutations.tsv
+index 6189900..39e542b 100644
+--- a/proofs/law-mutations.tsv
++++ b/proofs/law-mutations.tsv
+@@ -12,3 +12,8 @@ math-sum-regrouped	src/scene-matrix.bend	PROOF.bend	  Vec4{(a * x + e * y + i *
+ math-quaternion-handedness	src/scene-matrix.bend	PROOF.bend	    Vec4{((1.0 - 2.0 * (y * y + z * z)) * sx : F32),(2.0 * (x * y + z * w) * sx : F32),(2.0 * (x * z - y * w) * sx : F32),0.0},	    Vec4{((1.0 - 2.0 * (y * y + z * z)) * sx : F32),(2.0 * (x * y - z * w) * sx : F32),(2.0 * (x * z - y * w) * sx : F32),0.0},	render_model_contract
+ texture-byte-order	src/render-format.bend	PROOF.bend	  [Core.word_byte(pixel,3),Core.word_byte(pixel,2),Core.word_byte(pixel,1),Core.word_byte(pixel,0)]	  [Core.word_byte(pixel,0),Core.word_byte(pixel,1),Core.word_byte(pixel,2),Core.word_byte(pixel,3)]	texture_rgba_bytes
+ vertex-stride	src/content.bend	PROOF.bend	def vertex_stride() -> U32:44	def vertex_stride() -> U32:24	vertex_upload_stride
++hierarchy-compose	src/hierarchy.bend	PROOF.bend	    case Some{GlobalTransform{matrix}}:GlobalTransform{M.multiply(matrix,M.model(local))}	    case Some{GlobalTransform{matrix}}:GlobalTransform{M.model(local)}	hierarchy_parent_composition
++hierarchy-cycle	src/hierarchy.bend	PROOF.bend	    case (array,Visiting{}):Fail{Cycle{index}}	    case (array,Visiting{}):Fail{MissingParent{index}}	hierarchy_visiting_rejected
++hierarchy-bounds	src/hierarchy.bend	PROOF.bend	  transformed(corners(bounds),matrix,Empty{})	  bounds	hierarchy_derived_bounds
++hierarchy-rejected-write	src/scene-hierarchy.bend	PROOF.bend	    case _:(world,Fail{error})	    case _:(commit(world,rows,rollback(rows)),Fail{error})	hierarchy_parent_rejection_preserves_world
++hierarchy-child-extraction	src/scene-draw.bend	PROOF.bend	    case Some{_}:GlobalItem{global,mesh}	    case Some{_}:DrawItem{local,mesh}	hierarchy_child_draw
+diff --git a/src/creation.bend b/src/creation.bend
+index b88c47e..afa7f05 100644
+--- a/src/creation.bend
++++ b/src/creation.bend
+@@ -2,13 +2,15 @@ import Base
+ import ./components.bend as C
+ import ./scene-matrix.bend as M
+ import ./content.bend as F
++import ./hierarchy.bend as H
+ 
+ type Instance is Data:
+   Instance{mesh:F.Mesh,material:F.Material,transform:C.Transform}
++  Parented{mesh:F.Mesh,material:F.Material,transform:C.Transform,parent:U32}
+ type Scene is Data:
+   Scene{instances:List<&2,Instance>}
+ type Seed is Data:
+-  Seed{transform:C.Transform,mesh:C.MeshRef}
++  Seed{transform:C.Transform,mesh:C.MeshRef,spatial:H.Spatial}
+ type Range is Data:
+   Range{id:U32,first_index:U32,index_count:U32,texture:Maybe<&2,F.SourceImage>}
+ type Geometry is Data:
+@@ -19,6 +21,7 @@ type Error is Data:
+   BadMesh{instance:U32}
+   BadMaterial{instance:U32}
+   BadTransform{instance:U32}
++  BadHierarchy{error:H.Error}
+   TooLarge{}
+ type Used is Data:
+   Used{mesh:F.Mesh,material:F.Material,id:U32}
+@@ -32,9 +35,63 @@ def matrix_finite(m:M.Mat4) -> Bool:
+   col_finite(a) && col_finite(b) && col_finite(c) && col_finite(d)
+ 
+ def transform_valid(t:C.Transform) -> Bool:
+-  C.Transform{p,C.Quat{+x,+y,+z,+w},s} = t
+-  +n = (x * x + y * y + z * z + w * w : F32)
+-  F.vec_finite(p) && F.vec_finite(s) && F.finite(x) && F.finite(y) && F.finite(z) && F.finite(w) && F32.is_ge(n,0.9999) && F32.is_le(n,1.0001)
++  H.transform_valid(t)
++
++def attached(parent:Maybe<&2,U32>,mesh:F.Mesh,material:F.Material,transform:C.Transform) -> Instance:
++  match parent:
++    case None{}:Instance{mesh,material,transform}
++    case Some{index}:Parented{mesh,material,transform,index}
++
++def parent(instance:Instance,parent:Maybe<&2,U32>) -> Instance:
++  match instance:
++    case Instance{mesh,material,t}:attached(parent,mesh,material,t)
++    case Parented{mesh,material,t,_}:attached(parent,mesh,material,t)
++
++def lit(material:F.Material) -> Bool:
++  match material:
++    case F.Basic{_}:False{}
++    case F.Textured{_,_}:True{}
++
++def local(mesh:F.Mesh,material:F.Material,t:C.Transform,parent:Maybe<&2,U32>) -> H.Local:
++  H.Local{t,parent,H.mesh_bounds(mesh),lit(material)}
++
++def locals(items:List<&2,Instance>) -> List<&2,H.Local>:
++  match items:
++    case []:[]
++    case Instance{mesh,material,t} <> rest:local(mesh,material,t,None{}) <> locals(rest)
++    case Parented{mesh,material,t,p} <> rest:local(mesh,material,t,Some{p}) <> locals(rest)
++
++def plain(items:List<&2,Instance>) -> List<&2,Instance>:
++  match items:
++    case []:[]
++    case Instance{mesh,material,t} <> rest:Instance{mesh,material,t} <> plain(rest)
++    case Parented{mesh,material,t,_} <> rest:Instance{mesh,material,t} <> plain(rest)
++
++def seed(+transform:C.Transform,mesh:C.MeshRef) -> Seed:
++  Seed{transform,mesh,H.initialized(H.Local{transform,None{},H.Empty{},False{}})}
++
++def derived_seeds(seeds:List<&2,Seed>,values:List<&2,H.Spatial>) -> List<&2,Seed>:
++  match seeds values:
++    case Seed{t,m,_} <> rest,value <> tail:Seed{t,m,value} <> derived_seeds(rest,tail)
++    case _ _:[]
++
++def seed_locals(seeds:List<&2,Seed>) -> List<&2,H.Local>:
++  match seeds:
++    case []:[]
++    case Seed{t,_,s} <> rest:H.with_transform(t,s) <> seed_locals(rest)
++
++def validated_seeds(seeds:List<&2,Seed>,result:Result<&2,&2,H.Error,List<&2,H.Spatial>>) -> IO(List<&2,Seed>):
++  match result:
++    case Fail{_}:IO.die(List<&2,Seed>,1,"Scene seed hierarchy rejected before bootstrap")
++    case Done{values}:IO.pure(List<&2,Seed>,derived_seeds(seeds,values))
++
++def check_seeds(+seeds:List<&2,Seed>) -> IO(List<&2,Seed>):
++  validated_seeds(seeds,H.evaluate(seed_locals(seeds)))
++
++def hierarchy(compiled:Compiled,result:Result<&2,&2,H.Error,List<&2,H.Spatial>>) -> Result<&2,&2,Error,Compiled>:
++  match compiled result:
++    case _ Fail{error}:Fail{BadHierarchy{error}}
++    case Compiled{seeds,geometry} Done{values}:Done{Compiled{derived_seeds(seeds,values),geometry}}
+ 
+ def rebase(indices:List<&2,U32>,+offset:U32) -> List<&2,U32>:
+   match indices:
+@@ -98,13 +155,15 @@ def compile_items(items:List<&2,Instance>,+pairs:List<&2,Used>,+geometry:Geometr
+       do Result<&2,&2,Error,Compiled>:
+         checked:Unit <- validate(F.mesh_valid(mesh),F.material_valid(material),transform_valid(transform),number)
+         plan:Plan <- compile_pair(lookup(pairs,mesh,material),mesh,material,pairs,geometry,next)
+-        apply_plan(Compiled,plan,pairs => geometry => id => next => prepend(Seed{transform,C.MeshRef{id}},compile_items(rest,pairs,geometry,U32.inc(number),next)))
++        apply_plan(Compiled,plan,pairs => geometry => id => next => prepend(seed(transform,C.MeshRef{id}),compile_items(rest,pairs,geometry,U32.inc(number),next)))
++    case Parented{_,_,_,_} <> _:Fail{BadTransform{number}}
+ 
+ def compile(scene:Scene) -> Result<&2,&2,Error,Compiled>:
+   Scene{+items} = scene
+   do Result<&2,&2,Error,Compiled>:
+     checked:Unit <- capacity(Nat.is_le(List.length(&2,Instance,items),100000n))
+-    compile_items(items,[],Geometry{[],[],[]},0,7)
++    compiled:Compiled <- compile_items(plain(items),[],Geometry{[],[],[]},0,7)
++    hierarchy(compiled,H.evaluate(locals(items)))
+ 
+ def unique(ranges:List<&2,Range>,+id:U32) -> Bool:
+   match ranges:
+diff --git a/src/lighting.bend b/src/lighting.bend
+index 61b6aef..9849e0b 100644
+--- a/src/lighting.bend
++++ b/src/lighting.bend
+@@ -2,6 +2,7 @@ import Base
+ import ./components.bend as C
+ import ./content.bend as F
+ import ./scene-matrix.bend as M
++import ./hierarchy.bend as H
+ 
+ type Light is Data:
+   Directional{toward:C.Vec3,color:C.Vec3,ambient:F32,intensity:F32}
+@@ -14,18 +15,27 @@ def valid(light:Light) -> Bool:
+   F.normal_valid(direction) && F.tint_valid(color) && F.channel(ambient) && F.channel(intensity)
+ 
+ def scale_valid(scale:C.Vec3) -> Bool:
+-  C.Vec3{+x,+y,+z} = scale
+-  F32.is_ge(F32.abs(x),0.000001) && F32.is_ge(F32.abs(y),0.000001) && F32.is_ge(F32.abs(z),0.000001) && F32.is_le(F32.abs(x),1000000.0) && F32.is_le(F32.abs(y),1000000.0) && F32.is_le(F32.abs(z),1000000.0)
++  H.flat_scale_valid(scale)
+ 
+ def transform_valid(transform:C.Transform) -> Bool:
+   C.Transform{_,_,scale} = transform
+   scale_valid(scale)
+ 
+-def payload(camera:M.Mat4,+transform:C.Transform,light:Light) -> List<U32>:
+-  C.Transform{_,C.Quat{x,y,z,w},C.Vec3{sx,sy,sz}} = transform
+-  Directional{C.Vec3{dx,dy,dz},C.Vec3{r,g,b},ambient,intensity} = light
+-  List.append(&1,U32,M.matrix_words(M.multiply(camera,M.model(transform))),[
+-    F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(w),
+-    F32.bits(F32.div(1.0,sx)),F32.bits(F32.div(1.0,sy)),F32.bits(F32.div(1.0,sz)),0,
+-    F32.bits(dx),F32.bits(dy),F32.bits(dz),F32.bits(ambient),
+-    F32.bits(r),F32.bits(g),F32.bits(b),F32.bits(intensity)])
++def normal_words(matrix:M.Mat4,light:Light) -> List<U32>:
++  M.Mat4{M.Vec4{a,b,c,_},M.Vec4{d,e,f,_},M.Vec4{g,h,i,_},_} = matrix
++  Directional{C.Vec3{dx,dy,dz},C.Vec3{r,g1,b1},ambient,+intensity} = light
++  [F32.bits(a),F32.bits(b),F32.bits(c),F32.bits(dx),
++   F32.bits(d),F32.bits(e),F32.bits(f),F32.bits(dy),
++   F32.bits(g),F32.bits(h),F32.bits(i),F32.bits(dz),
++   F32.bits(F32.mul(r,intensity)),F32.bits(F32.mul(g1,intensity)),F32.bits(F32.mul(b1,intensity)),F32.bits(ambient)]
++
++def normal_payload(camera:M.Mat4,global:H.GlobalTransform,light:Light,normal:Maybe<&2,M.Mat4>) -> List<U32>:
++  match normal:
++    case None{}:[]
++    case Some{matrix}:List.append(&1,U32,M.matrix_words(M.multiply(camera,H.matrix(global))),normal_words(matrix,light))
++
++def global_payload(camera:M.Mat4,+global:H.GlobalTransform,light:Light) -> List<U32>:
++  normal_payload(camera,global,light,H.normal(global))
++
++def payload(camera:M.Mat4,transform:C.Transform,light:Light) -> List<U32>:
++  global_payload(camera,H.compose(None{},transform),light)
+diff --git a/src/mesh-control.bend b/src/mesh-control.bend
+index ad3e224..1072ee4 100644
+--- a/src/mesh-control.bend
++++ b/src/mesh-control.bend
+@@ -29,7 +29,7 @@ def selection(~Permit:Data,~F:(Type -> Type),~H:Type,~B:Type,~cr:Build.Component
+   ~R(),~F,~H,~B),~life:Build.Lifecycle(~D.Schema,~D.Columns(),~C(),~R(),~H,~B),book:B) -> B & Ops(Permit,
+   F,H):
+   Build.general_query(~D.Schema,~D.Columns(),~C(),~R(),~F,~D.components(),~L.InLeft{L.AtLeaf{}},~{==},
+-    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.AtLeaf{}}},~Match.Required{},~any_transform,
++    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.InLeft{L.AtLeaf{}}}},~Match.Required{},~any_transform,
+     ~H,~B,~q,book)
+ 
+ def program(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~B:Type,~builder:Build.Builder(~D.Schema,
+diff --git a/src/mesh-observe.bend b/src/mesh-observe.bend
+index b185077..6e4c773 100644
+--- a/src/mesh-observe.bend
++++ b/src/mesh-observe.bend
+@@ -1,4 +1,6 @@
+ import Base
++import ./scene-hierarchy.bend as Hierarchy
++import ./hierarchy.bend as H
+ import ./scene-draw.bend as Draw
+ import ./scene-schema.bend as D
+ import ./mesh-playground.bend as Scene
+@@ -41,15 +43,20 @@ def snapshot(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.App
+         routing},guards,handler,stateBindings},settings,bindings,deferred},world,instance,Retained.map_owner(Scene.Compilation(),
+         Scene.Owner(),List<&2,W.Handle<D.Schema>> & (Bool & Bool),Observe.bootstrap,left))
+ 
+-def drawn(rebuild:D.World() -> Scene.Application(),result:I.Observed<D.Schema,D.Columns(),D.Resources(),
+-  Unit,Unit,List<&2,Draw.DrawItem>>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+-  match result:
+-    case I.Observed{world,instance,Done{items}}:(rebuild(world),(instance,Done{Draw.DrawList{items}}))
+-    case I.Observed{world,instance,Fail{error}}:(rebuild(world),(instance,Fail{error}))
++def drawn(rebuild:D.World() -> Scene.Application(),instance:I.Instance<D.Schema>,result:D.World() & Result<&2,&2,Unit,Draw.DrawList>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
++  (world,result) = result
++  (rebuild(world),(instance,result))
+ 
+ def draw_list(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+   match app:
+     case Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}:
+       drawn(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,
+-        bindings,deferred},I.passive(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~Observe.Ops,~Unit,~Unit,
+-        ~(List<&2,Draw.DrawItem>),~Observe.plan(),~Observe.body(~Draw.DrawItem,~Observe.draw_item),instance,Unit{},world))
++        bindings,deferred},instance,Hierarchy.draw_list(world))
++
++def spatial_read(rebuild:D.World() -> Scene.Application(),pair:D.World() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
++  (world,result) = pair
++  (rebuild(world),result)
++
++def spatial(app:Scene.Application()) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
++  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
++  spatial_read(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.read(world))
+diff --git a/src/mesh-playground.bend b/src/mesh-playground.bend
+index 917184c..e1c28ac 100644
+--- a/src/mesh-playground.bend
++++ b/src/mesh-playground.bend
+@@ -1,4 +1,6 @@
+ import Base
++import ./hierarchy.bend as H
++import ./scene-hierarchy.bend as Hierarchy
+ import ./creation.bend as Create
+ import ../deps/bendvy/src/ecs/world.bend as W
+ import ../deps/bendvy/src/ecs/execution-composer-schema.bend as Setup
+@@ -101,9 +103,27 @@ def apply(ids:List<&2,U32>,world:D.World(),nodes:Nodes()) -> D.World() & (Nodes(
+ def guard_dispatch() -> Unit -> D.World() -> U32 -> Unit & (D.World() & Exec.Invocation<String,Bool>):
+   Reg.empty_dispatch(~D.World(),~String,~Bool)
+ 
++def settled(result:Application() & App.Report<String,Unit>) -> Application() & App.Report<String,Unit>:
++  (Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},report) = result
++  (Scheduled.Scheduled{App.State{Hierarchy.propagate(world),nodes,guards,handler,stateBindings},settings,bindings,deferred},report)
++
+ def run(app:Application()) -> Application() & App.Report<String,Unit>:
+-  Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
+-    ~guard_dispatch(),~handle,~apply,app)
++  settled(Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
++    ~guard_dispatch(),~handle,~apply,app))
++
++def edited(rebuild:D.World() -> Application(),pair:D.World() & Result<&2,&2,H.Error,Unit>) -> Application() & Result<&2,&2,H.Error,Unit>:
++  (world,result) = pair
++  (rebuild(world),result)
++
++def edit(app:Application(),request:Hierarchy.Edit) -> Application() & Result<&2,&2,H.Error,Unit>:
++  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
++  edited(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.update(world,request))
++
++def set_parent(app:Application(),entity:W.Handle<D.Schema>,parent:Maybe<&2,W.Handle<D.Schema>>) -> Application() & Result<&2,&2,H.Error,Unit>:
++  edit(app,Hierarchy.SetParent{entity,parent})
++
++def set_transform(app:Application(),entity:W.Handle<D.Schema>,transform:C.Transform) -> Application() & Result<&2,&2,H.Error,Unit>:
++  edit(app,Hierarchy.SetTransform{entity,transform})
+ 
+ def configure(id:U32,app:Application()) -> Application():Scheduled.configure(~State(),Settings.Settings{False{},
+   True{},[],[Settings.Explicit{id,None{}}]},app)
+@@ -211,14 +231,16 @@ def initialized(initial:C.Transform,app:Application()) -> IO(Application()):
+ 
+ def create_seeds(seeds:List<&2,Create.Seed>,pending:IO(Application())) -> IO(Application()):
+   match seeds:
+-    case Create.Seed{initial,_} <> _:
++    case Create.Seed{initial,_,_} <> _:
+       do IO<Application()>:
+         app:Application() <- pending
+         initialized(initial,app)
+     case _:IO.die(Application(),1,"Mesh playground needs a player")
+ 
+-def create(+seeds:List<&2,Create.Seed>) -> IO(Application()):
+-  create_seeds(seeds,unbooted(seeds))
++def create(seeds:List<&2,Create.Seed>) -> IO(Application()):
++  do IO<Application()>:
++    +seeds:List<&2,Create.Seed> <- Create.check_seeds(seeds)
++    create_seeds(seeds,unbooted(seeds))
+ 
+ def input(events:List<Event>,app:Application(),camera:Maybe<Create.Camera>) -> Application() & Maybe<Create.Camera>:
+   match events camera:
+diff --git a/src/scene-draw.bend b/src/scene-draw.bend
+index e2d3f47..244abc8 100644
+--- a/src/scene-draw.bend
++++ b/src/scene-draw.bend
+@@ -1,8 +1,15 @@
+ import Base
+ import ./components.bend as C
++import ./hierarchy.bend as H
+ 
+ type DrawItem is Data:
+   DrawItem{transform:C.Transform,mesh:C.MeshRef}
++  GlobalItem{transform:H.GlobalTransform,mesh:C.MeshRef}
+ 
+ type DrawList is Data:
+   DrawList{items:List<&2,DrawItem>}
++
++def item(parent:Maybe<&2,U32>,local:C.Transform,mesh:C.MeshRef,global:H.GlobalTransform) -> DrawItem:
++  match parent:
++    case None{}:DrawItem{local,mesh}
++    case Some{_}:GlobalItem{global,mesh}
+diff --git a/src/scene-file.bend b/src/scene-file.bend
+index 256e7b6..14cdfe7 100644
+--- a/src/scene-file.bend
++++ b/src/scene-file.bend
+@@ -7,6 +7,8 @@ import ./components.bend as C
+ import ./creation.bend as Create
+ import ./model-obj.bend as Obj
+ import ./image-png.bend as Png
++import ./hierarchy.bend as H
++import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as B
+ 
+ type AssetKind is Data:
+   Model{}
+@@ -16,7 +18,7 @@ type Reference is Data:
+ type Manifest is Data:
+   Manifest{assets:List<&2,Reference>}
+ type Placement is Data:
+-  Placement{model:String,transform:C.Transform}
++  Placement{model:String,transform:C.Transform,parent:Maybe<&2,U32>}
+ type Description is Data:
+   Description{manifest:String,instances:List<&2,Placement>}
+ type Source is Data:
+@@ -146,9 +148,43 @@ def placement_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.E
+         model:String <- Json.text(model,path ++ ".model")
+         model:String <- identifier(model,path ++ ".model")
+         t:C.Transform <- transform(t,path ++ ".transform")
+-        return Placement{model,t}
++        return Placement{model,t,None{}}
+     case _:Fail{Json.error(3,path,"invalid placement fields")}
+ 
++def parent_number(value:Maybe<&2,U32>,+token:String,+path:String) -> Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
++  match value:
++    case None{}:Fail{Json.error(5,path,"parent must be a placement index or null")}
++    case Some{+n}:
++      do Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
++        _:Unit <- Json.need(String.eq(token,U32.show(n)) && U32.is_lt(n,256),5,path,"parent must be an integer placement index below 256")
++        return Some{n}
++
++def parent_value(value:Maybe<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
++  match value:
++    case None{}:Done{None{}}
++    case Some{J.Null{}}:Done{None{}}
++    case Some{J.Num{token}}:
++      +token = B.to_string(token)
++      parent_number(U32.read(token),token,path)
++    case _:Fail{Json.error(5,path,"parent must be a placement index or null")}
++
++def placement_parent(item:Placement,parent:Maybe<&2,U32>) -> Placement:
++  Placement{model,t,_} = item
++  Placement{model,t,parent}
++
++def placement_optional(pair:Maybe<&1,J.Val> & List<&1,B.Bytes & J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Placement>:
++  (optional,fields) = pair
++  do Result<&2,&1,Asset.Error,Placement>:
++    parent:Maybe<&2,U32> <- parent_value(optional,path ++ ".parent")
++    ordered:List<&1,J.Val> <- Json.ordered(["model","transform"],fields,path)
++    item:Placement <- placement_fields(ordered,path)
++    return placement_parent(item,parent)
++
++def placement(value:J.Val,+path:String) -> Result<&2,&1,Asset.Error,Placement>:
++  do Result<&2,&1,Asset.Error,Placement>:
++    fields:List<&1,B.Bytes & J.Val> <- Json.fields(value,path)
++    placement_optional(Json.pull(fields,"parent"),path)
++
+ def placements(values:List<&1,J.Val>,+path:String,+index:Nat) -> Result<&2,&1,Asset.Error,List<&2,Placement>>:
+   match values:
+     case []:Done{[]}
+@@ -156,11 +192,20 @@ def placements(values:List<&1,J.Val>,+path:String,+index:Nat) -> Result<&2,&1,As
+       do Result<&2,&1,Asset.Error,List<&2,Placement>>:
+         _:Unit <- Json.need(Nat.is_lt(index,instance_limit()),2,path,"scene exceeds 256 instances")
+         +item_path:String = path ++ "[" ++ Nat.show(index) ++ "]"
+-        fields:List<&1,J.Val> <- Json.schema(value,["model","transform"],item_path)
+-        p:Placement <- placement_fields(fields,item_path)
++        p:Placement <- placement(value,item_path)
+         ps:List<&2,Placement> <- placements(rest,path,1n+index)
+         return p <> ps
+ 
++def placement_locals(items:List<&2,Placement>) -> List<&2,H.Local>:
++  match items:
++    case []:[]
++    case Placement{_,t,p} <> rest:H.Local{t,p,H.Empty{},False{}} <> placement_locals(rest)
++
++def parent_graph(result:Result<&2,&2,H.Error,List<&2,H.Spatial>>,path:String) -> Result<&2,&1,Asset.Error,Unit>:
++  match result:
++    case Fail{_}:Fail{Json.error(5,path,"invalid parent graph or composed transform")}
++    case Done{_}:Done{Unit{}}
++
+ def scene_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Description>:
+   match values:
+     case [version,manifest,instances]:
+@@ -169,7 +214,8 @@ def scene_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error
+         name:String <- Json.text(manifest,path ++ ".manifest")
+         name:String <- relative(name,path ++ ".manifest")
+         values:List<&1,J.Val> <- Json.array(instances,path ++ ".instances")
+-        items:List<&2,Placement> <- placements(values,path ++ ".instances",0n)
++        +items:List<&2,Placement> <- placements(values,path ++ ".instances",0n)
++        _:Unit <- parent_graph(H.evaluate(placement_locals(items)),path)
+         return Description{name,items}
+     case _:Fail{Json.error(3,path,"invalid scene fields")}
+ 
+@@ -220,7 +266,7 @@ def model_reference(refs:List<&2,Reference>,+id:String,+path:String) -> Result<&
+ def check_references(items:List<&2,Placement>,+refs:List<&2,Reference>,+path:String) -> Result<&2,&2,Asset.Error,Unit>:
+   match items:
+     case []:Done{Unit{}}
+-    case Placement{id,_} <> rest:
++    case Placement{id,_,_} <> rest:
+       do Result<&2,&2,Asset.Error,Unit>:
+         _:Unit <- model_reference(refs,id,path)
+         check_references(rest,refs,path)
+@@ -310,7 +356,7 @@ def model_instances(value:F.SourceModel,t:C.Transform) -> List<&2,Create.Instanc
+ def expand(items:List<&2,Placement>,+sources:List<&2,Source>,+path:String,+count:Nat,acc:List<&2,Create.Instance>) -> Result<&2,&2,Asset.Error,Create.Scene>:
+   match items:
+     case []:Done{Create.Scene{acc}}
+-    case Placement{id,t} <> rest:
++    case Placement{id,t,_} <> rest:
+       do Result<&2,&2,Asset.Error,Create.Scene>:
+         value:F.SourceModel <- model(sources,id,path)
+         +added:List<&2,Create.Instance> = model_instances(value,t)
+@@ -318,6 +364,66 @@ def expand(items:List<&2,Placement>,+sources:List<&2,Source>,+path:String,+count
+         _:Unit <- Json.data(Unit,Json.need(Nat.is_le(count,expanded_limit()),2,path,"expanded scene exceeds 4096 parts"))
+         expand(rest,sources,path,count,List.append(&2,Create.Instance,acc,added))
+ 
++type Group is Data:
++  Group{placement:Placement,parts:List<&2,F.ModelPart>,first:U32}
++
++def has_parent(items:List<&2,Placement>) -> Bool:
++  match items:
++    case []:False{}
++    case Placement{_,_,Some{_}} <> _:True{}
++    case _ <> rest:has_parent(rest)
++
++def parts(value:F.SourceModel) -> List<&2,F.ModelPart>:
++  F.SourceModel{parts} = value
++  parts
++
++def groups(items:List<&2,Placement>,+sources:List<&2,Source>,+path:String,+count:Nat) -> Result<&2,&2,Asset.Error,List<&2,Group>>:
++  match items:
++    case []:Done{[]}
++    case +item <> rest:
++      Placement{id,_,_} = item
++      do Result<&2,&2,Asset.Error,List<&2,Group>>:
++        model:F.SourceModel <- model(sources,id,path)
++        +ps:List<&2,F.ModelPart> = parts(model)
++        +next:Nat = Nat.add(count,List.length(&2,F.ModelPart,ps))
++        _:Unit <- Json.data(Unit,Json.need(Nat.is_gt(next,count) && Nat.is_le(next,expanded_limit()),2,path,"hierarchical models must have parts and fit the 4096-part limit"))
++        tail:List<&2,Group> <- groups(rest,sources,path,next)
++        return Group{item,ps,U32.from_nat(count)} <> tail
++
++def anchor(groups:List<&2,Group>,index:Nat) -> Maybe<&2,U32>:
++  match groups index:
++    case Group{_,_,first} <> _,0n:Some{first}
++    case _ <> rest,1n+n:anchor(rest,n)
++    case [] _:None{}
++
++def anchor_parent(parent:Maybe<&2,U32>,groups:List<&2,Group>) -> Maybe<&2,U32>:
++  match parent:
++    case None{}:None{}
++    case Some{p}:anchor(groups,U32.to_nat(p))
++
++def attached_parts(parts:List<&2,F.ModelPart>,+first:U32) -> List<&2,Create.Instance>:
++  match parts:
++    case []:[]
++    case F.ModelPart{m,c,_} <> rest:Create.Parented{m,c,C.Transform.identity(),first} <> attached_parts(rest,first)
++
++def group_instances(parts:List<&2,F.ModelPart>,t:C.Transform,parent:Maybe<&2,U32>,first:U32) -> List<&2,Create.Instance>:
++  match parts:
++    case []:[]
++    case F.ModelPart{m,c,_} <> rest:Create.parent(Create.Instance{m,c,t},parent) <> attached_parts(rest,first)
++
++def grouped(groups:List<&2,Group>,+all:List<&2,Group>) -> List<&2,Create.Instance>:
++  match groups:
++    case []:[]
++    case Group{Placement{_,t,p},parts,first} <> rest:List.append(&2,Create.Instance,group_instances(parts,t,anchor_parent(p,all),first),grouped(rest,all))
++
++def expand_scene(hierarchy:Bool,items:List<&2,Placement>,sources:List<&2,Source>,path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
++  match hierarchy:
++    case False{}:expand(items,sources,path,0n,[])
++    case True{}:
++      do Result<&2,&2,Asset.Error,Create.Scene>:
++        +gs:List<&2,Group> <- groups(items,sources,path,0n)
++        return Create.Scene{grouped(gs,gs)}
++
+ def compilation_ok(result:Result<&2,&2,Create.Error,Create.Compiled>) -> Bool:
+   match result:
+     case Fail{_}:False{}
+@@ -339,10 +445,10 @@ def valid_result(result:Result<&2,&2,Asset.Error,Create.Scene>) -> Bool:
+     case Fail{_}:True{}
+     case Done{scene}:scene_valid(scene)
+ 
+-def resolve(loaded:Result<&2,&2,Asset.Error,List<&2,Source>>,items:List<&2,Placement>,+path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
++def resolve(loaded:Result<&2,&2,Asset.Error,List<&2,Source>>,+items:List<&2,Placement>,+path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
+   do Result<&2,&2,Asset.Error,Create.Scene>:
+     sources:List<&2,Source> <- loaded
+-    scene:Create.Scene <- expand(items,sources,path,0n,[])
++    scene:Create.Scene <- expand_scene(has_parent(items),items,sources,path)
+     admit(scene,path)
+ 
+ def checked_manifest(checked:Result<&2,&2,Asset.Error,Unit>,refs:List<&2,Reference>,+items:List<&2,Placement>,owner:String,path:String) -> IO(Result<&2,&2,Asset.Error,Create.Scene>):
+diff --git a/src/scene-motion.bend b/src/scene-motion.bend
+index 9520d66..bfe405e 100644
+--- a/src/scene-motion.bend
++++ b/src/scene-motion.bend
+@@ -28,7 +28,7 @@ def selection(~Permit:Data,~F:(Type -> Type),~H:Type,~B:Type,~cr:Build.Component
+   ~R(),~F,~H,~B),~life:Build.Lifecycle(~D.Schema,~D.Columns(),~C(),~R(),~H,~B),book:B) -> B & Ops(Permit,
+   F,H):
+   Build.general_query(~D.Schema,~D.Columns(),~C(),~R(),~F,~D.components(),~L.InLeft{L.AtLeaf{}},~{==},
+-    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.AtLeaf{}}},~Match.Required{},~any_transform,
++    ~{==},~{==},~Recipe.WriteRows{},~Recipe.With{L.InRight{L.InLeft{L.AtLeaf{}}}},~Match.Required{},~any_transform,
+     ~H,~B,~q,book)
+ 
+ def program(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~B:Type,~builder:Build.Builder(~D.Schema,
+diff --git a/src/scene-observe.bend b/src/scene-observe.bend
+index 4cc93a1..d6bd15c 100644
+--- a/src/scene-observe.bend
++++ b/src/scene-observe.bend
+@@ -1,4 +1,6 @@
+ import Base
++import ./scene-hierarchy.bend as Hierarchy
++import ./hierarchy.bend as H
+ import ./scene-draw.bend as Draw
+ import ./components.bend as C
+ import ./scene-schema.bend as D
+@@ -36,7 +38,7 @@ def Ops(H:Type) -> Type:Reads<H>
+ def plan() -> I.Plan<D.Schema,D.Columns(),D.Resources(),Unit,Ops>:
+   I.Plan{Reads{Columns.query(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~D.components(),~L.InLeft{L.AtLeaf{}},
+     ~{==},~{==},~Rows.Required{}),Columns.lookup(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~D.components(),
+-    ~L.InRight{L.AtLeaf{}},~{==},~{==})}}
++    ~L.InRight{L.InLeft{L.AtLeaf{}}},~{==},~{==})}}
+ 
+ def mesh_read(~H:Type,caps:Ops(H)) -> H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>:
+   match caps:
+@@ -83,8 +85,8 @@ def receipt_tail(head:Receipt(),result:List<Receipt()> & Bool) -> List<Receipt()
+ def receipts(values:List<Receipt()>) -> List<Receipt()> & Bool:
+   match values:
+     case []:([],True{})
+-    case Buffer.Spawned{handle,Product.Owner{None{},None{}}} <> rest:receipt_tail(Buffer.Spawned{handle,
+-      Product.Owner{None{},None{}}},receipts(rest))
++    case Buffer.Spawned{handle,Product.Owner{None{},Product.Owner{None{},None{}}}} <> rest:receipt_tail(Buffer.Spawned{handle,
++      Product.Owner{None{},Product.Owner{None{},None{}}}},receipts(rest))
+     case head <> tail:(head <> tail,False{})
+ 
+ def receipt_checked(restore:List<Receipt()> -> Scene.Owner(),handles:List<&2,W.Handle<D.Schema>>,result:List<Receipt()> & Bool) -> Scene.Owner() & (List<&2,
+@@ -134,15 +136,20 @@ def snapshot(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.App
+ def draw_item(_:W.Handle<D.Schema>,value:C.Transform,mesh:C.MeshRef) -> Draw.DrawItem:
+   Draw.DrawItem{value,mesh}
+ 
+-def drawn(rebuild:D.World() -> Scene.Application(),result:I.Observed<D.Schema,D.Columns(),D.Resources(),
+-  Unit,Unit,List<&2,Draw.DrawItem>>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+-  match result:
+-    case I.Observed{world,instance,Done{items}}:(rebuild(world),(instance,Done{Draw.DrawList{items}}))
+-    case I.Observed{world,instance,Fail{error}}:(rebuild(world),(instance,Fail{error}))
++def drawn(rebuild:D.World() -> Scene.Application(),instance:I.Instance<D.Schema>,result:D.World() & Result<&2,&2,Unit,Draw.DrawList>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
++  (world,result) = result
++  (rebuild(world),(instance,result))
+ 
+ def draw_list(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+   match app:
+     case Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}:
+       drawn(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,
+-        bindings,deferred},I.passive(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~Ops,~Unit,~Unit,
+-        ~(List<&2,Draw.DrawItem>),~plan(),~body(~Draw.DrawItem,~draw_item),instance,Unit{},world))
++        bindings,deferred},instance,Hierarchy.draw_list(world))
++
++def spatial_read(rebuild:D.World() -> Scene.Application(),pair:D.World() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
++  (world,result) = pair
++  (rebuild(world),result)
++
++def spatial(app:Scene.Application()) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
++  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
++  spatial_read(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.read(world))
+diff --git a/src/scene-render.bend b/src/scene-render.bend
+index 5e977d1..7d57f8d 100644
+--- a/src/scene-render.bend
++++ b/src/scene-render.bend
+@@ -1,4 +1,5 @@
+ import Base
++import ./hierarchy.bend as H
+ import ./scene-buffer.bend as B
+ import ./scene-geometry.bend as G
+ import ./error.bend as Error
+@@ -59,11 +60,18 @@ def normal_transform(range:Maybe<Create.Range>,transform:C.Transform) -> Bool:
+     case Some{Create.Range{_,_,_,Some{_}}}:Light.transform_valid(transform)
+     case _:True{}
+ 
++def normal_global(range:Maybe<Create.Range>,global:H.GlobalTransform) -> Bool:
++  match range:
++    case Some{Create.Range{_,_,_,Some{_}}}:H.usable_normal(H.normal(global))
++    case _:True{}
++
+ def preflight(+camera:M.Mat4,+ranges:List<&2,Create.Range>,items:List<&2,Draw.DrawItem>,+index:U32) -> Result<&2,&2,InputError,Unit>:
+   match items:
+     case []:Done{Unit{}}
+     case Draw.DrawItem{+t,C.MeshRef{+other}} <> rest:
+       preflight_item(known(Create.resolve(ranges,other)),Create.transform_valid(t) && normal_transform(Create.resolve(ranges,other),t) && Create.matrix_finite(M.multiply(camera,M.model(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
++    case Draw.GlobalItem{+t,C.MeshRef{+other}} <> rest:
++      preflight_item(known(Create.resolve(ranges,other)),H.affine(t) && normal_global(Create.resolve(ranges,other),t) && Create.matrix_finite(M.multiply(camera,H.matrix(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
+ 
+ def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,requirements:V.MemoryRequirements,flags:U32) -> V.Action(V.DeviceMemory):
+   V.MemoryRequirements{size,_,bits} = requirements
+@@ -174,7 +182,7 @@ def draw_item(+command:V.CommandBuffer,range:Create.Range,+on:Bool,+counters:Cou
+     +counters:Count.Counters = Bool.pick(Count.Counters,on,Count.draw(counters),counters)
+     return counters
+ 
+-def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,buffers:Maybe<&2,G.Buffers>,material:Maybe<T.Material>,camera:M.Mat4,transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
++def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,buffers:Maybe<&2,G.Buffers>,material:Maybe<T.Material>,camera:M.Mat4,transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+   match material:
+     case None{}:Error.failure(Count.Counters,1,"Missing resident texture")
+     case Some{T.Material{set,_}}:
+@@ -182,19 +190,19 @@ def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,b
+         V.CommandBuffer.bind_graphics_pipeline(command,P.textured(pipelines))
+         bind_geometry(command,buffers)
+         V.CommandBuffer.bind_descriptor_sets(command,0,[set])
+-        draw_item(command,range,on,counters,payload_size(Light.payload(camera,transform,light)))
++        draw_item(command,range,on,counters,payload_size(Light.global_payload(camera,transform,light)))
+ 
+-def draw_range(+range:Create.Range,+command:V.CommandBuffer,pipelines:P.Pipelines,+resident:G.Resident,camera:M.Mat4,transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
++def draw_range(+range:Create.Range,+command:V.CommandBuffer,pipelines:P.Pipelines,+resident:G.Resident,camera:M.Mat4,transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+   Create.Range{id,_,_,image} = range
+   match image:
+     case None{}:
+       do V.Action<Count.Counters>:
+         V.CommandBuffer.bind_graphics_pipeline(command,P.basic(pipelines))
+         bind_geometry(command,G.buffers(resident))
+-        draw_item(command,range,on,counters,payload_size(M.matrix_words(M.multiply(camera,M.model(transform)))))
++        draw_item(command,range,on,counters,payload_size(M.matrix_words(M.multiply(camera,H.matrix(transform)))))
+     case Some{_}:lit_draw(command,pipelines,range,G.buffers(resident),Materials.material(G.materials(resident),id),camera,transform,light,on,counters)
+ 
+-def draw_resolved(range:Maybe<Create.Range>,+command:V.CommandBuffer,+pipelines:P.Pipelines,+resident:G.Resident,+camera:M.Mat4,+transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
++def draw_resolved(range:Maybe<Create.Range>,+command:V.CommandBuffer,+pipelines:P.Pipelines,+resident:G.Resident,+camera:M.Mat4,+transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+   match range:
+     case None{}:Error.failure(Count.Counters,1,"Unresolved preflight range")
+     case Some{Create.Range{_,_,0,_}}:V.Action.pure(Count.Counters,counters)
+@@ -205,6 +213,10 @@ def draw_items_counted(+command:V.CommandBuffer,+pipelines:P.Pipelines,+camera:M
+   match items:
+     case []:V.Action.pure(Count.Counters,counters)
+     case Draw.DrawItem{+t,C.MeshRef{+id}} <> rest:
++      do V.Action<Count.Counters>:
++        counters:Count.Counters <- draw_resolved(Create.resolve(G.ranges(resident),id),command,pipelines,resident,camera,H.compose(None{},t),light,on,counters)
++        draw_items_counted(command,pipelines,camera,light,resident,rest,on,counters)
++    case Draw.GlobalItem{+t,C.MeshRef{+id}} <> rest:
+       do V.Action<Count.Counters>:
+         counters:Count.Counters <- draw_resolved(Create.resolve(G.ranges(resident),id),command,pipelines,resident,camera,t,light,on,counters)
+         draw_items_counted(command,pipelines,camera,light,resident,rest,on,counters)
+diff --git a/src/scene-schema.bend b/src/scene-schema.bend
+index 21caf28..ba5984f 100644
+--- a/src/scene-schema.bend
++++ b/src/scene-schema.bend
+@@ -1,5 +1,6 @@
+ import Base
+ import ./components.bend as C
++import ./hierarchy.bend as H
+ import ../deps/bendvy/src/ecs/world.bend as W
+ import ../deps/bendvy/src/ecs/execution-composer-layout.bend as L
+ import ../deps/bendvy/src/ecs/execution-resource-policy.bend as Policy
+@@ -15,8 +16,12 @@ def mesh(value:C.MeshRef) -> C.MeshRef & C.MeshRef:
+   +value : C.MeshRef = value
+   (value,value)
+ 
++def spatial(value:H.Spatial) -> H.Spatial & H.Spatial:
++  +value:H.Spatial = value
++  (value,value)
++
+ def components() -> L.Layout:
+-  L.LayoutPair{L.LayoutLeaf{C.Transform,C.Transform,transform,"transform",Policy.Ordinary{}},L.LayoutLeaf{C.MeshRef,C.MeshRef,mesh,"mesh-ref",Policy.Ordinary{}}}
++  L.LayoutPair{L.LayoutLeaf{C.Transform,C.Transform,transform,"transform",Policy.Ordinary{}},L.LayoutPair{L.LayoutLeaf{C.MeshRef,C.MeshRef,mesh,"mesh-ref",Policy.Ordinary{}},L.LayoutLeaf{H.Spatial,H.Spatial,spatial,"spatial",Policy.Ordinary{}}}}
+ 
+ def resources() -> L.Layout:L.EmptyLayout{}
+ 
+diff --git a/src/scene-spawn.bend b/src/scene-spawn.bend
+index 6ad8ef4..3a34b16 100644
+--- a/src/scene-spawn.bend
++++ b/src/scene-spawn.bend
+@@ -27,7 +27,7 @@ type User is Type:
+ def bundles(seeds:List<&2,Create.Seed>) -> List<Removed.Removed(D.components())>:
+   match seeds:
+     case []:[]
+-    case Create.Seed{transform,mesh} <> rest:Product.Owner{Some{transform},Some{mesh}} <> bundles(rest)
++    case Create.Seed{transform,mesh,spatial} <> rest:Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> bundles(rest)
+ 
+ def initial(seeds:List<&2,Create.Seed>) -> User:User{bundles(seeds),[],[]}
+ 
+diff --git a/src/scene.bend b/src/scene.bend
+index 878c56d..68a9b00 100644
+--- a/src/scene.bend
++++ b/src/scene.bend
+@@ -1,4 +1,7 @@
+ import Base
++import ./hierarchy.bend as H
++import ./components.bend as Value
++import ./scene-hierarchy.bend as Hierarchy
+ import ./creation.bend as Create
+ import ../deps/bendvy/src/ecs/world.bend as W
+ import ../deps/bendvy/src/ecs/execution-composer-schema.bend as Setup
+@@ -98,9 +101,27 @@ def apply(ids:List<&2,U32>,world:D.World(),nodes:Nodes()) -> D.World() & (Nodes(
+ def guard_dispatch() -> Unit -> D.World() -> U32 -> Unit & (D.World() & Exec.Invocation<String,Bool>):
+   Reg.empty_dispatch(~D.World(),~String,~Bool)
+ 
++def settled(result:Application() & App.Report<String,Unit>) -> Application() & App.Report<String,Unit>:
++  (Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},report) = result
++  (Scheduled.Scheduled{App.State{Hierarchy.propagate(world),nodes,guards,handler,stateBindings},settings,bindings,deferred},report)
++
+ def run(app:Application()) -> Application() & App.Report<String,Unit>:
+-  Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
+-    ~guard_dispatch(),~handle,~apply,app)
++  settled(Root.run(~D.Schema,~D.components(),~D.resources(),~Unit,~Nodes(),~Unit,~Unit,~String,~Unit,~dispatch(),
++    ~guard_dispatch(),~handle,~apply,app))
++
++def edited(rebuild:D.World() -> Application(),pair:D.World() & Result<&2,&2,H.Error,Unit>) -> Application() & Result<&2,&2,H.Error,Unit>:
++  (world,result) = pair
++  (rebuild(world),result)
++
++def edit(app:Application(),request:Hierarchy.Edit) -> Application() & Result<&2,&2,H.Error,Unit>:
++  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
++  edited(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.update(world,request))
++
++def set_parent(app:Application(),entity:W.Handle<D.Schema>,parent:Maybe<&2,W.Handle<D.Schema>>) -> Application() & Result<&2,&2,H.Error,Unit>:
++  edit(app,Hierarchy.SetParent{entity,parent})
++
++def set_transform(app:Application(),entity:W.Handle<D.Schema>,transform:Value.Transform) -> Application() & Result<&2,&2,H.Error,Unit>:
++  edit(app,Hierarchy.SetTransform{entity,transform})
+ 
+ def configure(id:U32,app:Application()) -> Application():Scheduled.configure(~State(),Settings.Settings{False{},
+   True{},[],[Settings.Explicit{id,None{}}]},app)
+@@ -156,7 +177,10 @@ def created(seeds:List<&2,Create.Seed>,result:Setup.Initialized<D.Schema,D.compo
+     case Setup.SchemaCreated{_,world}:attach(seeds,world)
+     case _:IO.die(Application(),1,"scene schema creation refused")
+ 
+-def create(seeds:List<&2,Create.Seed>) -> IO(Application()):created(seeds,D.create(W.factory()))
++def create(seeds:List<&2,Create.Seed>) -> IO(Application()):
++  do IO<Application()>:
++    seeds:List<&2,Create.Seed> <- Create.check_seeds(seeds)
++    created(seeds,D.create(W.factory()))
+ 
+ def distinct_systems(same:Bool) -> IO(Unit):
+   match same:
+diff --git a/src/shaders/spirv.bend b/src/shaders/spirv.bend
+index d8fc394..9622b25 100644
+--- a/src/shaders/spirv.bend
++++ b/src/shaders/spirv.bend
+@@ -1,7 +1,7 @@
+ import Base
+ 
+ def vert() -> List<U32>:
+-  [119734787,65536,851979,79,0,131089,1,393227,1,1280527431,1685353262,808793134,0,196622,0,1,851983,0,4,1852399981,0,13,25,36,37,41,43,47,64,196679,11,2,327752,11,0,11,0,327752,11,1,11,1,327752,11,2,11,3,327752,11,3,11,4,196679,17,2,262216,17,0,5,327752,17,0,7,16,327752,17,0,35,0,327752,17,1,35,64,327752,17,2,35,80,327752,17,3,35,96,327752,17,4,35,112,262215,25,30,0,196679,36,14,262215,36,30,0,262215,37,30,1,262215,41,30,1,262215,43,30,2,262215,47,30,3,262215,64,30,2,131091,2,196641,3,2,196630,6,32,262167,7,6,4,262165,8,32,0,262187,8,9,1,262172,10,6,9,393246,11,7,6,10,10,262176,12,3,11,262203,12,13,3,262165,14,32,1,262187,14,15,0,262168,16,7,4,458782,17,16,7,7,7,7,262176,18,9,17,262203,18,19,9,262176,20,9,16,262167,23,6,3,262176,24,1,23,262203,24,25,1,262187,6,27,1065353216,262176,33,3,7,262176,35,3,23,262203,35,36,3,262203,24,37,1,262167,39,6,2,262176,40,3,39,262203,40,41,3,262176,42,1,39,262203,42,43,1,262203,24,47,1,262187,14,49,2,262176,50,9,7,262187,6,56,1073741824,262187,14,57,1,262203,35,64,3,262187,8,66,3,262176,67,9,6,327734,2,4,0,3,131320,5,327745,20,21,19,15,262205,16,22,21,262205,23,26,25,327761,6,28,26,0,327761,6,29,26,1,327761,6,30,26,2,458832,7,31,28,29,30,27,327825,7,32,22,31,327745,33,34,13,15,196670,34,32,262205,23,38,37,196670,36,38,262205,39,44,43,196670,41,44,262205,23,48,47,327745,50,51,19,49,262205,7,52,51,524367,23,53,52,52,0,1,2,327813,23,54,48,53,327745,50,58,19,57,262205,7,59,58,524367,23,60,59,59,0,1,2,458764,23,62,1,68,60,54,327822,23,63,62,56,393281,67,68,19,57,66,262205,6,69,68,327822,23,71,63,69,327809,23,72,54,71,458764,23,77,1,68,60,63,327809,23,78,72,77,196670,64,78,65789,65592,]
++  [119734787,65536,851979,77,0,131089,1,393227,1,1280527431,1685353262,808793134,0,196622,0,1,851983,0,4,1852399981,0,13,25,36,37,41,43,45,74,196679,11,2,327752,11,0,11,0,327752,11,1,11,1,327752,11,2,11,3,327752,11,3,11,4,196679,17,2,262216,17,0,5,327752,17,0,7,16,327752,17,0,35,0,327752,17,1,35,64,327752,17,2,35,80,327752,17,3,35,96,327752,17,4,35,112,262215,25,30,0,196679,36,14,262215,36,30,0,262215,37,30,1,262215,41,30,1,262215,43,30,2,262215,45,30,2,262215,74,30,3,131091,2,196641,3,2,196630,6,32,262167,7,6,4,262165,8,32,0,262187,8,9,1,262172,10,6,9,393246,11,7,6,10,10,262176,12,3,11,262203,12,13,3,262165,14,32,1,262187,14,15,0,262168,16,7,4,458782,17,16,7,7,7,7,262176,18,9,17,262203,18,19,9,262176,20,9,16,262167,23,6,3,262176,24,1,23,262203,24,25,1,262187,6,27,1065353216,262176,33,3,7,262176,35,3,23,262203,35,36,3,262203,24,37,1,262167,39,6,2,262176,40,3,39,262203,40,41,3,262176,42,1,39,262203,42,43,1,262203,35,45,3,262187,14,46,1,262176,47,9,7,262187,14,51,2,262187,14,55,3,262168,59,23,3,262203,24,74,1,327734,2,4,0,3,131320,5,327745,20,21,19,15,262205,16,22,21,262205,23,26,25,327761,6,28,26,0,327761,6,29,26,1,327761,6,30,26,2,458832,7,31,28,29,30,27,327825,7,32,22,31,327745,33,34,13,15,196670,34,32,262205,23,38,37,196670,36,38,262205,39,44,43,196670,41,44,327745,47,48,19,46,262205,7,49,48,327745,47,52,19,51,262205,7,53,52,327745,47,56,19,55,262205,7,57,56,327761,6,61,49,0,327761,6,62,49,1,327761,6,63,49,2,327761,6,64,53,0,327761,6,65,53,1,327761,6,66,53,2,327761,6,67,57,0,327761,6,68,57,1,327761,6,69,57,2,393296,23,70,61,62,63,393296,23,71,64,65,66,393296,23,72,67,68,69,393296,59,73,70,71,72,262205,23,75,74,327825,23,76,73,75,196670,45,76,65789,65592,]
+ 
+ def frag() -> List<U32>:
+-  [119734787,65536,851979,82,0,131089,1,393227,1,1280527431,1685353262,808793134,0,196622,0,1,589839,4,4,1852399981,0,11,61,69,73,196624,4,7,262215,11,30,2,196679,31,2,262216,31,0,5,327752,31,0,7,16,327752,31,0,35,0,327752,31,1,35,64,327752,31,2,35,80,327752,31,3,35,96,327752,31,4,35,112,262215,61,30,0,262215,65,33,0,262215,65,34,0,262215,69,30,1,196679,73,14,262215,73,30,0,131091,2,196641,3,2,196630,6,32,262167,9,6,3,262176,10,1,9,262203,10,11,1,262187,6,19,0,131092,20,262187,6,23,1065353216,262167,29,6,4,262168,30,29,4,458782,31,30,29,29,29,29,262176,32,9,31,262203,32,33,9,262165,34,32,1,262187,34,35,3,262176,36,9,29,262165,44,32,0,262187,44,45,3,262176,46,9,6,262187,34,50,4,262176,60,3,29,262203,60,61,3,589849,62,6,1,0,0,0,1,0,196635,63,62,262176,64,0,63,262203,64,65,0,262167,67,6,2,262176,68,1,67,262203,68,69,1,262203,10,73,1,327734,2,4,0,3,131320,5,262205,9,12,11,327828,6,14,12,12,327866,20,21,14,19,393385,6,24,21,14,23,393228,6,25,1,32,24,327822,9,26,12,25,327745,36,37,33,35,262205,29,38,37,524367,9,39,38,38,0,1,2,393228,9,40,1,69,39,327828,6,41,26,40,458764,6,42,1,40,41,19,393281,46,47,33,35,45,262205,6,48,47,393296,9,49,48,48,48,327745,36,51,33,50,262205,29,52,51,524367,9,53,52,52,0,1,2,393281,46,54,33,50,45,262205,6,55,54,327813,6,57,55,42,327822,9,58,53,57,327809,9,59,49,58,262205,63,66,65,262205,67,70,69,327767,29,71,66,70,524367,9,72,71,71,0,1,2,262205,9,74,73,327813,9,75,72,74,327813,9,77,75,59,327761,6,78,77,0,327761,6,79,77,1,327761,6,80,77,2,458832,29,81,78,79,80,23,196670,61,81,65789,65592,]
++  [119734787,65536,851979,85,0,131089,1,393227,1,1280527431,1685353262,808793134,0,196622,0,1,589839,4,4,1852399981,0,11,64,72,76,196624,4,7,262215,11,30,2,196679,31,2,262216,31,0,5,327752,31,0,7,16,327752,31,0,35,0,327752,31,1,35,64,327752,31,2,35,80,327752,31,3,35,96,327752,31,4,35,112,262215,64,30,0,262215,68,33,0,262215,68,34,0,262215,72,30,1,196679,76,14,262215,76,30,0,131091,2,196641,3,2,196630,6,32,262167,9,6,3,262176,10,1,9,262203,10,11,1,262187,6,19,0,131092,20,262187,6,23,1065353216,262167,29,6,4,262168,30,29,4,458782,31,30,29,29,29,29,262176,32,9,31,262203,32,33,9,262165,34,32,1,262187,34,35,1,262165,36,32,0,262187,36,37,3,262176,38,9,6,262187,34,41,2,262187,34,44,3,262187,34,52,4,262176,56,9,29,262176,63,3,29,262203,63,64,3,589849,65,6,1,0,0,0,1,0,196635,66,65,262176,67,0,66,262203,67,68,0,262167,70,6,2,262176,71,1,70,262203,71,72,1,262203,10,76,1,327734,2,4,0,3,131320,5,262205,9,12,11,327828,6,14,12,12,327866,20,21,14,19,393385,6,24,21,14,23,393228,6,25,1,32,24,327822,9,26,12,25,393281,38,39,33,35,37,262205,6,40,39,393281,38,42,33,41,37,262205,6,43,42,393281,38,45,33,44,37,262205,6,46,45,393296,9,47,40,43,46,393228,9,48,1,69,47,327828,6,49,26,48,458764,6,50,1,40,49,19,393281,38,53,33,52,37,262205,6,54,53,393296,9,55,54,54,54,327745,56,57,33,52,262205,29,58,57,524367,9,59,58,58,0,1,2,327822,9,61,59,50,327809,9,62,55,61,262205,66,69,68,262205,70,73,72,327767,29,74,69,73,524367,9,75,74,74,0,1,2,262205,9,77,76,327813,9,78,75,77,327813,9,80,78,62,327761,6,81,80,0,327761,6,82,80,1,327761,6,83,80,2,458832,29,84,81,82,83,23,196670,64,84,65789,65592,]
+diff --git a/src/shaders/textured.frag b/src/shaders/textured.frag
+index a5b4e90..1952bbd 100644
+--- a/src/shaders/textured.frag
++++ b/src/shaders/textured.frag
+@@ -2,10 +2,10 @@
+ layout(set=0,binding=0) uniform sampler2D albedo;
+ layout(push_constant) uniform Drawing {
+     mat4 mvp;
+-    vec4 rotation;
+-    vec4 inverse_scale;
+-    vec4 light_direction_ambient;
+-    vec4 light_color_intensity;
++    vec4 normal_x_light_x;
++    vec4 normal_y_light_y;
++    vec4 normal_z_light_z;
++    vec4 light_color_ambient;
+ } drawing;
+ layout(location=0) flat in vec3 vertex_color;
+ layout(location=1) in vec2 texture_uv;
+@@ -14,7 +14,7 @@ layout(location=0) out vec4 output_color;
+ void main() {
+     float normal_squared = dot(world_normal, world_normal);
+     vec3 normal = world_normal * inversesqrt(normal_squared > 0.0 ? normal_squared : 1.0);
+-    float diffuse = max(dot(normal, normalize(drawing.light_direction_ambient.xyz)), 0.0);
+-    vec3 light = vec3(drawing.light_direction_ambient.w) + drawing.light_color_intensity.rgb * (drawing.light_color_intensity.w * diffuse);
++    float diffuse = max(dot(normal, normalize(vec3(drawing.normal_x_light_x.w, drawing.normal_y_light_y.w, drawing.normal_z_light_z.w))), 0.0);
++    vec3 light = vec3(drawing.light_color_ambient.w) + drawing.light_color_ambient.rgb * diffuse;
+     output_color = vec4(texture(albedo, texture_uv).rgb * vertex_color * light, 1.0);
+ }
+diff --git a/src/shaders/textured.vert b/src/shaders/textured.vert
+index 50aced9..56af89d 100644
+--- a/src/shaders/textured.vert
++++ b/src/shaders/textured.vert
+@@ -5,10 +5,10 @@ layout(location=2) in vec2 uv;
+ layout(location=3) in vec3 normal;
+ layout(push_constant) uniform Drawing {
+     mat4 mvp;
+-    vec4 rotation;
+-    vec4 inverse_scale;
+-    vec4 light_direction_ambient;
+-    vec4 light_color_intensity;
++    vec4 normal_x_light_x;
++    vec4 normal_y_light_y;
++    vec4 normal_z_light_z;
++    vec4 light_color_ambient;
+ } drawing;
+ layout(location=0) flat out vec3 vertex_color;
+ layout(location=1) out vec2 texture_uv;
+@@ -17,7 +17,5 @@ void main() {
+     gl_Position = drawing.mvp * vec4(position, 1.0);
+     vertex_color = color;
+     texture_uv = uv;
+-    vec3 n = normal * drawing.inverse_scale.xyz;
+-    vec3 t = 2.0 * cross(drawing.rotation.xyz, n);
+-    world_normal = n + drawing.rotation.w * t + cross(drawing.rotation.xyz, t);
++    world_normal = mat3(drawing.normal_x_light_x.xyz, drawing.normal_y_light_y.xyz, drawing.normal_z_light_z.xyz) * normal;
+ }
+diff --git a/tools/jonmath/qualify.bend.in b/tools/jonmath/qualify.bend.in
+index eadb637..3d4d7b2 100644
+--- a/tools/jonmath/qualify.bend.in
++++ b/tools/jonmath/qualify.bend.in
+@@ -33,7 +33,7 @@ def transform(+t:C.Transform) -> IO(Unit):
+     product(Create.orbit(Create.default_camera(),640,480),M.model(t))
+ 
+ def seed(value:Create.Seed) -> IO(Unit):
+-  Create.Seed{t,_} = value
++  Create.Seed{t,_,_} = value
+   transform(t)
+ 
+ def seeds(values:List<&2,Create.Seed>) -> IO(Unit):
+diff --git a/tools/model-obj/native.bend b/tools/model-obj/native.bend
+index 9ce569b..080ca69 100644
+--- a/tools/model-obj/native.bend
++++ b/tools/model-obj/native.bend
+@@ -1,4 +1,6 @@
+ import Base
++import ../../src/hierarchy.bend as H
++import ../../src/scene-matrix.bend as M
+ import ../../src/content.bend as F
+ import ../../src/components.bend as Comp
+ import ../../src/asset.bend as Asset
+@@ -46,6 +48,7 @@ def state_items(items:List<&2,Draw.DrawItem>) -> String:
+   match items:
+     case []:""
+     case Draw.DrawItem{t,Comp.MeshRef{id}} <> rest:"mesh=" ++ U32.show(id) ++ " transform=" ++ words(pose_words(t)) ++ "\n" ++ state_items(rest)
++    case Draw.GlobalItem{global,Comp.MeshRef{id}} <> rest:"mesh=" ++ U32.show(id) ++ " global=" ++ words(R.reusable(M.matrix_words(H.matrix(global)))) ++ "\n" ++ state_items(rest)
+ 
+ def state(list:Draw.DrawList) -> String:
+   Draw.DrawList{items} = list
+@@ -56,6 +59,8 @@ def same_items(a:List<&2,Draw.DrawItem>,b:List<&2,Draw.DrawItem>) -> Bool:
+     case [],[]:True{}
+     case Draw.DrawItem{t,Comp.MeshRef{id}} <> xs,Draw.DrawItem{u,Comp.MeshRef{other}} <> ys:
+       U32.is_eq(id,other) && F.same_indices(pose_words(t),pose_words(u)) && same_items(xs,ys)
++    case Draw.GlobalItem{t,Comp.MeshRef{id}} <> xs,Draw.GlobalItem{u,Comp.MeshRef{other}} <> ys:
++      U32.is_eq(id,other) && Render.equal_bytes(R.reusable(M.matrix_words(H.matrix(t))),R.reusable(M.matrix_words(H.matrix(u)))) && same_items(xs,ys)
+     case _,_:False{}
+ 
+ def same_draws(a:Draw.DrawList,b:Draw.DrawList) -> Bool:
+diff --git a/tools/upload-boundary/dependencies.txt b/tools/upload-boundary/dependencies.txt
+index aba2b09..dfce8aa 100644
+--- a/tools/upload-boundary/dependencies.txt
++++ b/tools/upload-boundary/dependencies.txt
+@@ -604,6 +604,7 @@ package 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend
+ module 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend
+ 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Arr
+ 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Num
++0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Null
+ 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Obj
+ 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Str
+ 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend Val
+@@ -640,3 +641,22 @@ deps/bend-vulkan/src/constants.bend VK_PRESENT_MODE_FIFO_KHR
+ deps/bend-vulkan/src/core.bend present_image_count
+ deps/bend-vulkan/src/core.bend surface_extent
+ deps/bend-vulkan/src/core.bend surface_format
++module deps/bendvy/src/ecs/execution-access.bend
++deps/bendvy/src/ecs/execution-access.bend component_get
++module deps/bendvy/src/ecs/execution-layout-access.bend
++deps/bendvy/src/ecs/execution-layout-access.bend column_lens
++deps/bendvy/src/ecs/execution-layout-access.bend component_modify
++module deps/bendvy/src/ecs/execution-state.bend
++deps/bendvy/src/ecs/execution-state.bend Scope
++deps/bendvy/src/ecs/execution-state.bend Administration
++deps/bendvy/src/ecs/execution-state.bend Invocation
++deps/bendvy/src/ecs/execution-state.bend same
++deps/bendvy/src/ecs/execution-state.bend separate
++deps/bendvy/src/ecs/execution-state.bend reassemble
++deps/bendvy/src/ecs/execution-composer-layout.bend stored
++deps/bendvy/src/ecs/execution-composer-layout.bend column_rest
++deps/bendvy/src/ecs/execution-composer-layout.bend payload
++deps/bendvy/src/ecs/execution-composer-layout.bend read
++deps/bendvy/src/ecs/execution-composer-layout.bend view
++deps/bendvy/src/ecs/world.bend execution_clock
++deps/bendvy/src/ecs/world.bend write_clock
+diff --git a/tools/verify-creation.bend b/tools/verify-creation.bend
+index 99aa9f5..04a1a24 100644
+--- a/tools/verify-creation.bend
++++ b/tools/verify-creation.bend
+@@ -41,12 +41,12 @@ def compiled(result:Result<&2,&2,Create.Error,Create.Compiled>) -> IO(Create.Com
+ 
+ def move_seed(pair:C.Transform & Unit,mesh:C.MeshRef) -> Create.Seed:
+   (transform,_) = pair
+-  Create.Seed{transform,mesh}
++  Create.seed(transform,mesh)
+ 
+ def move_once(seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
+   match seeds:
+     case []:[]
+-    case Create.Seed{transform,mesh} <> rest:move_seed(Step.step(Unit{},transform),mesh) <> move_once(rest)
++    case Create.Seed{transform,mesh,_} <> rest:move_seed(Step.step(Unit{},transform),mesh) <> move_once(rest)
+ 
+ def moved(+ticks:Nat,seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
+   match ticks:
+@@ -56,7 +56,7 @@ def moved(+ticks:Nat,seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
+ def rows_equal(rows:List<&2,Observe.Row>,seeds:List<&2,Create.Seed>) -> Bool:
+   match rows seeds:
+     case [], []:True{}
+-    case Observe.Row{_,t,C.MeshRef{id}} <> rest,Create.Seed{u,C.MeshRef{other}} <> tail:
++    case Observe.Row{_,t,C.MeshRef{id}} <> rest,Create.Seed{u,C.MeshRef{other},_} <> tail:
+       U32.is_eq(id,other) && Render.equal_bytes(R.reusable(M.matrix_words(M.model(t))),R.reusable(M.matrix_words(M.model(u)))) && rows_equal(rest,tail)
+     case _,_:False{}
+ 
+@@ -68,12 +68,17 @@ def draw_items(rows:List<&2,Observe.Row>) -> List<&2,Draw.DrawItem>:
+ def draws(rows:List<&2,Observe.Row>) -> Draw.DrawList:
+   Draw.DrawList{draw_items(rows)}
+ 
++def derived_draws(pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> IO(Scene.Application() & Draw.DrawList):
++  match pair:
++    case (app,(_,Done{draws})):IO.pure(Scene.Application() & Draw.DrawList,(app,draws))
++    case _:IO.die(Scene.Application() & Draw.DrawList,1,"Creation derived drawing extraction refused")
++
+ def snapshot(+seeds:List<&2,Create.Seed>,tick:Nat,pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>)) -> IO(Scene.Application() & Draw.DrawList):
+   match pair:
+-    case (app,(_,Done{Observe.Snapshot{+live,+admitted,exhausted,clean,+rows}})):
++    case (app,(inspector,Done{Observe.Snapshot{+live,+admitted,exhausted,clean,+rows}})):
+       do IO<Scene.Application() & Draw.DrawList>:
+         ECS.require(Nat.is_eq(List.length(&2,Observe.Row,rows),List.length(&2,Create.Seed,seeds)) && ECS.distinct(live) && ECS.same(live,admitted) && exhausted && clean && rows_equal(rows,moved(tick,seeds)),"Created ECS instances, publication or movement differs")
+-        return (app,draws(rows))
++        derived_draws(Observe.draw_list(app,inspector))
+     case _:IO.die(Scene.Application() & Draw.DrawList,1,"Creation snapshot refused")
+ 
+ def camera() -> M.Mat4:
+diff --git a/tools/verify-law-mutations.bend b/tools/verify-law-mutations.bend
+index 9f65fca..5694e05 100644
+--- a/tools/verify-law-mutations.bend
++++ b/tools/verify-law-mutations.bend
+@@ -51,7 +51,7 @@ def main() -> IO(Unit):
+     +dest:String = String.trim(directory)
+     IO.print("Bend law mutation evidence: " ++ dest)
+     _:String <- S.run("cp",["-R","--reflink=auto","--","src","proofs","tools","examples","deps","LAWS.bend","PROOF.bend","toolchain.bend",dest])
+-    hashes:String <- S.run("sha256sum",["src/asset.bend","src/scene-geometry-policy.bend","src/time.bend","src/upload-size.bend","deps/bend-vulkan/src/core.bend","LAWS.bend","PROOF.bend","proofs/upload-range/LAWS.bend","proofs/upload-range/PROOF.bend","proofs/law-mutations.tsv","tools/verify-law-mutations.bend"])
++    hashes:String <- S.run("sha256sum",["src/asset.bend","src/scene-geometry-policy.bend","src/time.bend","src/upload-size.bend","src/hierarchy.bend","src/scene-hierarchy.bend","deps/bend-vulkan/src/core.bend","LAWS.bend","PROOF.bend","proofs/upload-range/LAWS.bend","proofs/upload-range/PROOF.bend","proofs/law-mutations.tsv","tools/verify-law-mutations.bend"])
+     Files.save(dest ++ "/sources.sha256",hashes)
+     gate(dest,"baseline-root","PROOF.bend","")
+     gate(dest,"baseline-upload","proofs/upload-range/PROOF.bend","")
+diff --git a/tools/verify-mesh-window.bend b/tools/verify-mesh-window.bend
+index eaaaf8a..4f614b7 100644
+--- a/tools/verify-mesh-window.bend
++++ b/tools/verify-mesh-window.bend
+@@ -192,6 +192,20 @@ def live(+display:String,+port:U32) -> IO(Unit):
+     held(display,pid,id,baseline,port)
+     IO.print("Native held/repeat/opposite/release/reset, six camera controls, real focus loss, unmap/restore, repeated resize and unfocused Escape passed.")
+ 
++def recorded_batches(lines:List<&2,String>) -> U32:
++  match lines:
++    case []:0
++    case line <> rest:U32.add(Bool.to_u32(String.starts_with(line,"mesh-state ")),recorded_batches(rest))
++
++def wait_close_batches(fuel:Nat) -> IO(Unit):
++  match fuel:
++    case 0n:IO.die(Unit,1,"Hidden Close did not record enough completed batches for replay")
++    case 1n+n:
++      do IO<Unit>:
++        log:String <- Check.read("docs/verification/2026-11-03-mesh-playground/native-close.log")
++        IO.sleep(50)
++        Bool.pick(IO(Unit),U32.is_gt(recorded_batches(String.lines(log)),10),IO.pure(Unit,Unit{}),wait_close_batches(n))
++
+ def hidden_close(+display:String,+port:U32) -> IO(Unit):
+   do IO<Unit>:
+     +pid:U32 <- IO.try(U32,Host.start("docs/verification/2026-11-03-mesh-playground/native-close.log",False{}))
+@@ -199,7 +213,7 @@ def hidden_close(+display:String,+port:U32) -> IO(Unit):
+     Focus.set(port,id)
+     frame:Pixels.Frame <- WindowCheck.wait(pid,id,WindowCheck.Populated{640,480})
+     IO.try(Unit,Host.control(id,1,0,0))
+-    IO.sleep(100)
++    wait_close_batches(100n)
+     IO.try(Unit,UI.send_to(display,id,[Close{}]))
+     Existing.wait_exit(300n,pid)
+     clean("native-close")
+diff --git a/tools/verify-texture-mutations.bend b/tools/verify-texture-mutations.bend
+index c78f97c..ba69b07 100644
+--- a/tools/verify-texture-mutations.bend
++++ b/tools/verify-texture-mutations.bend
+@@ -53,10 +53,10 @@ def main() -> IO(Unit):
+       "  [Core.word_byte(pixel,0),Core.word_byte(pixel,1),Core.word_byte(pixel,2),Core.word_byte(pixel,3)]",
+       "verify-textured-render","Texture orientation and sampling: full RGBA/D32 differs")
+     mutation(dest,"normal-scale","src/shaders/textured.vert",
+-      "    vec3 n = normal * drawing.inverse_scale.xyz;","    vec3 n = normal;",
++      "    world_normal = mat3(drawing.normal_x_light_x.xyz, drawing.normal_y_light_y.xyz, drawing.normal_z_light_z.xyz) * normal;","    world_normal = normal;",
+       "verify-textured-transforms","Nonuniform inverse scale: normal transform irradiance differs")
+     mutation(dest,"diffuse","src/shaders/textured.frag",
+-      "    float diffuse = max(dot(normal, normalize(drawing.light_direction_ambient.xyz)), 0.0);","    float diffuse = 1.0;",
++      "    float diffuse = max(dot(normal, normalize(vec3(drawing.normal_x_light_x.w, drawing.normal_y_light_y.w, drawing.normal_z_light_z.w))), 0.0);","    float diffuse = 1.0;",
+       "verify-textured-render","Back-facing normals receive no diffuse light: full RGBA/D32 differs")
+     mutation(dest,"normal-magnitude","src/shaders/textured.frag",
+       "    vec3 normal = world_normal * inversesqrt(normal_squared > 0.0 ? normal_squared : 1.0);",
+diff --git a/tools/verify-window-session.sh b/tools/verify-window-session.sh
+index 212a820..f580daf 100644
+--- a/tools/verify-window-session.sh
++++ b/tools/verify-window-session.sh
+@@ -2,7 +2,7 @@
+ set -euo pipefail
+ entangle_extended=${1:-}
+ test "$#" -le 1
+-case "$entangle_extended" in ""|extended) ;; *) exit 2 ;; esac
++case "$entangle_extended" in ""|extended|hierarchy) ;; *) exit 2 ;; esac
+ entangle_repo="$PWD"
+ test -f "$entangle_repo/toolchain.bend"
+ mkdir -p "$entangle_repo/build/verification"
+@@ -73,6 +73,11 @@ run proof bend PROOF.bend
+ run build-app bend examples/mesh-playground.bend -o "$entangle_evidence/bin/mesh-playground"
+ run build-driver bend tools/verify-mesh-window.bend -o "$entangle_evidence/bin/verify-mesh-window"
+ run build-replay bend tools/replay-mesh-window.bend -o "$entangle_evidence/bin/replay-mesh-window"
++if [ "$entangle_extended" = extended ] || [ "$entangle_extended" = hierarchy ]; then
++  run build-hierarchy bend tools/hierarchy/window.bend -o "$entangle_evidence/bin/hierarchy-window"
++  run build-hierarchy-driver bend tools/hierarchy/window-driver.bend -o "$entangle_evidence/bin/hierarchy-driver"
++  run build-hierarchy-replay bend tools/hierarchy/replay.bend -o "$entangle_evidence/bin/hierarchy-replay"
++fi
+ if [ "$entangle_extended" = extended ]; then
+   run build-cube bend examples/scene-window.bend -o "$entangle_evidence/bin/cube-window"
+   run build-cube-driver bend tools/verify-window.bend -o "$entangle_evidence/bin/verify-window"
+@@ -143,6 +148,18 @@ if [ "$entangle_extended" = extended ]; then
+   ln -s "$entangle_evidence/mesh" build/window-evidence
+   run doctor-after-extended doctor
+ fi
++if [ "$entangle_extended" = extended ] || [ "$entangle_extended" = hierarchy ]; then
++  mkdir -p "$entangle_evidence/hierarchy"
++  cp "$entangle_evidence/bin/hierarchy-window" build/indexed-window
++  rm build/window-evidence
++  ln -s "$entangle_evidence/hierarchy" build/window-evidence
++  run hierarchy-window timeout --signal=KILL 120s "$entangle_evidence/bin/hierarchy-driver"
++  run hierarchy-replay "$entangle_evidence/bin/hierarchy-replay" "$entangle_evidence/hierarchy/native.log"
++  cp "$entangle_evidence/bin/mesh-playground" build/indexed-window
++  rm build/window-evidence
++  ln -s "$entangle_evidence/mesh" build/window-evidence
++  run doctor-after-hierarchy doctor
++fi
+ run window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-mesh-window"
+ run replay-live "$entangle_evidence/bin/replay-mesh-window" "$entangle_evidence/mesh/native-live.log"
+ run replay-close "$entangle_evidence/bin/replay-mesh-window" "$entangle_evidence/mesh/native-close.log"
+diff --git a/tools/verify-workflow.bend b/tools/verify-workflow.bend
+index 06c5eb1..af6e8fa 100644
+--- a/tools/verify-workflow.bend
++++ b/tools/verify-workflow.bend
+@@ -12,7 +12,7 @@ def native(+name:String,kind:String,path:String,args:List<&2,String>) -> List<&2
+    Step{name,kind,"./" ++ binary,List.append(&2,String,args,["+RTS","--threads","1","--gpu","off"])}]
+ 
+ def known(name:String) -> Bool:
+-  S.has(["toolchain","proofs","assets","images","json","math","textures","upload","native-failures","native","window","textured-window","all"],name)
++  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-window","upload","native-failures","native","window","textured-window","all"],name)
+ 
+ def valid(names:List<&2,String>) -> Bool:
+   match names:
+@@ -31,22 +31,24 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
+   +assets:Bool = selected(names,"assets") || selected(names,"images") || selected(names,"json")
+   +upload:Bool = selected(names,"upload") || baseline
+   +failures:Bool = selected(names,"native-failures") || selected(names,"textures") || baseline
+-  +laws:Bool = proofs || assets || upload || failures || selected(names,"math")
++  +laws:Bool = proofs || assets || upload || failures || selected(names,"math") || selected(names,"hierarchy")
+   List.concat(&2,Step,[
+     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
+-    add(laws || selected(names,"window") || selected(names,"textured-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
++    add(laws || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
+     add(laws && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
+     add(assets && Bool.not(baseline),native("assets","runtime","tools/verify-assets.bend",[])),
+     add(selected(names,"images") && Bool.not(baseline),native("images","runtime-and-sensitivity","tools/verify-images.bend",[])),
+     add(selected(names,"json") && Bool.not(baseline),native("json","runtime-and-sensitivity","tools/verify-json.bend",[])),
+     add(selected(names,"math"),native("math","qualification-and-retained-scenes","tools/verify-math.bend",[])),
+     add(selected(names,"textures") && Bool.not(baseline),native("textures","runtime-and-sensitivity","tools/verify-textures.bend",[])),
++    add(selected(names,"hierarchy"),native("hierarchy","ecs-render-replay-and-sensitivity","tools/verify-hierarchy.bend",[])),
+     add(upload && Bool.not(baseline),native("upload-runtime","runtime","tools/verify-upload-runtime.bend",[])),
+     add(upload && Bool.not(baseline),native("upload-native-limit","runtime","tools/verify-upload-native-limit.bend",[])),
+     add(failures && Bool.not(baseline),native("resource-failures","runtime","tools/verify-resource-failures.bend",[])),
+     add(baseline,native("native","native-baseline","tools/verify.bend",[])),
+     add(selected(names,"window") && Bool.not(selected(names,"textured-window")),[Step{"window","mesh-window-and-replay","bash",["tools/verify-window-session.sh"]}]),
+     add(selected(names,"textured-window"),[Step{"textured-window","all-renderer-windows-and-replay","bash",["tools/verify-window-session.sh","extended"]}]),
++    add(selected(names,"hierarchy-window") && Bool.not(selected(names,"textured-window")),[Step{"hierarchy-window","hierarchy-mesh-windows-and-replay","bash",["tools/verify-window-session.sh","hierarchy"]}]),
+     add(proofs || upload,[Step{"upload-kernel","kernel","bend",["proofs/upload-range/PROOF.bend","--verdict"]}]),
+     add(laws,native("law-mutations","sensitivity","tools/verify-law-mutations.bend",[])),
+     add(upload,native("upload-mutations","sensitivity","tools/verify-upload-mutations.bend",[])),

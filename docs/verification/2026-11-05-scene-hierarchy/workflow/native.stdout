@@ -1,0 +1,726 @@
++ bend
+bend 2.0.39
++ clang
++ clang
+x86_64-pc-linux-gnu
++ uname
+Linux x86_64
++ git
+16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee
++ git
++ git
+a144f7dd4fb4835ca3d5ce17350fc850de049038
++ git
++ git
+bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c
++ git
++ mkdir
++ bend
++ ./build/verify-upload-boundary
+Upload source boundary verified, including untracked Bend sources.
++ bend
+ALL PROOFS CHECK
+Use --verdict for mathematical validity.
++ mkdir
++ bend
++ ./build/verify-assets
+Asset runtime evidence: build/verification/assets-0k4cmxPE
+Wrong scope rejected; released Loading entry performs no IO.
+Loaded data cached; release is idempotent; reacquisition has fresh identity.
+Failed load cached; explicit retry recovered; unrelated asset preserved.
+Real file byte limit verified at zero, exactly 1 MiB, and one byte over.
+Procedural mesh and material loaded; source values retained after cache release.
+Mesh and material source caches verified after release; source-only closure compiled and ran without Creation or Vulkan.
+Public instances completed two production ECS ticks.
+Asset API verified with real files and production scene execution.
++ bend
++ ./build/verify-images
+deps/jonlib-png/png.bend: OK
+deps/jonlib-png/codec.bend: OK
+deps/jonlib-png/inflate.bend: OK
+docs/verification/2026-11-04-image-decoder/corpus/source/june.jpg: OK
+docs/verification/2026-11-04-image-decoder/corpus/source/tabby.jpg: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-ga16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-ga8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-gray8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette-trns.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-palette2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgb16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba-adam7.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba16.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/cat-rgba8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/height4096.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/june-adam7.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/june-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/layout.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/materials-palette2.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/mesh-palette4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/scene-palette1.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/survivors-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/tabby-palette4.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/tabby-rgb8.png: OK
+docs/verification/2026-11-04-image-decoder/corpus/png/width4096.png: OK
+june-rgb8 320 260 8 2 0 (Not interlaced)
+june-adam7 320 260 8 2 1 (Adam7 method)
+tabby-rgb8 192 256 8 2 0 (Not interlaced)
+tabby-palette4 192 256 4 3 0 (Not interlaced)
+cat-gray8 37 29 8 0 0 (Not interlaced)
+cat-ga8 37 29 8 4 0 (Not interlaced)
+cat-rgba8 37 29 8 6 0 (Not interlaced)
+cat-palette-trns 37 29 8 3 0 (Not interlaced)
+cat-gray1 37 29 1 0 0 (Not interlaced)
+cat-gray2 37 29 2 0 0 (Not interlaced)
+cat-gray4 37 29 4 0 0 (Not interlaced)
+cat-palette1 37 29 1 3 0 (Not interlaced)
+cat-palette2 37 29 2 3 0 (Not interlaced)
+cat-gray16 37 29 16 0 0 (Not interlaced)
+cat-ga16 37 29 16 4 0 (Not interlaced)
+cat-rgb16 37 29 16 2 0 (Not interlaced)
+cat-rgba16 37 29 16 6 0 (Not interlaced)
+cat-rgba-adam7 37 29 8 6 1 (Adam7 method)
+layout 3 2 8 6 0 (Not interlaced)
+width4096 4096 1 8 2 0 (Not interlaced)
+height4096 1 4096 8 2 0 (Not interlaced)
+mesh-palette4 640 480 4 3 0 (Not interlaced)
+materials-palette2 640 480 2 3 0 (Not interlaced)
+scene-palette1 1024 256 1 3 0 (Not interlaced)
+survivors-rgb8 800 394 8 2 0 (Not interlaced)
+june-rgb8 decode=file=all-pixels-exact
+june-adam7 decode=file=all-pixels-exact
+tabby-rgb8 decode=file=all-pixels-exact
+tabby-palette4 decode=file=all-pixels-exact
+cat-gray8 decode=file=all-pixels-exact
+cat-ga8 decode=file=all-pixels-exact
+cat-rgba8 decode=file=all-pixels-exact
+cat-palette-trns decode=file=all-pixels-exact
+cat-gray1 decode=file=all-pixels-exact
+cat-gray2 decode=file=all-pixels-exact
+cat-gray4 decode=file=all-pixels-exact
+cat-palette1 decode=file=all-pixels-exact
+cat-palette2 decode=file=all-pixels-exact
+cat-gray16 decode=file=all-pixels-exact
+cat-ga16 decode=file=all-pixels-exact
+cat-rgb16 decode=file=all-pixels-exact
+cat-rgba16 decode=file=all-pixels-exact
+cat-rgba-adam7 decode=file=all-pixels-exact
+layout decode=file=all-pixels-exact
+width4096 decode=file=all-pixels-exact
+height4096 decode=file=all-pixels-exact
+mesh-palette4 decode=file=all-pixels-exact
+materials-palette2 decode=file=all-pixels-exact
+scene-palette1 decode=file=all-pixels-exact
+survivors-rgb8 decode=file=all-pixels-exact
+stored tolerated=all-pixels-exact
+bad-crc tolerated=all-pixels-exact
+bad-adler tolerated=all-pixels-exact
+trailing tolerated=all-pixels-exact
+duplicate-ihdr decode=file=error 2147483649
+cgbi tolerated=all-pixels-exact
+input-at-limit tolerated=all-pixels-exact
+empty decode=file=error 2147483649
+truncated decode=file=error 2147483649
+bad-signature decode=file=error 2147483649
+unsupported decode=file=error 2147483649
+zero-width decode=file=error 2147483651
+width4097 decode=file=error 2147483651
+height4097 decode=file=error 2147483651
+filtered-over-limit decode=file=error 2147483651
+inflate-overrun decode=file=error 2147483653
+inflate-short decode=file=error 2147483653
+bad-filter decode=file=error 2147483653
+input-over-limit decode=file=error 2147483651
+Full image retained after release; repeated load cached; failure stable after repair; release/request/load retry recovered; actual loader calls=3.
+PNG production adapter verified.
+missing code=2 message=No such file or directory
+sparse-size code=75 message=Value too large for defined data type
+directory-read code=21 message=Is a directory
+Native missing-file and >UINT32_MAX errors preserved byte for byte; real shrink/growth rejected; 64 repetitions of six file paths retain descriptor count.
+order detected by native verifier status=1 message=pixels differ
+packing detected by native verifier status=1 message=pixels differ
+input-limit detected by native verifier status=1 message=input-at-limit file failed
+side-limit detected by native verifier status=1 message=width4096 decode failed
+Wrong order, packing, encoded limit and side limit were each rejected by actual runtime evidence.
+Loading
+Loaded 320x260 pixels=83200
+Missing
+Image decoder verification complete.
+deps/jonlib-obj/binary64_add_sub.bend: OK
+deps/jonlib-obj/binary64_fma.bend: OK
+deps/jonlib-obj/binary64_narrow.bend: OK
+deps/jonlib-obj/binary64_ops.bend: OK
+deps/jonlib-obj/float64.bend: OK
+deps/jonlib-obj/float64_ops.bend: OK
+deps/jonlib-obj/obj.bend: OK
+deps/jonlib-obj/resize_numeric.bend: OK
+deps/jonlib-obj/LICENSE: OK
+deps/jonlib-obj/LICENSES/raylib.txt: OK
+deps/jonlib-obj/LICENSES/tinyobj_loader_c.txt: OK
+deps/jonlib-obj/THIRD_PARTY_NOTICES.md: OK
+docs/verification/2026-11-04-model-obj/corpus/sign.obj: OK
+docs/verification/2026-11-04-model-obj/corpus/sign.mtl: OK
+docs/verification/2026-11-04-model-obj/corpus/wedge.obj: OK
+docs/verification/2026-11-04-model-obj/corpus/LICENSE.txt: OK
++ bend tools/model-obj/qualify.bend -o build/model-obj/bin/qualify
++ build/model-obj/bin/qualify +RTS --threads 1 --gpu off
+MtlOut.ok=True table.ok=True material-count=2
+material=0 diffuse=False/1065353216 False/0 False/0  specular=False/0 False/0 False/0  emission=False/0 False/0 False/0  shininess=False/1065353216 
+material=1 diffuse=False/0 False/1065353216 False/0  specular=False/0 False/0 False/0  emission=False/0 False/0 False/0  shininess=False/1065353216 
+CEmpty
+CLib sign.mtl
+CShape
+CV False/3225419776 False/3212836864 False/0 
+CV False/3212836864 False/3212836864 False/0 
+CV False/3212836864 False/1065353216 False/0 
+CV False/3225419776 False/1065353216 False/0 
+CV False/3212836864 False/3212836864 False/0 
+CV False/1065353216 False/3212836864 False/0 
+CV False/1065353216 False/1065353216 False/0 
+CV False/3212836864 False/1065353216 False/0 
+CV False/1065353216 False/3212836864 False/2147483648 
+CV False/1077936128 False/3212836864 False/0 
+CV False/1077936128 False/1065353216 False/0 
+CV False/1065353216 False/1065353216 False/0 
+CShape
+CF count=3 +1/missing/missing +2/missing/missing +3/missing/missing 
+CF count=3 +1/missing/missing +3/missing/missing +4/missing/missing 
+CUse red
+CShape
+CF count=3 +5/missing/missing +6/missing/missing +7/missing/missing 
+CF count=3 +5/missing/missing +7/missing/missing +8/missing/missing 
+CUse green
+CShape
+CF count=3 -4/missing/missing -3/missing/missing -2/missing/missing 
+CF count=3 -4/missing/missing -2/missing/missing -1/missing/missing 
+CEmpty
+sign positions ub/word False/3225419776 False/3212836864 False/0 False/3212836864 False/3212836864 False/0 False/3212836864 False/1065353216 False/0 False/3225419776 False/1065353216 False/0 False/3212836864 False/3212836864 False/0 False/1065353216 False/3212836864 False/0 False/1065353216 False/1065353216 False/0 False/3212836864 False/1065353216 False/0 False/1065353216 False/3212836864 False/2147483648 False/1077936128 False/3212836864 False/0 False/1077936128 False/1065353216 False/0 False/1065353216 False/1065353216 False/0 
+True/0 True/1 True/2 material=4294967295
+True/0 True/2 True/3 material=4294967295
+True/4 True/5 True/6 material=0
+True/4 True/6 True/7 material=0
+True/8 True/9 True/10 material=1
+True/8 True/10 True/11 material=1
+S41 retained authored sign exact 36 position words, 18 corners, six material selections including default and negative-relative indices.
+wedge positions ub/word False/3212836864 False/3212836864 False/0 False/1065353216 False/3212836864 False/0 False/1065353216 False/1065353216 False/0 False/3212836864 False/1065353216 False/0 False/3212836864 False/3212836864 False/1065353216 False/1065353216 False/3212836864 False/1073741824 
+True/0 True/2 True/1 material=4294967295
+True/0 True/3 True/2 material=4294967295
+True/0 True/1 True/5 material=4294967295
+True/0 True/5 True/4 material=4294967295
+True/1 True/2 True/5 material=4294967295
+True/2 True/3 True/4 material=4294967295
+True/2 True/4 True/5 material=4294967295
+True/3 True/0 True/4 material=4294967295
+S41 Blender 5.2.3 closed asymmetric wedge matches independent six-vertex/eight-face authoring specification.
+Actual 128-declaration MTL has MtlOut.ok=True and table.ok=False; both flags require checking.
+numeric -0 checked
+numeric +0 checked
+numeric 1.5 checked
+numeric 1.000000059604644775390625 checked
+numeric 1.00000011920928955078125 checked
+numeric 1e-20 checked
+numeric 1e38 checked
+numeric 1e-45 checked
+numeric 1e-46 checked
+numeric -1e-46 checked
+numeric 1e39 checked
+numeric 1e65 checked
+numeric 1e2147483648 checked
+numeric 1junk checked
+numeric .5 checked
+numeric 1e checked
+Pinned parser qualification passed. Prefix/zero/line quirks require adapter admission. No universal decimal conversion claim.
++ bend tools/model-obj/runtime.bend -o build/model-obj/bin/runtime
++ build/model-obj/bin/runtime +RTS --threads 1 --gpu off
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 0 2 3 OBJ line 4: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f -0 2 3 OBJ line 4: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1 2 3
+v 1 0 0
+v 0 1 0 OBJ line 2: face index outside positions declared so far
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f -4 -2 -1 OBJ line 4: face index outside positions declared so far
+rejected v 1junk 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v .5 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v 1e 0 0
+f 1 1 1 OBJ line 1: complete decimal token required
+rejected v 1e39 0 0
+f 1 1 1 OBJ line 1: number outside pinned parser domain
+rejected v 0 0 0
+f 2147483648 1 1 OBJ line 2: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1/1 1/1 1/1 OBJ line 2: nonzero complete signed 31-bit index required
+rejected v 0 0 0
+f 1 1 1 1 OBJ line 2: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0 1
+f 1 1 1 OBJ line 1: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+vn 0 0 1 OBJ line 5: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+vt 0 0 OBJ line 5: unsupported directive or field count; authored triangles and bare indices required
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+s 1 OBJ line 5: active smoothing unsupported
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+usemtl missing OBJ line 5: unresolved usemtl missing
+rejected mtllib ../mat
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib /mat
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib a//b
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib https:a
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: MTL requires relative slash-separated components without dot, parent or URI syntax
+rejected mtllib a
+mtllib b
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 2: duplicate mtllib
+rejected # blank only OBJ line 0: no triangles
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 5: lone CR
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+\
+ OBJ line 5: line continuation
+rejected  MTL line 0: declared MTL contains no materials
+rejected # only MTL line 0: declared MTL contains no materials
+rejected newmtl a MTL line 1: material requires exactly one Kd
+rejected newmtl a
+Kd 1 0 0
+Kd 0 1 0 MTL line 3: duplicate material property
+rejected newmtl a
+Kd 1 0 0
+d 0.99999999999999999999 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1 0 0
+Tr 1e-40 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1 0 0
+illum 1 MTL line 3: only exact d 1, Tr 0 and illum 0 are neutral
+rejected newmtl a
+Kd 1.1 0 0 MTL line 2: Kd channels outside [0,1]
+rejected newmtl a
+Kd 1 0 0
+map_Kd texture MTL line 3: unsupported material property
+rejected newmtl a
+Kd 1 0 0
+Ks 0 0 0 MTL line 3: unsupported property or field count
+rejected newmtl ab
+Kd 1 0 0
+newmtl bA
+Kd 0 1 0 MTL line 3: duplicate or colliding material name
+rejected newmtl a
+Kd 1 0 0
+newmtl a
+Kd 0 1 0 MTL line 3: duplicate or colliding material name
+Complete source fidelity and strict production rejection checks passed.
++ bend tools/model-obj/properties.bend -o build/model-obj/bin/properties
++ build/model-obj/bin/properties +RTS --threads 1 --gpu off
+rejected NUL OBJ line 1: expected ASCII text without controls or NUL
+rejected nonbyte OBJ line 1: expected ASCII text without controls or NUL
+rejected BOM OBJ line 1: expected ASCII text without controls or NUL
+rejected control OBJ line 1: expected ASCII text without controls or NUL
+rejected unexpected MTL MTL line 0: unexpected supplied MTL bytes
+rejected missing MTL MTL line 0: declared MTL bytes missing
+rejected newmtl unused
+Kd 1e65 0 0 MTL line 2: number outside pinned parser domain
+rejected newmtl unused
+Kd 0 0 0
+d 1
+d 1 MTL line 4: duplicate material property
+rejected mtllib a
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+usemtl missing MTL line 0: declared MTL bytes missing
+rejected #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: physical line exceeds 4095 bytes
+rejected o xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+ OBJ line 1: label exceeds 255 bytes
+rejected v 00000000000000000000000000000000000000000000000000000000000000000 0 0
+f 1 1 1 OBJ line 1: numeric token exceeds 64 bytes
+rejected v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+v 1e65 0 0 OBJ line 5: number outside pinned parser domain
+192 generated encoding/conservation checks; complete Blender wedge; bytes, exact opacity and reachable scalar boundaries passed.
++ bend tools/model-obj/bounds.bend -o build/model-obj/bin/bounds
++ build/model-obj/bin/bounds +RTS --threads 1 --gpu off
+rejected 129 materials MTL line 257: material limit
+rejected 4097 parts OBJ line 8195: part limit
+rejected OBJ over 2 MiB OBJ line 0: encoded byte limit
+rejected MTL over 256 KiB MTL line 0: encoded byte limit
+rejected expanded geometry over 381300 vertices OBJ line 127102: expanded geometry limit
+rejected root path over 4096 UTF-8 bytes xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx line 0: root path is empty, contains NUL or exceeds 4096 UTF-8 bytes
+rejected root path NUL  x line 0: root path is empty, contains NUL or exceeds 4096 UTF-8 bytes
+Production byte/material/part/expanded-geometry bounds checked at and over admission limits; every one of 381300 emitted vertices and indices checked.
++ bend tools/model-obj/files.bend -o build/model-obj/bin/files
++ build/model-obj/bin/files +RTS --threads 1 --gpu off
+Fresh request loaded exact dependency content; stale and foreign handles performed no load.
+Cached success skipped invalid changed files; full retained source survived release; fresh load observed red-to-blue dependency edit.
+Fresh request loaded exact dependency content; stale and foreign handles performed no load.
+Missing dependency failure remained cached after creation; whole-model retry recovered.
+rejected real OBJ over byte limit build/model-obj/files/bound line 0: encoded byte limit
+rejected real MTL over byte limit build/model-obj/files/sign.mtl line 0: encoded byte limit
+rejected joined dependency path over limit build/model-obj/files/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx line 0: joined dependency path exceeds path policy
+Native missing-file, >UINT32_MAX stat and directory-read codes/messages preserved with path context.
+Unicode root without extension loaded; real shrink/growth rejected; 64 repetitions of success/missing dependency/missing root/directory/over-limit paths kept descriptor count.
++ bend tools/model-obj/inventory.bend -o build/model-obj/bin/inventory
++ build/model-obj/bin/inventory +RTS --threads 1 --gpu off
+Source-only OBJ consumer ran without Creation, ECS or Vulkan.
+build/model-obj/source-only-0kKJEZg5/consumer
+build/model-obj/source-only-0kKJEZg5/tools/model-obj/consumer.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/float64_ops.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/float64.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/resize_numeric.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/binary64_narrow.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/binary64_ops.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/binary64_add_sub.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/binary64_fma.bend
+build/model-obj/source-only-0kKJEZg5/deps/jonlib-obj/obj.bend
+build/model-obj/source-only-0kKJEZg5/src/asset.bend
+build/model-obj/source-only-0kKJEZg5/src/components.bend
+build/model-obj/source-only-0kKJEZg5/src/content.bend
+build/model-obj/source-only-0kKJEZg5/src/model-obj.bend
+
+Source-only inventory compiled and ran with only Base, Content, Components, Asset, OBJ adapter and eight pinned parser modules.
++ bend tools/model-obj/mutations.bend -o build/model-obj/bin/mutations
++ build/model-obj/bin/mutations +RTS --threads 1 --gpu off
+winding mutation detected by actual production decode, native status=1, expected observation=complete sign source differs
+raw-zero mutation detected by actual production decode, native status=1, expected observation=f 0 2 3 accepted
+material-fallback mutation detected by actual production decode, native status=1, expected observation=usemtl missing accepted
+unsupported-fields mutation detected by actual production decode, native status=1, expected observation=Ks 0 0 0 accepted
+Winding, raw-zero, silent material fallback and ignored unsupported MTL mutations each failed the native verifier as intended.
++ bend tools/model-obj/native.bend -o build/model-obj/bin/native
++ build/model-obj/bin/native +RTS --threads 1 --gpu off
+sign full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+wedge full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+Imported model parts completed two production ECS ticks after cache release.
+Static OBJ source, properties, bounds, files/cache, mutations, source-only closure and real native consumers verified. X11 is a separate owned-display gate.
+docs/verification/2026-11-04-json-scene/corpus/manifest.json: OK
+docs/verification/2026-11-04-json-scene/corpus/scene.json: OK
+docs/verification/2026-11-04-json-scene/corpus/sign.obj: OK
+docs/verification/2026-11-04-json-scene/corpus/sign.mtl: OK
+docs/verification/2026-11-04-json-scene/corpus/image.png: OK
++ bend tools/json-scene/qualify.bend -o build/json-scene/qualify
+kit expected=False input={"x":1,"x":2}
+kit expected=False input={"x":1,"\u0078":2}
+kit expected=False input={"nested":{"x":1,"x":2}}
+kit expected=True input=[[]]
+kit expected=False input=[[]]
+kit expected=False input="\ud800"
+kit expected=True input="\ud83d\ude00"
+kit expected=False input=01
+kit expected=False input={} trailing
+ezjson duplicate accepted=True
+Selected bend-kit-json strict unique byte parser. Exact numbers, decoded-key uniqueness and pre-descent depth checks qualified.
++ bend tools/json-scene/runtime.bend -o build/json-scene/runtime
+Complete scene matches authored reference, including transforms, mesh/material words and part order. Creation shares three ranges across six instances.
+duplicate-root rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+duplicate-escaped rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+duplicate-nested rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+unknown-field rejected build/json-scene/files/scene.json: unknown field extra
+missing-field rejected build/json-scene/files/scene.json: missing field version
+wrong-type rejected build/json-scene/files/scene.json.version: version must be integer 1
+version-rounded rejected build/json-scene/files/scene.json.version: version must be integer 1
+wrong-version rejected build/json-scene/files/scene.json.version: version must be integer 1
+null-transform rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+short-vector rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+long-vector rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+string-number rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: expected number
+range rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number must be finite in [-1000000,1000000]
+overflow rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number must be finite in [-1000000,1000000]
+zero-quaternion rejected build/json-scene/files/scene.json.instances[0].transform: rotation must be a unit quaternion within 0.0001 squared-norm tolerance
+long-number rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number exceeds 64 bytes
+unresolved-reference rejected build/json-scene/files/scene.json: unresolved model absent
+wrong-asset-kind rejected build/json-scene/files/scene.json: image used as model image
+manifest-traversal rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-absolute rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-uri rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-nul rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-long rejected build/json-scene/files/scene.json.manifest: string exceeds 255 UTF-8 bytes
+surrogate rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+depth-at-limit rejected build/json-scene/files/scene.json: unknown field extra
+depth rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+trailing rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+empty rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+root-array rejected build/json-scene/files/scene.json: expected object
+bytes-over rejected build/json-scene/files/scene.json: JSON exceeds 65536 bytes
+Exact 65536-byte scene accepted.
+manifest-duplicate rejected build/json-scene/files/manifest.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+asset-id-duplicate rejected build/json-scene/files/manifest.json.assets: duplicate asset id sign
+asset-path-traversal rejected build/json-scene/files/manifest.json.assets[0].path: path requires relative ASCII components without dot, parent, backslash or URI syntax
+asset-kind rejected build/json-scene/files/manifest.json.assets[0].kind: kind must be obj or png
+asset-schema rejected build/json-scene/files/manifest.json.assets[0]: unknown field extra
+instance-count rejected build/json-scene/files/scene.json.instances: scene exceeds 256 instances
+asset-count rejected build/json-scene/files/manifest.json.assets: manifest exceeds 64 assets
+invalid-utf8 rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+Real JSON file rejection matrix and restored scene pass.
++ bend tools/json-scene/bounds.bend -o build/json-scene/bounds
+expanded-count rejected build/json-scene/files/scene.json: expanded scene exceeds 4096 parts
+empty-root rejected : root path empty, contains NUL or exceeds 4096 UTF-8 bytes
+nul-root rejected bad path: root path empty, contains NUL or exceeds 4096 UTF-8 bytes
+non-byte rejected supplied: input contains a non-byte word
+Real files accept 64 assets, 256 placements and 4080 expanded parts, reject expansion above 4096, and enforce root path and byte-word rules.
++ bend tools/json-scene/cache.bend -o build/json-scene/cache
+JSON source cache preserves success and failure, releases handles, and retries with fresh identity.
++ bend tools/json-scene/native.bend -o build/json-scene/native
+json-scene full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
++ bend tools/json-scene/mutations.bend -o build/json-scene/mutations
+duplicate rejected by duplicate-root accepted
+schema rejected by unknown-field accepted
+range rejected by range accepted
+reference-kind rejected by wrong-asset-kind wrong rejection
+bytes rejected by bytes-over accepted
+depth rejected by depth wrong rejection
+Six isolated production regressions rejected at the named boundary observations.
+Complete scene matches authored reference, including transforms, mesh/material words and part order. Creation shares three ranges across six instances.
+duplicate-root rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+duplicate-escaped rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+duplicate-nested rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+unknown-field rejected build/json-scene/files/scene.json: unknown field extra
+missing-field rejected build/json-scene/files/scene.json: missing field version
+wrong-type rejected build/json-scene/files/scene.json.version: version must be integer 1
+version-rounded rejected build/json-scene/files/scene.json.version: version must be integer 1
+wrong-version rejected build/json-scene/files/scene.json.version: version must be integer 1
+null-transform rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+short-vector rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+long-vector rejected build/json-scene/files/scene.json.instances[0].transform.position: expected exactly three numbers
+string-number rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: expected number
+range rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number must be finite in [-1000000,1000000]
+overflow rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number must be finite in [-1000000,1000000]
+zero-quaternion rejected build/json-scene/files/scene.json.instances[0].transform: rotation must be a unit quaternion within 0.0001 squared-norm tolerance
+long-number rejected build/json-scene/files/scene.json.instances[0].transform.position[0]: number exceeds 64 bytes
+unresolved-reference rejected build/json-scene/files/scene.json: unresolved model absent
+wrong-asset-kind rejected build/json-scene/files/scene.json: image used as model image
+manifest-traversal rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-absolute rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-uri rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-nul rejected build/json-scene/files/scene.json.manifest: path requires relative ASCII components without dot, parent, backslash or URI syntax
+manifest-long rejected build/json-scene/files/scene.json.manifest: string exceeds 255 UTF-8 bytes
+surrogate rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+depth-at-limit rejected build/json-scene/files/scene.json: unknown field extra
+depth rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+trailing rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+empty rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+root-array rejected build/json-scene/files/scene.json: expected object
+bytes-over rejected build/json-scene/files/scene.json: JSON exceeds 65536 bytes
+Exact 65536-byte scene accepted.
+manifest-duplicate rejected build/json-scene/files/manifest.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+asset-id-duplicate rejected build/json-scene/files/manifest.json.assets: duplicate asset id sign
+asset-path-traversal rejected build/json-scene/files/manifest.json.assets[0].path: path requires relative ASCII components without dot, parent, backslash or URI syntax
+asset-kind rejected build/json-scene/files/manifest.json.assets[0].kind: kind must be obj or png
+asset-schema rejected build/json-scene/files/manifest.json.assets[0]: unknown field extra
+instance-count rejected build/json-scene/files/scene.json.instances: scene exceeds 256 instances
+asset-count rejected build/json-scene/files/manifest.json.assets: manifest exceeds 64 assets
+invalid-utf8 rejected build/json-scene/files/scene.json: invalid UTF-8 JSON, duplicate decoded key, or nesting exceeds 8
+Real JSON file rejection matrix and restored scene pass.
+Loaded JSON scene. instances=6 vertices=18 indices=18 ranges=3
+JSON qualification, file/schema/reference/limit checks, cache, production mutations, restored baseline and real ECS/offscreen consumer passed.
+Texture runtime evidence: build/verification/textures-MJoE8zN9
+Native image binding rejection releases both candidate resources; original error preserved.
+Real RGBA8 upload and immediate resource release verified.
+Texture terminal live objects=0
+Texture orientation and sampling: every color and depth byte matches
+Invalid light and singular transform preserve the renderer: every color and depth byte matches
+Back-facing normals receive no diffuse light: every color and depth byte matches
+Ambient-only texture: every color and depth byte matches
+Distinct texture bindings and baked material tint match every pixel.
+Textured renderer live objects=0
+Nonuniform inverse scale: all covered pixels match scalar irradiance within one UNORM step
+Rotated scaled normals: all covered pixels match scalar irradiance within one UNORM step
+Small valid normals at maximum scale: all covered pixels match scalar irradiance within one UNORM step
+Camera move changes pixels; reset restores exact RGBA/D32 without resource growth.
+Textured material lifetime verified across pending, completed and unsubmitted commands, replacement, reset and collection.
+Texture sensitivity evidence: build/verification/texture-controls-vll8jkVx
+upload-rollback rejected at its named property; restored source passed
+byte-order rejected at its named property; restored source passed
+normal-scale rejected at its named property; restored source passed
+diffuse rejected at its named property; restored source passed
+normal-magnitude rejected at its named property; restored source passed
+retirement rejected at its named property; restored source passed
+camera rejected at its named property; restored source passed
++ bend
++ ./build/verify-native-failures
+Native formal evidence: build/verification/native-formal-brOgy8GA
+verify_device_loss proved
+verify_record_reset_failure proved
+verify_submit_result proved
+verify_synced_submission proved
+verify_uncertain_guards proved
+verify_lost_guards proved
+verify_descriptor_failure proved
+verify_fence_reset_failure proved
+verify_idle_failure proved
+verify_completion proved
+verify_idle_success proved
+Production native failure properties verified within the documented bounds.
++ bend
++ ./build/verify-upload-runtime
+Native scalar U64 ABI verified: 12 boundary pairs, 64 walking-one and 64 walking-zero values; both returned limbs compared.
+Requested capacity 7 is smaller than actual Vulkan memory requirement padding.
+Production small boundaries verified: empty start/end; zero allocate/upload_new; engine max-offset/read-count rejection; native invalid bytes; full unchanged destination; immediate cleanup.
+Production exact-limit write/read begins: L=16777216, capacity=L+2, offset=1.
+Production exact-limit verified: returned count=16777216; every byte and exact list exhaustion compared; both guards intact.
+Engine limit-plus-one write rejected before native dispatch; all 16777218 destination bytes unchanged in bounded chunks.
+Native limit-plus-one read rejected through production; all 16777218 destination bytes unchanged; immediate disposal count restored.
+Production upload verified with real Vulkan writes/readback; endpoint, empty, crossing, beyond, max U64, invalid byte, unchanged rejection; live Vulkan objects=0.
++ bend
++ ./build/verify-upload-native-limit
+Native scalar U64 ABI verified: 12 boundary pairs, 64 walking-one and 64 walking-zero values; both returned limbs compared.
+Flattened BufferCreateInfo ABI verified: requested lo=257 hi=1; requirements lo=272 hi=1; unbound buffer only, no large allocation.
+Native exact-limit write/read begins: L=16777216, capacity=L+2, offset=1.
+Native exact-limit verified: every byte and exact list exhaustion compared; both guards intact.
+Native limit-plus-one writer rejected with argument code/message; all 16777218 destination bytes unchanged.
+Native negative boundaries verified: read limit, invalid byte after prefix, U64max empty/nonempty offsets, U32max count precedence; all destination bytes unchanged; zero allocation and immediate disposal counts restored.
+Standalone native upload verified; live Vulkan objects=0.
++ bend
++ ./build/verify-time
+Fixed-step accounting, cap, remainder, duplicate and regressing samples verified across 768826 configurations and clock samples.
++ bend
++ clang
++ env
+before-barrier=
+tick=1 health=5,5
+tick=2 health=2.5,1.25
+tick=3 health=1.25,0.3125
+tick=4 health=0.625,0.078125
+tick=5 health=0.3125,0.01953125
+tick=6 health=0.15625,0.0048828125
+untouched=30
+Host roundtrip and GPU buffer fill verified
+Bendvy + Vulkan native compatibility verified; live Vulkan objects: 0
++ bend
++ clang
++ env
+Project component fields and defaults verified.
++ bend
++ clang
++ env
+before-tick entities=0 admitted=0
+tick=1 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=1 start=0 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=2 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=2 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=3 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=3 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=4 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=4 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=5 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=5 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=6 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=6 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=7 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=7 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+tick=8 entities=100 mesh=7 translated=100 stable=true preserved=true bootstrap=exhausted
+boundaries tick=8 start=100 finish=100 receipts=100 updates=100 spawn=1 move=2 sync=0 events=4 unapplied=0
+Shared mesh scene verified across 8 ticks.
++ bend
++ clang
++ env
+Scalar quaternion cross-product and independent coverage bound verified.
+index-order=near-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+index-order=far-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+Terminal Action cleanup verified.
+Public Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm
++ bend
++ env
+Memory aliases reject retirement without sealing; sealed memory rejects new aliases; final collection returns to baseline.
+Two real submissions retain descriptor memory; completion of one, device idle, and command pool destruction preserve the remaining owners. Rebinding preserves earlier recorded references.
+Descriptor array slots and independent sets retain retired buffers after commands disappear; partial rewrites preserve other slots; free and pool reset release the final owners.
+Sampled descriptors: two real submissions, rebinding, completion, reset and idle preserve recorded sets, views, samplers, images and memory until command release.
+Sampled descriptors: partial array rewrites and independent sets retain every resource; final overwrite and final set free permit explicit destruction; all four resource handles become stale.
+Sampled descriptors: pool reset releases set references; explicit resource cleanup restores baseline.
+Sampled descriptors: pool destruction releases set references; explicit resource cleanup restores baseline.
+Real recording rejection cleaned candidate; both old allocations readable. Pending, completed and unsubmitted commands retained both old buffers and memories until every command reset plus collection. Changed ranges, removed IDs, repeated empty transitions and exact RGBA passed.
+Mesh replacement offscreen and native retention verified; live Vulkan objects: 0
++ bend
++ env
+Recording, submit and pending-reset rejections preserve native references; original GPU fill reads back exactly; successful reset permits collection and reuse.
+Partial upload rollback: retained-pairs=0 first=0 second=0; primary error, every cleanup error, successful writes and exact live counts preserved.
+Partial upload rollback: retained-pairs=1 first=1 second=0; primary error, every cleanup error, successful writes and exact live counts preserved.
+Partial upload rollback: retained-pairs=1 first=0 second=1; primary error, every cleanup error, successful writes and exact live counts preserved.
+Partial upload rollback: retained-pairs=2 first=1 second=1; primary error, every cleanup error, successful writes and exact live counts preserved.
+Allocation pressure: process=273988 VmSizeKiB=11438280 headroomKiB=4096 soft-bytes=11716993024 previous=unlimited
+Process address-space limit restored: unlimited
+Genuine partial preparation failure: vkAllocateMemory: VkResult -2; first allocation rolled back; original resident and diagnostic owner returned intact.
+Allocation and upload succeed again after restoring the process limit.
+Recoverable native resource failures verified; live Vulkan objects: 0
+Terminal entry teardown releases both retained candidates and commands; initiating error and both cleanup diagnostics preserved; live Vulkan objects: 0
+Native resource failure verification passed; live Vulkan objects: 0
+Unexercised: uncertain submission, device loss, Vulkan begin/end/reset errors, and driver-level cleanup errors.
+Pinned native toolchain and dependency compatibility verified.

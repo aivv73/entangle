@@ -1,4 +1,5 @@
 import Base
+import ./hierarchy.bend as H
 import ./scene-buffer.bend as B
 import ./scene-geometry.bend as G
 import ./error.bend as Error
@@ -59,11 +60,18 @@ def normal_transform(range:Maybe<Create.Range>,transform:C.Transform) -> Bool:
     case Some{Create.Range{_,_,_,Some{_}}}:Light.transform_valid(transform)
     case _:True{}
 
+def normal_global(range:Maybe<Create.Range>,global:H.GlobalTransform) -> Bool:
+  match range:
+    case Some{Create.Range{_,_,_,Some{_}}}:H.usable_normal(H.normal(global))
+    case _:True{}
+
 def preflight(+camera:M.Mat4,+ranges:List<&2,Create.Range>,items:List<&2,Draw.DrawItem>,+index:U32) -> Result<&2,&2,InputError,Unit>:
   match items:
     case []:Done{Unit{}}
     case Draw.DrawItem{+t,C.MeshRef{+other}} <> rest:
       preflight_item(known(Create.resolve(ranges,other)),Create.transform_valid(t) && normal_transform(Create.resolve(ranges,other),t) && Create.matrix_finite(M.multiply(camera,M.model(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
+    case Draw.GlobalItem{+t,C.MeshRef{+other}} <> rest:
+      preflight_item(known(Create.resolve(ranges,other)),H.affine(t) && normal_global(Create.resolve(ranges,other),t) && Create.matrix_finite(M.multiply(camera,H.matrix(t))),other,index,preflight(camera,ranges,rest,U32.inc(index)))
 
 def allocate(+instance:V.Instance,+physical:V.PhysicalDevice,+device:V.Device,requirements:V.MemoryRequirements,flags:U32) -> V.Action(V.DeviceMemory):
   V.MemoryRequirements{size,_,bits} = requirements
@@ -174,7 +182,7 @@ def draw_item(+command:V.CommandBuffer,range:Create.Range,+on:Bool,+counters:Cou
     +counters:Count.Counters = Bool.pick(Count.Counters,on,Count.draw(counters),counters)
     return counters
 
-def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,buffers:Maybe<&2,G.Buffers>,material:Maybe<T.Material>,camera:M.Mat4,transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,buffers:Maybe<&2,G.Buffers>,material:Maybe<T.Material>,camera:M.Mat4,transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
   match material:
     case None{}:Error.failure(Count.Counters,1,"Missing resident texture")
     case Some{T.Material{set,_}}:
@@ -182,19 +190,19 @@ def lit_draw(+command:V.CommandBuffer,pipelines:P.Pipelines,range:Create.Range,b
         V.CommandBuffer.bind_graphics_pipeline(command,P.textured(pipelines))
         bind_geometry(command,buffers)
         V.CommandBuffer.bind_descriptor_sets(command,0,[set])
-        draw_item(command,range,on,counters,payload_size(Light.payload(camera,transform,light)))
+        draw_item(command,range,on,counters,payload_size(Light.global_payload(camera,transform,light)))
 
-def draw_range(+range:Create.Range,+command:V.CommandBuffer,pipelines:P.Pipelines,+resident:G.Resident,camera:M.Mat4,transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+def draw_range(+range:Create.Range,+command:V.CommandBuffer,pipelines:P.Pipelines,+resident:G.Resident,camera:M.Mat4,transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
   Create.Range{id,_,_,image} = range
   match image:
     case None{}:
       do V.Action<Count.Counters>:
         V.CommandBuffer.bind_graphics_pipeline(command,P.basic(pipelines))
         bind_geometry(command,G.buffers(resident))
-        draw_item(command,range,on,counters,payload_size(M.matrix_words(M.multiply(camera,M.model(transform)))))
+        draw_item(command,range,on,counters,payload_size(M.matrix_words(M.multiply(camera,H.matrix(transform)))))
     case Some{_}:lit_draw(command,pipelines,range,G.buffers(resident),Materials.material(G.materials(resident),id),camera,transform,light,on,counters)
 
-def draw_resolved(range:Maybe<Create.Range>,+command:V.CommandBuffer,+pipelines:P.Pipelines,+resident:G.Resident,+camera:M.Mat4,+transform:C.Transform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
+def draw_resolved(range:Maybe<Create.Range>,+command:V.CommandBuffer,+pipelines:P.Pipelines,+resident:G.Resident,+camera:M.Mat4,+transform:H.GlobalTransform,light:Light.Light,on:Bool,counters:Count.Counters) -> V.Action(Count.Counters):
   match range:
     case None{}:Error.failure(Count.Counters,1,"Unresolved preflight range")
     case Some{Create.Range{_,_,0,_}}:V.Action.pure(Count.Counters,counters)
@@ -205,6 +213,10 @@ def draw_items_counted(+command:V.CommandBuffer,+pipelines:P.Pipelines,+camera:M
   match items:
     case []:V.Action.pure(Count.Counters,counters)
     case Draw.DrawItem{+t,C.MeshRef{+id}} <> rest:
+      do V.Action<Count.Counters>:
+        counters:Count.Counters <- draw_resolved(Create.resolve(G.ranges(resident),id),command,pipelines,resident,camera,H.compose(None{},t),light,on,counters)
+        draw_items_counted(command,pipelines,camera,light,resident,rest,on,counters)
+    case Draw.GlobalItem{+t,C.MeshRef{+id}} <> rest:
       do V.Action<Count.Counters>:
         counters:Count.Counters <- draw_resolved(Create.resolve(G.ranges(resident),id),command,pipelines,resident,camera,t,light,on,counters)
         draw_items_counted(command,pipelines,camera,light,resident,rest,on,counters)

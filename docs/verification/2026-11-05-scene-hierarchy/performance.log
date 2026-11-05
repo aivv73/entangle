@@ -1,0 +1,77 @@
+Performance evidence: build/verification/hierarchy-measure-u8uQ1E0f
+baseline repeat=0 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=3114.9255
+baseline repeat=0 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=5927.23
+candidate repeat=0 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=395.07788
+candidate repeat=0 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=1130.9968
+exact state/RGBA/D32 comparison passed
+candidate repeat=1 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=388.98227
+candidate repeat=1 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=1114.6935
+baseline repeat=1 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=2958.331
+baseline repeat=1 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=5985.1064
+exact state/RGBA/D32 comparison passed
+baseline repeat=2 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=3189.8862
+baseline repeat=2 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=6180.835
+candidate repeat=2 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=400.58078
+candidate repeat=2 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=1152.9319
+exact state/RGBA/D32 comparison passed
+candidate repeat=3 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=435.69702
+candidate repeat=3 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=1126.6581
+baseline repeat=3 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=3079.0332
+baseline repeat=3 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=6062.6567
+exact state/RGBA/D32 comparison passed
+baseline repeat=4 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=3050.3518
+baseline repeat=4 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=6265.5645
+candidate repeat=4 publication mode=0 nodes=1000 updates=6 errors=0 total_ms=391.03763
+candidate repeat=4 offscreen-frame mode=0 nodes=1000 updates=6 errors=0 total_ms=1169.5774
+exact state/RGBA/D32 comparison passed
+baseline repeat=0 publication mode=1 nodes=256 updates=6 errors=0 total_ms=189.48691
+baseline repeat=0 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=895.8368
+candidate repeat=0 publication mode=1 nodes=256 updates=6 errors=0 total_ms=35.747467
+candidate repeat=0 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=602.6609
+exact state/RGBA/D32 comparison passed
+candidate repeat=1 publication mode=1 nodes=256 updates=6 errors=0 total_ms=35.379375
+candidate repeat=1 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=600.40686
+baseline repeat=1 publication mode=1 nodes=256 updates=6 errors=0 total_ms=195.3031
+baseline repeat=1 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=907.383
+exact state/RGBA/D32 comparison passed
+baseline repeat=2 publication mode=1 nodes=256 updates=6 errors=0 total_ms=193.3476
+baseline repeat=2 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=891.5275
+candidate repeat=2 publication mode=1 nodes=256 updates=6 errors=0 total_ms=35.768288
+candidate repeat=2 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=606.1775
+exact state/RGBA/D32 comparison passed
+candidate repeat=3 publication mode=1 nodes=256 updates=6 errors=0 total_ms=35.588017
+candidate repeat=3 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=611.47784
+baseline repeat=3 publication mode=1 nodes=256 updates=6 errors=0 total_ms=193.34373
+baseline repeat=3 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=900.6246
+exact state/RGBA/D32 comparison passed
+baseline repeat=4 publication mode=1 nodes=256 updates=6 errors=0 total_ms=190.34918
+baseline repeat=4 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=896.7973
+candidate repeat=4 publication mode=1 nodes=256 updates=6 errors=0 total_ms=37.461246
+candidate repeat=4 offscreen-frame mode=1 nodes=256 updates=6 errors=0 total_ms=621.90643
+exact state/RGBA/D32 comparison passed
+baseline repeat=0 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=3110.915
+baseline repeat=0 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=6199.5396
+candidate repeat=0 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=437.78973
+candidate repeat=0 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=1166.9296
+exact state/RGBA/D32 comparison passed
+candidate repeat=1 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=411.88672
+candidate repeat=1 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=1150.9539
+baseline repeat=1 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=3180.4895
+baseline repeat=1 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=6292.513
+exact state/RGBA/D32 comparison passed
+baseline repeat=2 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=3282.6265
+baseline repeat=2 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=6420.858
+candidate repeat=2 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=429.60834
+candidate repeat=2 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=1164.6401
+exact state/RGBA/D32 comparison passed
+candidate repeat=3 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=422.8484
+candidate repeat=3 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=1155.8114
+baseline repeat=3 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=3162.667
+baseline repeat=3 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=6211.15
+exact state/RGBA/D32 comparison passed
+baseline repeat=4 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=3132.0227
+baseline repeat=4 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=6198.8223
+candidate repeat=4 publication mode=2 nodes=1023 updates=6 errors=0 total_ms=406.7855
+candidate repeat=4 offscreen-frame mode=2 nodes=1023 updates=6 errors=0 total_ms=1131.0905
+exact state/RGBA/D32 comparison passed
+Five alternating pairs per workload passed exact state and image comparison

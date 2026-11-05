@@ -7,6 +7,8 @@ import ./components.bend as C
 import ./creation.bend as Create
 import ./model-obj.bend as Obj
 import ./image-png.bend as Png
+import ./hierarchy.bend as H
+import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as B
 
 type AssetKind is Data:
   Model{}
@@ -16,7 +18,7 @@ type Reference is Data:
 type Manifest is Data:
   Manifest{assets:List<&2,Reference>}
 type Placement is Data:
-  Placement{model:String,transform:C.Transform}
+  Placement{model:String,transform:C.Transform,parent:Maybe<&2,U32>}
 type Description is Data:
   Description{manifest:String,instances:List<&2,Placement>}
 type Source is Data:
@@ -146,8 +148,42 @@ def placement_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.E
         model:String <- Json.text(model,path ++ ".model")
         model:String <- identifier(model,path ++ ".model")
         t:C.Transform <- transform(t,path ++ ".transform")
-        return Placement{model,t}
+        return Placement{model,t,None{}}
     case _:Fail{Json.error(3,path,"invalid placement fields")}
+
+def parent_number(value:Maybe<&2,U32>,+token:String,+path:String) -> Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
+  match value:
+    case None{}:Fail{Json.error(5,path,"parent must be a placement index or null")}
+    case Some{+n}:
+      do Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
+        _:Unit <- Json.need(String.eq(token,U32.show(n)) && U32.is_lt(n,256),5,path,"parent must be an integer placement index below 256")
+        return Some{n}
+
+def parent_value(value:Maybe<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Maybe<&2,U32>>:
+  match value:
+    case None{}:Done{None{}}
+    case Some{J.Null{}}:Done{None{}}
+    case Some{J.Num{token}}:
+      +token = B.to_string(token)
+      parent_number(U32.read(token),token,path)
+    case _:Fail{Json.error(5,path,"parent must be a placement index or null")}
+
+def placement_parent(item:Placement,parent:Maybe<&2,U32>) -> Placement:
+  Placement{model,t,_} = item
+  Placement{model,t,parent}
+
+def placement_optional(pair:Maybe<&1,J.Val> & List<&1,B.Bytes & J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Placement>:
+  (optional,fields) = pair
+  do Result<&2,&1,Asset.Error,Placement>:
+    parent:Maybe<&2,U32> <- parent_value(optional,path ++ ".parent")
+    ordered:List<&1,J.Val> <- Json.ordered(["model","transform"],fields,path)
+    item:Placement <- placement_fields(ordered,path)
+    return placement_parent(item,parent)
+
+def placement(value:J.Val,+path:String) -> Result<&2,&1,Asset.Error,Placement>:
+  do Result<&2,&1,Asset.Error,Placement>:
+    fields:List<&1,B.Bytes & J.Val> <- Json.fields(value,path)
+    placement_optional(Json.pull(fields,"parent"),path)
 
 def placements(values:List<&1,J.Val>,+path:String,+index:Nat) -> Result<&2,&1,Asset.Error,List<&2,Placement>>:
   match values:
@@ -156,10 +192,19 @@ def placements(values:List<&1,J.Val>,+path:String,+index:Nat) -> Result<&2,&1,As
       do Result<&2,&1,Asset.Error,List<&2,Placement>>:
         _:Unit <- Json.need(Nat.is_lt(index,instance_limit()),2,path,"scene exceeds 256 instances")
         +item_path:String = path ++ "[" ++ Nat.show(index) ++ "]"
-        fields:List<&1,J.Val> <- Json.schema(value,["model","transform"],item_path)
-        p:Placement <- placement_fields(fields,item_path)
+        p:Placement <- placement(value,item_path)
         ps:List<&2,Placement> <- placements(rest,path,1n+index)
         return p <> ps
+
+def placement_locals(items:List<&2,Placement>) -> List<&2,H.Local>:
+  match items:
+    case []:[]
+    case Placement{_,t,p} <> rest:H.Local{t,p,H.Empty{},False{}} <> placement_locals(rest)
+
+def parent_graph(result:Result<&2,&2,H.Error,List<&2,H.Spatial>>,path:String) -> Result<&2,&1,Asset.Error,Unit>:
+  match result:
+    case Fail{_}:Fail{Json.error(5,path,"invalid parent graph or composed transform")}
+    case Done{_}:Done{Unit{}}
 
 def scene_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error,Description>:
   match values:
@@ -169,7 +214,8 @@ def scene_fields(values:List<&1,J.Val>,+path:String) -> Result<&2,&1,Asset.Error
         name:String <- Json.text(manifest,path ++ ".manifest")
         name:String <- relative(name,path ++ ".manifest")
         values:List<&1,J.Val> <- Json.array(instances,path ++ ".instances")
-        items:List<&2,Placement> <- placements(values,path ++ ".instances",0n)
+        +items:List<&2,Placement> <- placements(values,path ++ ".instances",0n)
+        _:Unit <- parent_graph(H.evaluate(placement_locals(items)),path)
         return Description{name,items}
     case _:Fail{Json.error(3,path,"invalid scene fields")}
 
@@ -220,7 +266,7 @@ def model_reference(refs:List<&2,Reference>,+id:String,+path:String) -> Result<&
 def check_references(items:List<&2,Placement>,+refs:List<&2,Reference>,+path:String) -> Result<&2,&2,Asset.Error,Unit>:
   match items:
     case []:Done{Unit{}}
-    case Placement{id,_} <> rest:
+    case Placement{id,_,_} <> rest:
       do Result<&2,&2,Asset.Error,Unit>:
         _:Unit <- model_reference(refs,id,path)
         check_references(rest,refs,path)
@@ -310,13 +356,73 @@ def model_instances(value:F.SourceModel,t:C.Transform) -> List<&2,Create.Instanc
 def expand(items:List<&2,Placement>,+sources:List<&2,Source>,+path:String,+count:Nat,acc:List<&2,Create.Instance>) -> Result<&2,&2,Asset.Error,Create.Scene>:
   match items:
     case []:Done{Create.Scene{acc}}
-    case Placement{id,t} <> rest:
+    case Placement{id,t,_} <> rest:
       do Result<&2,&2,Asset.Error,Create.Scene>:
         value:F.SourceModel <- model(sources,id,path)
         +added:List<&2,Create.Instance> = model_instances(value,t)
         +count:Nat = Nat.add(count,List.length(&2,Create.Instance,added))
         _:Unit <- Json.data(Unit,Json.need(Nat.is_le(count,expanded_limit()),2,path,"expanded scene exceeds 4096 parts"))
         expand(rest,sources,path,count,List.append(&2,Create.Instance,acc,added))
+
+type Group is Data:
+  Group{placement:Placement,parts:List<&2,F.ModelPart>,first:U32}
+
+def has_parent(items:List<&2,Placement>) -> Bool:
+  match items:
+    case []:False{}
+    case Placement{_,_,Some{_}} <> _:True{}
+    case _ <> rest:has_parent(rest)
+
+def parts(value:F.SourceModel) -> List<&2,F.ModelPart>:
+  F.SourceModel{parts} = value
+  parts
+
+def groups(items:List<&2,Placement>,+sources:List<&2,Source>,+path:String,+count:Nat) -> Result<&2,&2,Asset.Error,List<&2,Group>>:
+  match items:
+    case []:Done{[]}
+    case +item <> rest:
+      Placement{id,_,_} = item
+      do Result<&2,&2,Asset.Error,List<&2,Group>>:
+        model:F.SourceModel <- model(sources,id,path)
+        +ps:List<&2,F.ModelPart> = parts(model)
+        +next:Nat = Nat.add(count,List.length(&2,F.ModelPart,ps))
+        _:Unit <- Json.data(Unit,Json.need(Nat.is_gt(next,count) && Nat.is_le(next,expanded_limit()),2,path,"hierarchical models must have parts and fit the 4096-part limit"))
+        tail:List<&2,Group> <- groups(rest,sources,path,next)
+        return Group{item,ps,U32.from_nat(count)} <> tail
+
+def anchor(groups:List<&2,Group>,index:Nat) -> Maybe<&2,U32>:
+  match groups index:
+    case Group{_,_,first} <> _,0n:Some{first}
+    case _ <> rest,1n+n:anchor(rest,n)
+    case [] _:None{}
+
+def anchor_parent(parent:Maybe<&2,U32>,groups:List<&2,Group>) -> Maybe<&2,U32>:
+  match parent:
+    case None{}:None{}
+    case Some{p}:anchor(groups,U32.to_nat(p))
+
+def attached_parts(parts:List<&2,F.ModelPart>,+first:U32) -> List<&2,Create.Instance>:
+  match parts:
+    case []:[]
+    case F.ModelPart{m,c,_} <> rest:Create.Parented{m,c,C.Transform.identity(),first} <> attached_parts(rest,first)
+
+def group_instances(parts:List<&2,F.ModelPart>,t:C.Transform,parent:Maybe<&2,U32>,first:U32) -> List<&2,Create.Instance>:
+  match parts:
+    case []:[]
+    case F.ModelPart{m,c,_} <> rest:Create.parent(Create.Instance{m,c,t},parent) <> attached_parts(rest,first)
+
+def grouped(groups:List<&2,Group>,+all:List<&2,Group>) -> List<&2,Create.Instance>:
+  match groups:
+    case []:[]
+    case Group{Placement{_,t,p},parts,first} <> rest:List.append(&2,Create.Instance,group_instances(parts,t,anchor_parent(p,all),first),grouped(rest,all))
+
+def expand_scene(hierarchy:Bool,items:List<&2,Placement>,sources:List<&2,Source>,path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
+  match hierarchy:
+    case False{}:expand(items,sources,path,0n,[])
+    case True{}:
+      do Result<&2,&2,Asset.Error,Create.Scene>:
+        +gs:List<&2,Group> <- groups(items,sources,path,0n)
+        return Create.Scene{grouped(gs,gs)}
 
 def compilation_ok(result:Result<&2,&2,Create.Error,Create.Compiled>) -> Bool:
   match result:
@@ -339,10 +445,10 @@ def valid_result(result:Result<&2,&2,Asset.Error,Create.Scene>) -> Bool:
     case Fail{_}:True{}
     case Done{scene}:scene_valid(scene)
 
-def resolve(loaded:Result<&2,&2,Asset.Error,List<&2,Source>>,items:List<&2,Placement>,+path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
+def resolve(loaded:Result<&2,&2,Asset.Error,List<&2,Source>>,+items:List<&2,Placement>,+path:String) -> Result<&2,&2,Asset.Error,Create.Scene>:
   do Result<&2,&2,Asset.Error,Create.Scene>:
     sources:List<&2,Source> <- loaded
-    scene:Create.Scene <- expand(items,sources,path,0n,[])
+    scene:Create.Scene <- expand_scene(has_parent(items),items,sources,path)
     admit(scene,path)
 
 def checked_manifest(checked:Result<&2,&2,Asset.Error,Unit>,refs:List<&2,Reference>,+items:List<&2,Placement>,owner:String,path:String) -> IO(Result<&2,&2,Asset.Error,Create.Scene>):

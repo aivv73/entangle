@@ -12,7 +12,7 @@ def native(+name:String,kind:String,path:String,args:List<&2,String>) -> List<&2
    Step{name,kind,"./" ++ binary,List.append(&2,String,args,["+RTS","--threads","1","--gpu","off"])}]
 
 def known(name:String) -> Bool:
-  S.has(["toolchain","proofs","assets","images","json","math","textures","upload","native-failures","native","window","textured-window","all"],name)
+  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-window","upload","native-failures","native","window","textured-window","all"],name)
 
 def valid(names:List<&2,String>) -> Bool:
   match names:
@@ -31,22 +31,24 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
   +assets:Bool = selected(names,"assets") || selected(names,"images") || selected(names,"json")
   +upload:Bool = selected(names,"upload") || baseline
   +failures:Bool = selected(names,"native-failures") || selected(names,"textures") || baseline
-  +laws:Bool = proofs || assets || upload || failures || selected(names,"math")
+  +laws:Bool = proofs || assets || upload || failures || selected(names,"math") || selected(names,"hierarchy")
   List.concat(&2,Step,[
     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
-    add(laws || selected(names,"window") || selected(names,"textured-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
+    add(laws || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
     add(laws && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
     add(assets && Bool.not(baseline),native("assets","runtime","tools/verify-assets.bend",[])),
     add(selected(names,"images") && Bool.not(baseline),native("images","runtime-and-sensitivity","tools/verify-images.bend",[])),
     add(selected(names,"json") && Bool.not(baseline),native("json","runtime-and-sensitivity","tools/verify-json.bend",[])),
     add(selected(names,"math"),native("math","qualification-and-retained-scenes","tools/verify-math.bend",[])),
     add(selected(names,"textures") && Bool.not(baseline),native("textures","runtime-and-sensitivity","tools/verify-textures.bend",[])),
+    add(selected(names,"hierarchy"),native("hierarchy","ecs-render-replay-and-sensitivity","tools/verify-hierarchy.bend",[])),
     add(upload && Bool.not(baseline),native("upload-runtime","runtime","tools/verify-upload-runtime.bend",[])),
     add(upload && Bool.not(baseline),native("upload-native-limit","runtime","tools/verify-upload-native-limit.bend",[])),
     add(failures && Bool.not(baseline),native("resource-failures","runtime","tools/verify-resource-failures.bend",[])),
     add(baseline,native("native","native-baseline","tools/verify.bend",[])),
     add(selected(names,"window") && Bool.not(selected(names,"textured-window")),[Step{"window","mesh-window-and-replay","bash",["tools/verify-window-session.sh"]}]),
     add(selected(names,"textured-window"),[Step{"textured-window","all-renderer-windows-and-replay","bash",["tools/verify-window-session.sh","extended"]}]),
+    add(selected(names,"hierarchy-window") && Bool.not(selected(names,"textured-window")),[Step{"hierarchy-window","hierarchy-mesh-windows-and-replay","bash",["tools/verify-window-session.sh","hierarchy"]}]),
     add(proofs || upload,[Step{"upload-kernel","kernel","bend",["proofs/upload-range/PROOF.bend","--verdict"]}]),
     add(laws,native("law-mutations","sensitivity","tools/verify-law-mutations.bend",[])),
     add(upload,native("upload-mutations","sensitivity","tools/verify-upload-mutations.bend",[])),

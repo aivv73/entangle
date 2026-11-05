@@ -1,0 +1,12 @@
+SOME PROOFS FAIL
+Error:
+- expected : H.GlobalTransform{Render.model(local)}
+- observed : H.GlobalTransform{Render.multiply(parent, Render.model(local))}
+Context:
+- parent : Render.Mat4
+- local  : C.Transform
+Location: Laws.hierarchy_parent_composition
+776 | def Laws.hierarchy_child_draw(parent,local,mesh,global):{==}
+777>| def Laws.hierarchy_parent_composition(parent,local):{==}
+    |                                                     ^^^^
+778 | def Laws.hierarchy_empty_bounds(global):

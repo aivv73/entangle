@@ -2,7 +2,7 @@
 set -euo pipefail
 entangle_extended=${1:-}
 test "$#" -le 1
-case "$entangle_extended" in ""|extended) ;; *) exit 2 ;; esac
+case "$entangle_extended" in ""|extended|hierarchy) ;; *) exit 2 ;; esac
 entangle_repo="$PWD"
 test -f "$entangle_repo/toolchain.bend"
 mkdir -p "$entangle_repo/build/verification"
@@ -73,6 +73,11 @@ run proof bend PROOF.bend
 run build-app bend examples/mesh-playground.bend -o "$entangle_evidence/bin/mesh-playground"
 run build-driver bend tools/verify-mesh-window.bend -o "$entangle_evidence/bin/verify-mesh-window"
 run build-replay bend tools/replay-mesh-window.bend -o "$entangle_evidence/bin/replay-mesh-window"
+if [ "$entangle_extended" = extended ] || [ "$entangle_extended" = hierarchy ]; then
+  run build-hierarchy bend tools/hierarchy/window.bend -o "$entangle_evidence/bin/hierarchy-window"
+  run build-hierarchy-driver bend tools/hierarchy/window-driver.bend -o "$entangle_evidence/bin/hierarchy-driver"
+  run build-hierarchy-replay bend tools/hierarchy/replay.bend -o "$entangle_evidence/bin/hierarchy-replay"
+fi
 if [ "$entangle_extended" = extended ]; then
   run build-cube bend examples/scene-window.bend -o "$entangle_evidence/bin/cube-window"
   run build-cube-driver bend tools/verify-window.bend -o "$entangle_evidence/bin/verify-window"
@@ -142,6 +147,18 @@ if [ "$entangle_extended" = extended ]; then
   rm build/window-evidence
   ln -s "$entangle_evidence/mesh" build/window-evidence
   run doctor-after-extended doctor
+fi
+if [ "$entangle_extended" = extended ] || [ "$entangle_extended" = hierarchy ]; then
+  mkdir -p "$entangle_evidence/hierarchy"
+  cp "$entangle_evidence/bin/hierarchy-window" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/hierarchy" build/window-evidence
+  run hierarchy-window timeout --signal=KILL 120s "$entangle_evidence/bin/hierarchy-driver"
+  run hierarchy-replay "$entangle_evidence/bin/hierarchy-replay" "$entangle_evidence/hierarchy/native.log"
+  cp "$entangle_evidence/bin/mesh-playground" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/mesh" build/window-evidence
+  run doctor-after-hierarchy doctor
 fi
 run window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-mesh-window"
 run replay-live "$entangle_evidence/bin/replay-mesh-window" "$entangle_evidence/mesh/native-live.log"

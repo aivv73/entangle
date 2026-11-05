@@ -1,0 +1,4 @@
+bend
+tools/verify-native-failures.bend
+-o
+build/workflow-native-failures

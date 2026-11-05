@@ -1,4 +1,6 @@
 import ./src/json-boundary.bend as Json
+import ./src/hierarchy.bend as H
+import ./src/scene-hierarchy.bend as Hierarchy
 import ./src/scene-file.bend as SceneFile
 import 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend as JsonParser
 import ./deps/jonlib-obj/obj.bend as ModelParser
@@ -173,7 +175,7 @@ law scene_rotation_scale:
 
 law scene_seed:
   for +index:U32
-  {Seeds.seed(index) == Create.Seed{C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}},C.MeshRef{7}} : Create.Seed}
+  {Seeds.seed(index) == Create.seed(C.Transform{C.Vec3{U32.to_f32(index),F32.mul(2.0,U32.to_f32(index)),F32.neg(U32.to_f32(index))},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{2.0,3.0,4.0}},C.MeshRef{7}) : Create.Seed}
 
 law scene_seed_count:
   for +count:Nat
@@ -246,7 +248,7 @@ law draw_finish_order:
   {Observe.values(~Draw.DrawItem,~Observe.draw_item,
     ~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,
     ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
-      ~SceneSchema.components(),~Layout.InRight{Layout.AtLeaf{}},~{==}),[],frame,acc) ==
+      ~SceneSchema.components(),~Layout.InRight{Layout.InLeft{Layout.AtLeaf{}}},~{==}),[],frame,acc) ==
     (frame,Done{List.reverse(&2,Draw.DrawItem,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
 
 
@@ -473,8 +475,9 @@ law creation_tint_position:
 law creation_bundle_order:
   for transform:C.Transform
   for mesh:C.MeshRef
+  for spatial:H.Spatial
   for rest:List<&2,Create.Seed>
-  {Spawn.bundles(Create.Seed{transform,mesh} <> rest) == Product.Owner{Some{transform},Some{mesh}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
+  {Spawn.bundles(Create.Seed{transform,mesh,spatial} <> rest) == Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
 
 law creation_empty:
   {Create.compile(Create.Scene{[]}) == Done{Create.Compiled{[],Create.Geometry{[],[],[]}}} : Result<&2,&2,Create.Error,Create.Compiled>}
@@ -1095,3 +1098,69 @@ law light_requires_direction:
   for +intensity:F32
   for invalid:{F.normal_valid(direction) == False{} : Bool}
   {Light.valid(Light.Directional{direction,color,ambient,intensity}) == False{} : Bool}
+
+law hierarchy_root_matrix:
+  for local:C.Transform
+  {H.compose(None{},local) == H.GlobalTransform{Render.model(local)} : H.GlobalTransform}
+
+law hierarchy_root_draw:
+  for local:C.Transform
+  for mesh:C.MeshRef
+  for global:H.GlobalTransform
+  {Draw.item(None{},local,mesh,global) == Draw.DrawItem{local,mesh} : Draw.DrawItem}
+
+law hierarchy_child_draw:
+  for parent:U32
+  for local:C.Transform
+  for mesh:C.MeshRef
+  for global:H.GlobalTransform
+  {Draw.item(Some{parent},local,mesh,global) == Draw.GlobalItem{global,mesh} : Draw.DrawItem}
+
+law hierarchy_parent_composition:
+  for parent:Render.Mat4
+  for local:C.Transform
+  {H.compose(Some{H.GlobalTransform{parent}},local) == H.GlobalTransform{Render.multiply(parent,Render.model(local))} : H.GlobalTransform}
+
+law hierarchy_empty_bounds:
+  for global:H.GlobalTransform
+  {H.world_bounds(global,H.Empty{}) == H.Empty{} : H.Bounds}
+
+law hierarchy_derived_bounds:
+  for global:H.GlobalTransform
+  for local:H.Bounds
+  {H.world_bounds(global,local) == H.transformed(H.corners(local),H.matrix(global),H.Empty{}) : H.Bounds}
+
+law hierarchy_visiting_rejected:
+  for array:Array<H.Mark>
+  for index:U32
+  for next:U32 -> Array<H.Mark> -> Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>
+  {H.visit_mark((array,H.Visiting{}),index,next) == Fail{H.Cycle{index}} : Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>}
+
+law hierarchy_missing_rejected:
+  for array:Array<H.Mark>
+  for index:U32
+  for next:U32 -> Array<H.Mark> -> Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>
+  {H.visit_checked(False{},index,array,next) == Fail{H.MissingParent{index}} : Result<&2,&1,H.Error,Array<H.Mark> & H.Spatial>}
+
+law hierarchy_invalid_derived_rejected:
+  for index:U32
+  for local:H.Local
+  for global:H.GlobalTransform
+  for bounds:H.Bounds
+  {H.derived(False{},index,local,global,bounds) == Fail{H.InvalidTransform{index}} : Result<&2,&2,H.Error,H.Spatial>}
+
+law hierarchy_parent_rejection_preserves_world:
+  for entity:W.Handle<SceneSchema.Schema>
+  for parent:Maybe<&2,W.Handle<SceneSchema.Schema>>
+  for world:SceneSchema.World()
+  for rows:List<&2,Hierarchy.Row>
+  for error:H.Error
+  {Hierarchy.evaluated(Hierarchy.SetParent{entity,parent},world,rows,Fail{error}) == (world,Fail{error}) : SceneSchema.World() & Result<&2,&2,H.Error,Unit>}
+
+law hierarchy_transform_rejection_preserves_world:
+  for entity:W.Handle<SceneSchema.Schema>
+  for transform:C.Transform
+  for world:SceneSchema.World()
+  for rows:List<&2,Hierarchy.Row>
+  for error:H.Error
+  {Hierarchy.evaluated(Hierarchy.SetTransform{entity,transform},world,rows,Fail{error}) == (world,Fail{error}) : SceneSchema.World() & Result<&2,&2,H.Error,Unit>}

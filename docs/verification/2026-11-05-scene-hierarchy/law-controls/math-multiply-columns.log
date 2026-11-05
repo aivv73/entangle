@@ -1,0 +1,15 @@
+SOME PROOFS FAIL
+Error:
+- expected : Render.Mat4{Render.apply(left, b), Render.apply(left, a), Render.apply(left, c), Render.apply(left, d)}
+- observed : Render.Mat4{Render.apply(left, a), Render.apply(left, b), Render.apply(left, c), Render.apply(left, d)}
+Context:
+- left : Render.Mat4
+- a    : Render.Vec4
+- b    : Render.Vec4
+- c    : Render.Vec4
+- d    : Render.Vec4
+Location: Laws.render_multiply_order
+139 | 
+140>| def Laws.render_multiply_order(left,a,b,c,d):{==}
+    |                                              ^^^^
+141 | 

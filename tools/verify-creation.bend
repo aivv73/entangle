@@ -41,12 +41,12 @@ def compiled(result:Result<&2,&2,Create.Error,Create.Compiled>) -> IO(Create.Com
 
 def move_seed(pair:C.Transform & Unit,mesh:C.MeshRef) -> Create.Seed:
   (transform,_) = pair
-  Create.Seed{transform,mesh}
+  Create.seed(transform,mesh)
 
 def move_once(seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
   match seeds:
     case []:[]
-    case Create.Seed{transform,mesh} <> rest:move_seed(Step.step(Unit{},transform),mesh) <> move_once(rest)
+    case Create.Seed{transform,mesh,_} <> rest:move_seed(Step.step(Unit{},transform),mesh) <> move_once(rest)
 
 def moved(+ticks:Nat,seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
   match ticks:
@@ -56,7 +56,7 @@ def moved(+ticks:Nat,seeds:List<&2,Create.Seed>) -> List<&2,Create.Seed>:
 def rows_equal(rows:List<&2,Observe.Row>,seeds:List<&2,Create.Seed>) -> Bool:
   match rows seeds:
     case [], []:True{}
-    case Observe.Row{_,t,C.MeshRef{id}} <> rest,Create.Seed{u,C.MeshRef{other}} <> tail:
+    case Observe.Row{_,t,C.MeshRef{id}} <> rest,Create.Seed{u,C.MeshRef{other},_} <> tail:
       U32.is_eq(id,other) && Render.equal_bytes(R.reusable(M.matrix_words(M.model(t))),R.reusable(M.matrix_words(M.model(u)))) && rows_equal(rest,tail)
     case _,_:False{}
 
@@ -68,12 +68,17 @@ def draw_items(rows:List<&2,Observe.Row>) -> List<&2,Draw.DrawItem>:
 def draws(rows:List<&2,Observe.Row>) -> Draw.DrawList:
   Draw.DrawList{draw_items(rows)}
 
+def derived_draws(pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>)) -> IO(Scene.Application() & Draw.DrawList):
+  match pair:
+    case (app,(_,Done{draws})):IO.pure(Scene.Application() & Draw.DrawList,(app,draws))
+    case _:IO.die(Scene.Application() & Draw.DrawList,1,"Creation derived drawing extraction refused")
+
 def snapshot(+seeds:List<&2,Create.Seed>,tick:Nat,pair:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Observe.Snapshot>)) -> IO(Scene.Application() & Draw.DrawList):
   match pair:
-    case (app,(_,Done{Observe.Snapshot{+live,+admitted,exhausted,clean,+rows}})):
+    case (app,(inspector,Done{Observe.Snapshot{+live,+admitted,exhausted,clean,+rows}})):
       do IO<Scene.Application() & Draw.DrawList>:
         ECS.require(Nat.is_eq(List.length(&2,Observe.Row,rows),List.length(&2,Create.Seed,seeds)) && ECS.distinct(live) && ECS.same(live,admitted) && exhausted && clean && rows_equal(rows,moved(tick,seeds)),"Created ECS instances, publication or movement differs")
-        return (app,draws(rows))
+        derived_draws(Observe.draw_list(app,inspector))
     case _:IO.die(Scene.Application() & Draw.DrawList,1,"Creation snapshot refused")
 
 def camera() -> M.Mat4:

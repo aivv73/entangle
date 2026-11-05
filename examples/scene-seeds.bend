@@ -4,7 +4,7 @@ import ../src/components.bend as V
 
 def seed(+index:U32) -> Create.Seed:
   +i = U32.to_f32(index)
-  Create.Seed{V.Transform{V.Vec3{i,F32.mul(2.0,i),F32.neg(i)},V.Quat{0.0,0.0,0.6,0.8},V.Vec3{2.0,3.0,4.0}},V.MeshRef{7}}
+  Create.seed(V.Transform{V.Vec3{i,F32.mul(2.0,i),F32.neg(i)},V.Quat{0.0,0.0,0.6,0.8},V.Vec3{2.0,3.0,4.0}},V.MeshRef{7})
 
 def values(count:Nat,+index:U32) -> List<&2,Create.Seed>:
   match count:

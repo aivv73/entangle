@@ -192,6 +192,20 @@ def live(+display:String,+port:U32) -> IO(Unit):
     held(display,pid,id,baseline,port)
     IO.print("Native held/repeat/opposite/release/reset, six camera controls, real focus loss, unmap/restore, repeated resize and unfocused Escape passed.")
 
+def recorded_batches(lines:List<&2,String>) -> U32:
+  match lines:
+    case []:0
+    case line <> rest:U32.add(Bool.to_u32(String.starts_with(line,"mesh-state ")),recorded_batches(rest))
+
+def wait_close_batches(fuel:Nat) -> IO(Unit):
+  match fuel:
+    case 0n:IO.die(Unit,1,"Hidden Close did not record enough completed batches for replay")
+    case 1n+n:
+      do IO<Unit>:
+        log:String <- Check.read("docs/verification/2026-11-03-mesh-playground/native-close.log")
+        IO.sleep(50)
+        Bool.pick(IO(Unit),U32.is_gt(recorded_batches(String.lines(log)),10),IO.pure(Unit,Unit{}),wait_close_batches(n))
+
 def hidden_close(+display:String,+port:U32) -> IO(Unit):
   do IO<Unit>:
     +pid:U32 <- IO.try(U32,Host.start("docs/verification/2026-11-03-mesh-playground/native-close.log",False{}))
@@ -199,7 +213,7 @@ def hidden_close(+display:String,+port:U32) -> IO(Unit):
     Focus.set(port,id)
     frame:Pixels.Frame <- WindowCheck.wait(pid,id,WindowCheck.Populated{640,480})
     IO.try(Unit,Host.control(id,1,0,0))
-    IO.sleep(100)
+    wait_close_batches(100n)
     IO.try(Unit,UI.send_to(display,id,[Close{}]))
     Existing.wait_exit(300n,pid)
     clean("native-close")

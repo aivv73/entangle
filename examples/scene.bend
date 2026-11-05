@@ -52,8 +52,8 @@ def receipt_cons(head:Observe.Receipt(),+handle:W.Handle<D.Schema>,
 def receipt_summary(values:List<Observe.Receipt()>) -> List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool):
   match values:
     case []:([],([],True{}))
-    case Buffer.Spawned{+handle,Product.Owner{None{},None{}}} <> rest:
-      receipt_cons(Buffer.Spawned{handle,Product.Owner{None{},None{}}},handle,receipt_summary(rest))
+    case Buffer.Spawned{+handle,Product.Owner{None{},Product.Owner{None{},None{}}}} <> rest:
+      receipt_cons(Buffer.Spawned{handle,Product.Owner{None{},Product.Owner{None{},None{}}}},handle,receipt_summary(rest))
     case head <> rest:(head <> rest,([],False{}))
 
 def summarized(restore:List<Observe.Receipt()> -> Scene.Owner(),id:U32,exhausted:Bool,
@@ -236,7 +236,7 @@ def previous_transform(values:List<&2,Observe.Row>,+target:W.Handle<D.Schema>) -
       Bool.pick(Maybe<&2,C.Transform>,equal(handle,target),Some{value},previous_transform(rest,target))
 
 def seeded_transform(seed:Create.Seed) -> Maybe<&2,C.Transform>:
-  Create.Seed{value,_} = seed
+  Create.Seed{value,_,_} = seed
   Some{value}
 
 def seed_transform(index:U32) -> Maybe<&2,C.Transform>:seeded_transform(Seeds.seed(index))

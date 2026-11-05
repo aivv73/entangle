@@ -1,5 +1,6 @@
 import ../src/content.bend as F
 import Base
+import ../src/hierarchy.bend as Hierarchy
 import ../src/creation.bend as Create
 import ../src/scene-window.bend as Win
 import ../src/scene-render.bend as R
@@ -61,6 +62,7 @@ def digest(items:List<&2,Draw.DrawItem>,hash:U32) -> U32:
     case []:hash
     case Draw.DrawItem{C.Transform{C.Vec3{x,y,z},C.Quat{a,b,c,d},C.Vec3{sx,sy,sz}},C.MeshRef{id}} <> rest:
       digest(rest,fold([F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(a),F32.bits(b),F32.bits(c),F32.bits(d),F32.bits(sx),F32.bits(sy),F32.bits(sz),id],hash))
+    case Draw.GlobalItem{global,C.MeshRef{id}} <> rest:digest(rest,fold(id <> M.matrix_words(Hierarchy.matrix(global)),hash))
 
 def extracted(pair:Scene.Application() & (I.Instance<D.Schema> & Draw.DrawList),+baseline:List<&2,Check.Identity>,+rows:List<&2,Observe.Row>,+tick:U32,clock:Time.Clock,retained:Draw.DrawList,saved:List<&2,Observe.Row>) -> V.Action(State):
   (app,(inspector,Draw.DrawList{+items})) = pair

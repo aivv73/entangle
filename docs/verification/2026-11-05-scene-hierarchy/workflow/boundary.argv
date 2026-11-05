@@ -1,0 +1,6 @@
+./build/verify-upload-boundary
++RTS
+--threads
+1
+--gpu
+off

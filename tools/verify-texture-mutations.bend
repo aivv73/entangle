@@ -53,10 +53,10 @@ def main() -> IO(Unit):
       "  [Core.word_byte(pixel,0),Core.word_byte(pixel,1),Core.word_byte(pixel,2),Core.word_byte(pixel,3)]",
       "verify-textured-render","Texture orientation and sampling: full RGBA/D32 differs")
     mutation(dest,"normal-scale","src/shaders/textured.vert",
-      "    vec3 n = normal * drawing.inverse_scale.xyz;","    vec3 n = normal;",
+      "    world_normal = mat3(drawing.normal_x_light_x.xyz, drawing.normal_y_light_y.xyz, drawing.normal_z_light_z.xyz) * normal;","    world_normal = normal;",
       "verify-textured-transforms","Nonuniform inverse scale: normal transform irradiance differs")
     mutation(dest,"diffuse","src/shaders/textured.frag",
-      "    float diffuse = max(dot(normal, normalize(drawing.light_direction_ambient.xyz)), 0.0);","    float diffuse = 1.0;",
+      "    float diffuse = max(dot(normal, normalize(vec3(drawing.normal_x_light_x.w, drawing.normal_y_light_y.w, drawing.normal_z_light_z.w))), 0.0);","    float diffuse = 1.0;",
       "verify-textured-render","Back-facing normals receive no diffuse light: full RGBA/D32 differs")
     mutation(dest,"normal-magnitude","src/shaders/textured.frag",
       "    vec3 normal = world_normal * inversesqrt(normal_squared > 0.0 ? normal_squared : 1.0);",

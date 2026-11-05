@@ -1,0 +1,14 @@
+SOME PROOFS FAIL
+Error:
+- expected : []
+- observed : [Create.Instance{mesh, material, transform}]
+Context:
+- mesh      : F.Mesh
+- material  : F.Material
+- labels    : F.ModelLabels
+- transform : C.Transform
+Location: Laws.json_preserve_model_part
+744 | def Laws.json_unresolved_reference(id,path):{==}
+745>| def Laws.json_preserve_model_part(mesh,material,labels,transform):{==}
+    |                                                                   ^^^^
+746 | 

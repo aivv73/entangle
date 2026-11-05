@@ -1,0 +1,4 @@
+bend
+tools/verify-law-mutations.bend
+-o
+build/workflow-law-mutations

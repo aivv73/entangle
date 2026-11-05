@@ -1,4 +1,6 @@
 import Base
+import ../../src/hierarchy.bend as H
+import ../../src/scene-matrix.bend as M
 import ../../src/content.bend as F
 import ../../src/components.bend as Comp
 import ../../src/asset.bend as Asset
@@ -46,6 +48,7 @@ def state_items(items:List<&2,Draw.DrawItem>) -> String:
   match items:
     case []:""
     case Draw.DrawItem{t,Comp.MeshRef{id}} <> rest:"mesh=" ++ U32.show(id) ++ " transform=" ++ words(pose_words(t)) ++ "\n" ++ state_items(rest)
+    case Draw.GlobalItem{global,Comp.MeshRef{id}} <> rest:"mesh=" ++ U32.show(id) ++ " global=" ++ words(R.reusable(M.matrix_words(H.matrix(global)))) ++ "\n" ++ state_items(rest)
 
 def state(list:Draw.DrawList) -> String:
   Draw.DrawList{items} = list
@@ -56,6 +59,8 @@ def same_items(a:List<&2,Draw.DrawItem>,b:List<&2,Draw.DrawItem>) -> Bool:
     case [],[]:True{}
     case Draw.DrawItem{t,Comp.MeshRef{id}} <> xs,Draw.DrawItem{u,Comp.MeshRef{other}} <> ys:
       U32.is_eq(id,other) && F.same_indices(pose_words(t),pose_words(u)) && same_items(xs,ys)
+    case Draw.GlobalItem{t,Comp.MeshRef{id}} <> xs,Draw.GlobalItem{u,Comp.MeshRef{other}} <> ys:
+      U32.is_eq(id,other) && Render.equal_bytes(R.reusable(M.matrix_words(H.matrix(t))),R.reusable(M.matrix_words(H.matrix(u)))) && same_items(xs,ys)
     case _,_:False{}
 
 def same_draws(a:Draw.DrawList,b:Draw.DrawList) -> Bool:

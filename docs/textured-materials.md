@@ -37,8 +37,10 @@ image separately.
 `Lighting.Directional{toward,color,ambient,intensity}` points from the surface
 toward the light. Its color, ambient, and intensity channels lie in `[0,1]`.
 The default direction is `(0.4,0.7,1)`, with white light, ambient `0.2`, and
-intensity `0.8`. Normal transforms apply inverse scale followed by quaternion
-rotation. Textured draws reject scale magnitudes outside `[1e-6,1e6]`.
+intensity `0.8`. Normals use the inverse transpose of the complete world linear
+transform, preserving correct lighting under parent rotation, nonuniform scale,
+and shear. Legacy flat draws retain the scale range `[1e-6,1e6]`. Affine hierarchy
+draws require a finite, usable inverse as specified by [scene hierarchy](scene-hierarchy.md).
 Interpolated zero normals receive ambient light without a normalization singularity.
 
 Offscreen configuration is `Render.Config{width,height,camera,light}`.
@@ -50,7 +52,9 @@ preserves the previous configuration on rejection. Window frames continue to use
 `Creation.view(camera,width,height)`. Camera or light changes do not upload meshes
 or textures again.
 
-The native shaders use at most 128 push-constant bytes. Shader source and generated
+The native shaders use 128 push-constant bytes: MVP, three normal-matrix columns
+with light direction packed in their fourth lanes, then light RGB times intensity
+and ambient. Shader source and generated
 SPIR-V live under `src/shaders`. Rebuild with `bend tools/build-scene-shaders.bend`.
 For a read-only regeneration check, compile that tool and run its binary with
 `--check`. The generator uses `glslc` targeting Vulkan 1.0 and runs `spirv-val`.
@@ -104,7 +108,7 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 
 The smaller `textures` profile runs the texture checks and native failure checks.
 `textured-window` invokes the existing owned Xwayland launcher in `extended` mode.
-It also runs cube, public-creation, mesh-replacement, and mesh movement/replay
+It also runs hierarchy, cube, public-creation, mesh-replacement, and mesh movement/replay
 scenarios because they consume the changed vertex and pipeline paths.
 
 The runtime drivers check the complete 64×64 RGBA/D32 readback, UV orientation,

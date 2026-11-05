@@ -1,0 +1,13 @@
+SOME PROOFS FAIL
+Error:
+- expected : Fail{H.MissingParent{index}}
+- observed : Fail{H.Cycle{index}}
+Context:
+- array : Array<H.Mark>
+- index : U32
+- next  : @_:U32 -> @_:Array<H.Mark> -> Result<&2, &1, H.Error, Sigma<&1, &1, Array<H.Mark>, _ => H.Spatial>>
+Location: Laws.hierarchy_visiting_rejected
+783 |     case H.GlobalTransform{matrix}:{==}
+784>| def Laws.hierarchy_visiting_rejected(array,index,next):{==}
+    |                                                        ^^^^
+785 | def Laws.hierarchy_missing_rejected(array,index,next):{==}

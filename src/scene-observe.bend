@@ -1,4 +1,6 @@
 import Base
+import ./scene-hierarchy.bend as Hierarchy
+import ./hierarchy.bend as H
 import ./scene-draw.bend as Draw
 import ./components.bend as C
 import ./scene-schema.bend as D
@@ -36,7 +38,7 @@ def Ops(H:Type) -> Type:Reads<H>
 def plan() -> I.Plan<D.Schema,D.Columns(),D.Resources(),Unit,Ops>:
   I.Plan{Reads{Columns.query(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~D.components(),~L.InLeft{L.AtLeaf{}},
     ~{==},~{==},~Rows.Required{}),Columns.lookup(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~D.components(),
-    ~L.InRight{L.AtLeaf{}},~{==},~{==})}}
+    ~L.InRight{L.InLeft{L.AtLeaf{}}},~{==},~{==})}}
 
 def mesh_read(~H:Type,caps:Ops(H)) -> H -> W.Handle<D.Schema> -> H & I.Value<C.MeshRef>:
   match caps:
@@ -83,8 +85,8 @@ def receipt_tail(head:Receipt(),result:List<Receipt()> & Bool) -> List<Receipt()
 def receipts(values:List<Receipt()>) -> List<Receipt()> & Bool:
   match values:
     case []:([],True{})
-    case Buffer.Spawned{handle,Product.Owner{None{},None{}}} <> rest:receipt_tail(Buffer.Spawned{handle,
-      Product.Owner{None{},None{}}},receipts(rest))
+    case Buffer.Spawned{handle,Product.Owner{None{},Product.Owner{None{},None{}}}} <> rest:receipt_tail(Buffer.Spawned{handle,
+      Product.Owner{None{},Product.Owner{None{},None{}}}},receipts(rest))
     case head <> tail:(head <> tail,False{})
 
 def receipt_checked(restore:List<Receipt()> -> Scene.Owner(),handles:List<&2,W.Handle<D.Schema>>,result:List<Receipt()> & Bool) -> Scene.Owner() & (List<&2,
@@ -134,15 +136,20 @@ def snapshot(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.App
 def draw_item(_:W.Handle<D.Schema>,value:C.Transform,mesh:C.MeshRef) -> Draw.DrawItem:
   Draw.DrawItem{value,mesh}
 
-def drawn(rebuild:D.World() -> Scene.Application(),result:I.Observed<D.Schema,D.Columns(),D.Resources(),
-  Unit,Unit,List<&2,Draw.DrawItem>>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
-  match result:
-    case I.Observed{world,instance,Done{items}}:(rebuild(world),(instance,Done{Draw.DrawList{items}}))
-    case I.Observed{world,instance,Fail{error}}:(rebuild(world),(instance,Fail{error}))
+def drawn(rebuild:D.World() -> Scene.Application(),instance:I.Instance<D.Schema>,result:D.World() & Result<&2,&2,Unit,Draw.DrawList>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+  (world,result) = result
+  (rebuild(world),(instance,result))
 
 def draw_list(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
   match app:
     case Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}:
       drawn(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,
-        bindings,deferred},I.passive(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~Ops,~Unit,~Unit,
-        ~(List<&2,Draw.DrawItem>),~plan(),~body(~Draw.DrawItem,~draw_item),instance,Unit{},world))
+        bindings,deferred},instance,Hierarchy.draw_list(world))
+
+def spatial_read(rebuild:D.World() -> Scene.Application(),pair:D.World() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
+  (world,result) = pair
+  (rebuild(world),result)
+
+def spatial(app:Scene.Application()) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
+  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
+  spatial_read(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.read(world))

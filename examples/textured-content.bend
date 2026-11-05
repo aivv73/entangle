@@ -5,6 +5,7 @@ import ../src/image-png.bend as Png
 import ../src/components.bend as C
 import ../src/creation.bend as Create
 import ../src/scene-draw.bend as Draw
+import ../src/hierarchy.bend as H
 
 def released(pair:Asset.Cache<F.SourceImage> & Maybe<&2,Asset.State<F.SourceImage>>,image:F.SourceImage) -> IO(F.SourceImage):
   match pair:
@@ -43,7 +44,7 @@ def compiled(result:Result<&2,&2,Create.Error,Create.Compiled>) -> IO(Create.Com
 def draws(seeds:List<&2,Create.Seed>) -> List<&2,Draw.DrawItem>:
   match seeds:
     case []:[]
-    case Create.Seed{t,m} <> rest:Draw.DrawItem{t,m} <> draws(rest)
+    case Create.Seed{t,m,H.Spatial{H.Local{_,p,_,_},g,_}} <> rest:Draw.item(p,t,m,g) <> draws(rest)
 
 def face_vertex(center:C.Vec3,uaxis:C.Vec3,vaxis:C.Vec3,normal:C.Vec3,+u:F32,+v:F32) -> F.Vertex:
   C.Vec3{x,y,z} = center

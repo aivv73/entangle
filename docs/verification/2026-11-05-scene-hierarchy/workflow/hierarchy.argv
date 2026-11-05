@@ -1,0 +1,6 @@
+./build/workflow-hierarchy
++RTS
+--threads
+1
+--gpu
+off

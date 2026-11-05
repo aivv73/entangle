@@ -1,0 +1,15 @@
+SOME PROOFS FAIL
+Error:
+- expected : Time.Clock{now, Pair.snd(Nat, Nat, Nat.divmod.go(Nat.add(remainder, Nat.sub(now, sample)), interval, 0n, 0n))}
+- observed : Time.Clock{Nat.max(sample, now), Pair.snd(Nat, Nat, Nat.divmod.go(Nat.add(remainder, Nat.sub(now, sample)), interval, 0n, 0n))}
+Context:
+- interval  : Nat
+- limit     : Nat
+- sample    : Nat
+- remainder : Nat
+- now       : Nat
+Location: Laws.time_high_water
+261 |   match config:
+262>|     case Time.Config{interval,limit}:{==}
+    |                                      ^^^^
+263 | 

@@ -1,4 +1,6 @@
 import Base
+import ./scene-hierarchy.bend as Hierarchy
+import ./hierarchy.bend as H
 import ./scene-draw.bend as Draw
 import ./scene-schema.bend as D
 import ./mesh-playground.bend as Scene
@@ -41,15 +43,20 @@ def snapshot(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.App
         routing},guards,handler,stateBindings},settings,bindings,deferred},world,instance,Retained.map_owner(Scene.Compilation(),
         Scene.Owner(),List<&2,W.Handle<D.Schema>> & (Bool & Bool),Observe.bootstrap,left))
 
-def drawn(rebuild:D.World() -> Scene.Application(),result:I.Observed<D.Schema,D.Columns(),D.Resources(),
-  Unit,Unit,List<&2,Draw.DrawItem>>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
-  match result:
-    case I.Observed{world,instance,Done{items}}:(rebuild(world),(instance,Done{Draw.DrawList{items}}))
-    case I.Observed{world,instance,Fail{error}}:(rebuild(world),(instance,Fail{error}))
+def drawn(rebuild:D.World() -> Scene.Application(),instance:I.Instance<D.Schema>,result:D.World() & Result<&2,&2,Unit,Draw.DrawList>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
+  (world,result) = result
+  (rebuild(world),(instance,result))
 
 def draw_list(app:Scene.Application(),instance:I.Instance<D.Schema>) -> Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Draw.DrawList>):
   match app:
     case Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}:
       drawn(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,
-        bindings,deferred},I.passive(~D.Schema,~D.Columns(),~D.Resources(),~Unit,~Observe.Ops,~Unit,~Unit,
-        ~(List<&2,Draw.DrawItem>),~Observe.plan(),~Observe.body(~Draw.DrawItem,~Observe.draw_item),instance,Unit{},world))
+        bindings,deferred},instance,Hierarchy.draw_list(world))
+
+def spatial_read(rebuild:D.World() -> Scene.Application(),pair:D.World() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
+  (world,result) = pair
+  (rebuild(world),result)
+
+def spatial(app:Scene.Application()) -> Scene.Application() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>:
+  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
+  spatial_read(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},Hierarchy.read(world))

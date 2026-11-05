@@ -1,6 +1,6 @@
 # JSON scene files and manifests
 
-`SceneFile.load(path)` reads a flat scene, resolves its manifest, validates every
+`SceneFile.load(path)` reads a scene, resolves its manifest, validates every
 declared OBJ and PNG source, and returns `Creation.Scene`. Errors are
 `Asset.Error` values. Loading creates no ECS or Vulkan resources. The caller can
 cache the result through `Asset.load` and compile it through `Creation.compile`.
@@ -22,7 +22,7 @@ returned on failure.
 
 ## Version 1 schema
 
-Every listed field is required. Unknown fields and wrong types are errors at
+Every listed field is required except `parent`. Unknown fields and wrong types are errors at
 all object levels. Object field order is irrelevant. Array order is preserved.
 Version is the exact JSON integer token `1`.
 
@@ -70,10 +70,20 @@ are rejected. These are lexical path rules. They do not confine symlink targets
 or provide a filesystem sandbox. Root paths must be nonempty, contain no NUL,
 and fit within 4096 UTF-8 bytes. Joined paths have the same limit.
 
-A model's parts expand in order at each placement. Meshes, materials, winding,
-and transforms are preserved. Existing Creation compilation shares identical
-mesh/material pairs. Images remain source assets. This schema adds no texture
-binding, cameras, parent hierarchy, animation, or new model format.
+A placement may include `"parent": 0`, referring to a zero-based placement index,
+or `"parent": null`, denoting a root. Omission also denotes a root. Parent numbers
+must be canonical unsigned integer tokens, not fractions or exponent notation.
+Forward references are allowed; missing parents, self-links, and cycles fail
+before source files load. Reparenting and matrix composition follow
+[scene hierarchy](scene-hierarchy.md).
+
+A model's parts expand in order at each placement. When any parent link exists,
+the first part is the placement anchor with its authored transform; remaining
+parts are identity children of that anchor. Parent links address another
+placement's anchor. Empty models are rejected in a scene containing parent links.
+Scenes without links retain their previous expansion and per-part transforms.
+Meshes, materials, winding, and shared mesh/material ranges are preserved. This
+schema adds no texture binding, cameras, animation, or new model format.
 
 ## Parser and limits
 
@@ -92,7 +102,8 @@ token length check. The resulting F32 must be finite and within
 zero. Position and scale contain exactly three numbers. Rotation contains
 exactly four numbers in x/y/z/w order. Its squared norm must be within
 `[0.9999,1.0001]`. Loading does not normalize it. Zero and negative scale remain
-valid under the existing Creation contract.
+valid for unlit geometry. Textured geometry additionally requires a usable world
+normal matrix; a singular ancestor therefore rejects the scene.
 
 | Boundary | Limit |
 | --- | --- |
@@ -128,6 +139,8 @@ Run `bend tools/verify-workflow.bend -o build/verify-workflow`, inspect
 `./build/verify-workflow --plan json`, then run
 `./build/verify-workflow json +RTS --threads 1 --gpu off`.
 The JSON profile includes the existing asset checks and root law checks.
+The `hierarchy` profile adds parent parsing, forward-reference/model-part
+expansion, real ECS propagation, rendering, replay, and sensitivity controls.
 `tools/verify-json.bend` retains parser qualification, real file rejection
 checks, cache behavior, six production mutations, a restored runtime baseline,
 and real ECS/offscreen comparison against an independently authored scene.

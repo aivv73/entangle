@@ -5,10 +5,10 @@ layout(location=2) in vec2 uv;
 layout(location=3) in vec3 normal;
 layout(push_constant) uniform Drawing {
     mat4 mvp;
-    vec4 rotation;
-    vec4 inverse_scale;
-    vec4 light_direction_ambient;
-    vec4 light_color_intensity;
+    vec4 normal_x_light_x;
+    vec4 normal_y_light_y;
+    vec4 normal_z_light_z;
+    vec4 light_color_ambient;
 } drawing;
 layout(location=0) flat out vec3 vertex_color;
 layout(location=1) out vec2 texture_uv;
@@ -17,7 +17,5 @@ void main() {
     gl_Position = drawing.mvp * vec4(position, 1.0);
     vertex_color = color;
     texture_uv = uv;
-    vec3 n = normal * drawing.inverse_scale.xyz;
-    vec3 t = 2.0 * cross(drawing.rotation.xyz, n);
-    world_normal = n + drawing.rotation.w * t + cross(drawing.rotation.xyz, t);
+    world_normal = mat3(drawing.normal_x_light_x.xyz, drawing.normal_y_light_y.xyz, drawing.normal_z_light_z.xyz) * normal;
 }

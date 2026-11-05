@@ -1,0 +1,15 @@
+SOME PROOFS FAIL
+Error:
+- expected : (src/scene-hierarchy.commit_clock(rows, src/scene-hierarchy.rollback(rows), deps/bendvy/src/ecs/world.write_clock(SceneSchema.Schema, deps/bendvy/src/ecs/owner-product.Owner<deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<C.Transform, C.Transform>, "transform", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{C.Transform, C.Transform, SceneSchema.transform, "transform", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>, deps/bendvy/src/ecs/owner-product.Owner<deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<C.MeshRef, C.MeshRef>, "mesh-ref", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{C.MeshRef, C.MeshRef, SceneSchema.mesh, "mesh-ref", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>, deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<H.Spatial, H.Spatial>, "spatial", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{H.Spatial, H.Spatial, SceneSchema.spatial, "spatial", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>>>, Unit, Unit, world)), Fail{error})
+- observed : (world, Fail{error})
+Context:
+- entity : deps/bendvy/src/ecs/world.Handle<SceneSchema.Schema>
+- parent : Maybe<&2, deps/bendvy/src/ecs/world.Handle<SceneSchema.Schema>>
+- world  : deps/bendvy/src/ecs/world.World<SceneSchema.Schema, deps/bendvy/src/ecs/owner-product.Owner<deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<C.Transform, C.Transform>, "transform", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{C.Transform, C.Transform, SceneSchema.transform, "transform", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>, deps/bendvy/src/ecs/owner-product.Owner<deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<C.MeshRef, C.MeshRef>, "mesh-ref", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{C.MeshRef, C.MeshRef, SceneSchema.mesh, "mesh-ref", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>, deps/bendvy/src/ecs/execution-composer-layout.ColumnSlot<SceneSchema.Schema, deps/bendvy/src/ecs/execution-composer-layout.Viewed<H.Spatial, H.Spatial>, "spatial", deps/bendvy/src/ecs/execution-composer-layout.LayoutLeaf{H.Spatial, H.Spatial, SceneSchema.spatial, "spatial", deps/bendvy/src/ecs/execution-resource-policy.Ordinary{}}>>>, Unit, Unit>
+- rows   : List<&2, src/scene-hierarchy.Row>
+- error  : H.Error
+Location: Laws.hierarchy_parent_rejection_preserves_world
+786 | def Laws.hierarchy_invalid_derived_rejected(index,local,global,bounds):{==}
+787>| def Laws.hierarchy_parent_rejection_preserves_world(entity,parent,world,rows,error):{==}
+    |                                                                                     ^^^^
+788 | def Laws.hierarchy_transform_rejection_preserves_world(entity,transform,world,rows,error):{==}

@@ -1,0 +1,21 @@
+SOME PROOFS FAIL
+Error:
+- expected : 44
+- observed : 24
+Context:
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+- _ : F32
+Location: Laws.vertex_upload_stride
+756 |   match vertex:
+757>|     case F.Vertex{C.Vec3{_,_,_},C.Vec3{_,_,_},F.UV{_,_},C.Vec3{_,_,_}}:{==}
+    |                                                                        ^^^^
+758 | 

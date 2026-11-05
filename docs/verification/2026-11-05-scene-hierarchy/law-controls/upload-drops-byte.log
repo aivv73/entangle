@@ -1,0 +1,12 @@
+SOME PROOFS FAIL
+Error:
+- expected : {List.length(&1, U32, UploadSize.transport(rest)) == 1n+List.length(&2, U32, rest) : Nat}
+- observed : {1n+List.length(&1, U32, UploadSize.transport(rest)) == 1n+List.length(&2, U32, rest) : Nat}
+Context:
+- _    : U32
+- rest : List<&2, U32>
+Location: Laws.upload_transport_length
+465 |     case []:{==}
+466>|     case _ <> rest:Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,U32,UploadSize.transport(rest)),UploadSize.byte_length(rest),Laws.upload_transport_length(rest))
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+467 | 

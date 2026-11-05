@@ -1,0 +1,6 @@
+./build/workflow-upload-mutations
++RTS
+--threads
+1
+--gpu
+off

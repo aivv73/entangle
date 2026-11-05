@@ -1,0 +1,9 @@
+SOME PROOFS FAIL
+Error:
+- expected : 9
+- observed : 8
+Location: Laws.json_depth_limit
+752 | def Laws.json_admitted_scene_compiles(scene,path):json_checked(scene,path,SceneFile.scene_valid(scene),{==})
+753>| def Laws.json_depth_limit():{==}
+    |                             ^^^^
+754 | 
