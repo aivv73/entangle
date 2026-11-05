@@ -41,8 +41,9 @@ The exact toolchain and dependency versions are recorded in
 [toolchain.bend](toolchain.bend). Clone the repository and its pinned dependencies:
 
 ```sh
-git clone --recurse-submodules https://github.com/aivv73/entangle.git
+git clone https://github.com/aivv73/entangle.git
 cd entangle
+git submodule update --init --recursive --filter=blob:none
 mkdir -p build
 bend examples/scene-window.bend -o build/indexed-window
 ./build/indexed-window
