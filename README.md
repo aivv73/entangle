@@ -151,6 +151,8 @@ continue to run or be inspected independently of rendering.
 
 Use the [development workflow](docs/development.md) to select affected checks and retain a source-specific result. The managed runner executes required stages in an isolated source snapshot.
 
+The opt-in `math` profile reproduces the [S41 Jonlib adapter evaluation](docs/verification/2026-11-05-jonmath/README.md), including exact numerical contracts and retained native scene comparisons.
+
 ```sh
 mkdir -p build
 bend tools/verify-workflow.bend -o build/verify-workflow

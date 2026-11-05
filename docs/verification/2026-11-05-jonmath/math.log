@@ -1,0 +1,62 @@
+download
+archive-pin
+build/qualification/jonlib.tar.gz: OK
+unpack
+adapter-source
+probe-source
+qualification-build
+qualification
+Unadapted multiply rejected. Swapped operands preserve left-times-right and exact expected translation 2,3,4.
+Vulkan near/far z/w=0/1,1/1. Jonmath frustum near z/w=-1/1. Direct projection replacement rejected.
+production default camera words 1065639630 1055486092 3205211349 3205202197 0 3217531298 3202280671 3202266061 3209249228 1058638228 3208098121 3208086083 0 0 1088226658 1088421888 
+Exact words matched for 256 layout roundtrips, 100 retained nontrivial quaternion seeds, four mesh instances, 16 quaternion sign combinations and a 10x10 finite matrix/TRS grid. No libm profile selected.
+mutations-build
+mutations
+Mutation rejected by adapted left-times-right order differs. Evidence build/jonmath/mutation-operand-order-SoEkW5Fa
+Mutation rejected by Vulkan near plane must be z=0,w=1. Evidence build/jonmath/mutation-projection-depth-orxHfDuK
+restored-qualification
+Unadapted multiply rejected. Swapped operands preserve left-times-right and exact expected translation 2,3,4.
+Vulkan near/far z/w=0/1,1/1. Jonmath frustum near z/w=-1/1. Direct projection replacement rejected.
+production default camera words 1065639630 1055486092 3205211349 3205202197 0 3217531298 3202280671 3202266061 3209249228 1058638228 3208098121 3208086083 0 0 1088226658 1088421888 
+Exact words matched for 256 layout roundtrips, 100 retained nontrivial quaternion seeds, four mesh instances, 16 quaternion sign combinations and a 10x10 finite matrix/TRS grid. No libm profile selected.
+creation-build
+creation
+Public creation verified: 4 distinct ECS entities; 3 used pairs; shared pair reused; ranges=3,3,6; two ticks; D32=0.28125/0.03125; red/green/white pixels; tint depth=white depth; retained replay; rejection recovery; live Vulkan objects=0.
+Empty scene and empty-mesh ECS instance render clear-only with absent buffers; invalid index, tint and transform rejected.
+Configured camera target and lens survive six controls and reset; configured view accepted; zero extent and invalid lens rejected.
+quaternion-scene-build
+quaternion-scene
+Scalar quaternion cross-product and independent coverage bound verified.
+index-order=near-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+index-order=far-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+Terminal Action cleanup verified.
+Public Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm
+scene-build
+scene
+sign full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+wedge full packed geometry/ranges, two real ECS snapshots, exact offscreen RGBA/D32, retained replay and zero live Vulkan objects verified.
+retained-sign.state.txt
+retained-sign.packed.txt
+retained-sign.rgba
+retained-sign.d32
+retained-wedge.state.txt
+retained-wedge.packed.txt
+retained-wedge.rgba
+retained-wedge.d32
+S41 adapters qualified against exact scene inputs. Retained ECS state, geometry, RGBA and D32 are byte-identical. Production math retained.

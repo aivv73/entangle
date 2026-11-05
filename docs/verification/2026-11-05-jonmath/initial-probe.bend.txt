@@ -1,0 +1,11 @@
+import Base
+import ./jonlib/jonmath.bend as J
+
+def report(matrix:J.Matrix) -> IO(Unit):
+  J.Matrix{_,_,_,d,_,_,_,h,_,_,_,l,_,_,_,_} = matrix
+  do IO<Unit>:
+    IO.print("Jonmath translation then scale translation=" ++ F32.show(d) ++ "," ++ F32.show(h) ++ "," ++ F32.show(l))
+    IO.print("Expected right-times-left translation=4,9,16")
+
+def main() -> IO(Unit):
+  report(J.Matrix.multiply(J.Matrix.translate(2.0,3.0,4.0),J.Matrix.scale(2.0,3.0,4.0)))

@@ -3,3 +3,4 @@ deps/jonlib-obj/LICENSES/raylib.txt -whitespace
 docs/verification/2026-11-04-model-obj/*.log -whitespace
 docs/verification/2026-11-04-model-obj/*.state.txt -whitespace
 docs/verification/2026-11-04-model-obj/*.packed.txt -whitespace
+docs/verification/2026-11-05-jonmath/*.log -whitespace

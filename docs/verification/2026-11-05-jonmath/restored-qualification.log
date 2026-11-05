@@ -1,0 +1,4 @@
+Unadapted multiply rejected. Swapped operands preserve left-times-right and exact expected translation 2,3,4.
+Vulkan near/far z/w=0/1,1/1. Jonmath frustum near z/w=-1/1. Direct projection replacement rejected.
+production default camera words 1065639630 1055486092 3205211349 3205202197 0 3217531298 3202280671 3202266061 3209249228 1058638228 3208098121 3208086083 0 0 1088226658 1088421888 
+Exact words matched for 256 layout roundtrips, 100 retained nontrivial quaternion seeds, four mesh instances, 16 quaternion sign combinations and a 10x10 finite matrix/TRS grid. No libm profile selected.

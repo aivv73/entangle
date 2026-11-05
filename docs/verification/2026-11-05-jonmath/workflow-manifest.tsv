@@ -1,0 +1,9 @@
+stage	kind	argv	stdout	stderr	status
+toolchain	precondition	toolchain.argv	toolchain.stdout	toolchain.stderr	toolchain.status
+boundary-build	build	boundary-build.argv	boundary-build.stdout	boundary-build.stderr	boundary-build.status
+boundary	source-policy	boundary.argv	boundary.stdout	boundary.stderr	boundary.status
+frontend	frontend	frontend.argv	frontend.stdout	frontend.stderr	frontend.status
+math-build	build	math-build.argv	math-build.stdout	math-build.stderr	math-build.status
+math	qualification-and-retained-scenes	math.argv	math.stdout	math.stderr	math.status
+law-mutations-build	build	law-mutations-build.argv	law-mutations-build.stdout	law-mutations-build.stderr	law-mutations-build.status
+law-mutations	sensitivity	law-mutations.argv	law-mutations.stdout	law-mutations.stderr	law-mutations.status

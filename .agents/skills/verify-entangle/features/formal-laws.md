@@ -18,7 +18,7 @@ The mutation driver copies production sources and dependencies into a fresh
 `build/verification/law-mutations-*` directory. It checks unchanged sources,
 changes one production definition at a time, restores each definition, and
 checks the restored sources. It preserves laws and proofs throughout.
-Require all seven mutations to exit one, print `SOME PROOFS FAIL`, and identify
+Require every mutation in `proofs/law-mutations.tsv` to exit one, print `SOME PROOFS FAIL`, and identify
 the expected `Location: Laws.<name>`. A parser error or timeout is not a
 successful negative control. The driver records source hashes, changed
 definitions, logs, and statuses. Retain the printed evidence directory.
@@ -30,6 +30,11 @@ exercise `geometry_install_reject`, `time_high_water`,
 claim mutation coverage of every root law. Asset controls retain a released
 entry, overwrite a cached failure, and reuse an allocation identity. They must
 fail `asset_release_entry`, `asset_failed_stable`, and `asset_request_miss`.
+Math controls exchange matrix columns, regroup F32 additions, and reverse a
+quaternion cross-term sign. They must fail `render_multiply_order`,
+`render_apply_order`, and `render_model_contract`. The [S41 record](../../../../docs/verification/2026-11-05-jonmath/README.md)
+keeps candidate-adapter qualification and native scene evidence separate from
+these frontend expression proofs.
 
 ## Coverage and assumptions
 
@@ -40,7 +45,7 @@ production definitions directly. There is no separate transition model.
 | Check | Covered production code | Scope |
 | --- | --- | --- |
 | Root component and scene laws | `src/components.bend`, `scene.bend`, `scene-step.bend`, `scene-motion.bend`, `scene-spawn.bend`, `scene-schema.bend`, `scene-draw.bend`, `scene-observe.bend`, `headless.bend`, `tools/component-consumer.bend`, `examples/scene-seeds.bend` | Field reconstruction, update/query behavior, ordered extraction, bootstrap, seeds, and batch recursion. Imported Bendvy definitions are pinned by `toolchain.bend`. |
-| Root content, creation, and rendering laws | `src/content.bend`, `creation.bend`, `scene-matrix.bend`, `measurement-counters.bend`, `scene-geometry-policy.bend` | Source equality reflexivity, universal white identity, tint position, ordered baking and count, validation error priority, duplicate reuse, ranges, index validation, bit layouts, counter independence, and pure geometry-selection policy. |
+| Root content, creation, and rendering laws | `src/content.bend`, `creation.bend`, `scene-matrix.bend`, `measurement-counters.bend`, `scene-geometry-policy.bend` | Source equality reflexivity, universal white identity, tint position, ordered baking and count, validation error priority, duplicate reuse, ranges, index validation, bit layouts, matrix multiplication order, F32 dot-product grouping, quaternion/TRS expressions, counter independence, and pure geometry-selection policy. |
 | Root time, input, and player laws | `src/time.bend`, `input.bend`, `mesh-control.bend` | Fixed-step accounting and bounds, high-water clock samples, input draining, camera reset, movement intent, and query refusal. |
 | Root upload laws | `src/upload-size.bend`, `deps/bend-vulkan/src/core.bend` | Byte-list length, exact conversion under its stated premise, and the universal range theorem. |
 | Root asset laws | `src/asset.bend` | Request hit/miss, terminal states, key preservation, eviction, released lookup/load, scope rejection, and monotonic allocation counter preservation. |

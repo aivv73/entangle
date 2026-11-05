@@ -1,0 +1,31 @@
+import Base
+import ../qualification/jonlib/jonmath.bend as J
+import ../../src/scene-matrix.bend as M
+import ../../src/components.bend as C
+
+def to_jon(m:M.Mat4) -> J.Matrix:
+  M.Mat4{M.Vec4{a,b,c,d},M.Vec4{e,f,g,h},M.Vec4{i,j,k,l},M.Vec4{n,o,p,q}} = m
+  J.Matrix{a,e,i,n,b,f,j,o,c,g,k,p,d,h,l,q}
+
+def from_jon(m:J.Matrix) -> M.Mat4:
+  J.Matrix{a,e,i,n,b,f,j,o,c,g,k,p,d,h,l,q} = m
+  M.Mat4{M.Vec4{a,b,c,d},M.Vec4{e,f,g,h},M.Vec4{i,j,k,l},M.Vec4{n,o,p,q}}
+
+def multiply(left:M.Mat4,right:M.Mat4) -> M.Mat4:
+  from_jon(J.Matrix.multiply(to_jon(right),to_jon(left)))
+
+def quaternion(q:C.Quat) -> J.Vector4:
+  C.Quat{x,y,z,w} = q
+  J.Vector4{x,y,z,w}
+
+def scaled(m:M.Mat4,p:C.Vec3,s:C.Vec3) -> M.Mat4:
+  M.Mat4{M.Vec4{a,b,c,_},M.Vec4{e,f,g,_},M.Vec4{i,j,k,_},_} = m
+  C.Vec3{x,y,z} = p
+  C.Vec3{+sx,+sy,+sz} = s
+  M.Mat4{M.Vec4{(a * sx : F32),(b * sx : F32),(c * sx : F32),0.0},
+    M.Vec4{(e * sy : F32),(f * sy : F32),(g * sy : F32),0.0},
+    M.Vec4{(i * sz : F32),(j * sz : F32),(k * sz : F32),0.0},M.Vec4{x,y,z,1.0}}
+
+def model(t:C.Transform) -> M.Mat4:
+  C.Transform{p,q,s} = t
+  scaled(from_jon(J.Quaternion.to_matrix(quaternion(q))),p,s)

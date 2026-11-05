@@ -1,0 +1,21 @@
+Scalar quaternion cross-product and independent coverage bound verified.
+index-order=near-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+index-order=far-first
+tick=1 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=2 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=3 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=4 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=5 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=6 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=7 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+tick=8 all=100 rgba=exact depth=exact repeat=equal replay=equal empty=clear unknown=rejected
+Terminal Action cleanup verified.
+Public Vulkan renderer verified in both index orders; live Vulkan objects=0; image=build/scene-render.ppm

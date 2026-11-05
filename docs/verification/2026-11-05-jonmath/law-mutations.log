@@ -1,0 +1,18 @@
+Bend law mutation evidence: build/verification/law-mutations-dx4Inkh9
+baseline-root passed
+baseline-upload passed
+geometry-reject-installs-candidate rejected by geometry_install_reject
+asset-release-retains-entry rejected by asset_release_entry
+asset-failure-overwritten rejected by asset_failed_stable
+asset-identity-reused rejected by asset_request_miss
+clock-regresses rejected by time_high_water
+upload-drops-byte rejected by upload_transport_length
+upload-offset-guard-removed rejected by universal
+json-depth rejected by json_depth_limit
+json-part-preservation rejected by json_preserve_model_part
+math-multiply-columns rejected by render_multiply_order
+math-sum-regrouped rejected by render_apply_order
+math-quaternion-handedness rejected by render_model_contract
+restored-root passed
+restored-upload passed
+Production Bend law mutations rejected; original sources restored in the evidence copy.

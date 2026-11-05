@@ -29,6 +29,7 @@ A mesh pass covers the mesh entry of camera controls. It does not establish the 
 Use the [verification profiles](../../../../docs/development.md#run-verification) to select required checks. Profile success is scoped to its listed scenarios.
 
 - [Formal laws](formal-laws.md): production Bend definitions, the universal upload-range theorem, mutation controls, and synchronization records.
+- [S41 math qualification](../../../../docs/verification/2026-11-05-jonmath/README.md): explicit candidate adapters, numerical contracts, sensitivity controls, and exact retained scene comparisons through the `math` profile.
 - [Source assets](../../../../docs/assets.md#verification-and-limits): typed cache handles, real file loading, cached failures, release/retry, exact retained mesh and material sources, source-only dependency closure, and scene execution after source release.
 - [PNG source images](images.md): pinned decoder, retained real images, complete-pixel comparison, file/cache/retry behavior and production mutation controls.
 - [Static OBJ sources](models.md): pinned parser, exact mesh/material/label conversion, file/cache/retry, source-only closure, real ECS/offscreen geometry, and owned X11 culling evidence.

@@ -1,0 +1,133 @@
+import Base
+import ./adapter.bend as A
+import ../qualification/jonlib/jonmath.bend as J
+import ../../src/scene-matrix.bend as M
+import ../../src/components.bend as C
+import ../../src/creation.bend as Create
+import ../../examples/scene-seeds.bend as Seeds
+import ../../examples/scene-render.bend as Render
+import ../../examples/mesh-playground-content.bend as Mesh
+import ../../tools/image-decoder/common.bend as Check
+
+def same_words(a:List<U32>,b:List<U32>) -> Bool:
+  match a b:
+    case [],[]:True{}
+    case x <> xs,y <> ys:U32.is_eq(x,y) && same_words(xs,ys)
+    case _,_:False{}
+
+def same(a:M.Mat4,b:M.Mat4) -> Bool:
+  same_words(M.matrix_words(a),M.matrix_words(b))
+
+def words(xs:List<U32>) -> String:
+  match xs:
+    case []:""
+    case x <> rest:U32.show(x) ++ " " ++ words(rest)
+
+def product(+left:M.Mat4,+right:M.Mat4) -> IO(Unit):
+  Check.require(same(M.multiply(left,right),A.multiply(left,right)),"adapted multiplication words differ")
+
+def transform(+t:C.Transform) -> IO(Unit):
+  do IO<Unit>:
+    Check.require(same(M.model(t),A.model(t)),"adapted quaternion/TRS words differ")
+    product(Render.camera(),M.model(t))
+    product(Create.orbit(Create.default_camera(),640,480),M.model(t))
+
+def seed(value:Create.Seed) -> IO(Unit):
+  Create.Seed{t,_} = value
+  transform(t)
+
+def seeds(values:List<&2,Create.Seed>) -> IO(Unit):
+  match values:
+    case []:IO.pure(Unit,Unit{})
+    case value <> rest:
+      do IO<Unit>:
+        seed(value)
+        seeds(rest)
+
+def instances(values:List<&2,Create.Instance>) -> IO(Unit):
+  match values:
+    case []:IO.pure(Unit,Unit{})
+    case Create.Instance{_,_,t} <> rest:
+      do IO<Unit>:
+        transform(t)
+        instances(rest)
+
+def scene(value:Create.Scene) -> IO(Unit):
+  Create.Scene{values} = value
+  instances(values)
+
+def roundtrips(remaining:Nat,+word:U32) -> IO(Unit):
+  match remaining:
+    case 0n:IO.pure(Unit,Unit{})
+    case 1n+rest:
+      do IO<Unit>:
+        +v:F32 = M.float_word(word)
+        +m:M.Mat4 = M.Mat4{M.Vec4{v,1.0,2.0,3.0},M.Vec4{4.0,v,5.0,6.0},M.Vec4{7.0,8.0,v,9.0},M.Vec4{10.0,11.0,12.0,v}}
+        Check.require(same(m,A.from_jon(A.to_jon(m))),"adapter column layout lost bits")
+        roundtrips(rest,U32.add(U32.mul(word,1664525),1013904223))
+
+def grid_columns(xs:List<&2,F32>,+a:F32) -> IO(Unit):
+  match xs:
+    case []:IO.pure(Unit,Unit{})
+    case +b <> rest:
+      do IO<Unit>:
+        product(M.Mat4{M.Vec4{a,b,0.125,1.0},M.Vec4{b,a,2.0,0.0},M.Vec4{0.0,0.25,a,b},M.Vec4{b,3.0,0.0,a}},
+          M.Mat4{M.Vec4{b,0.0,a,1.0},M.Vec4{0.0,a,b,2.0},M.Vec4{a,b,0.5,0.0},M.Vec4{1.0,b,0.0,a}})
+        transform(C.Transform{C.Vec3{a,b,0.0},C.Quat{0.0,0.0,0.6,0.8},C.Vec3{a,b,2.0}})
+        grid_columns(rest,a)
+
+def grid(xs:List<&2,F32>,+all:List<&2,F32>) -> IO(Unit):
+  match xs:
+    case []:IO.pure(Unit,Unit{})
+    case a <> rest:
+      do IO<Unit>:
+        grid_columns(all,a)
+        grid(rest,all)
+
+def quaternions(remaining:Nat,+bits:U32) -> IO(Unit):
+  match remaining:
+    case 0n:IO.pure(Unit,Unit{})
+    case 1n+rest:
+      do IO<Unit>:
+        +x:F32 = Bool.pick(F32,U32.is_zero(U32.and(bits,1)),0.5,F32.neg(0.5))
+        +y:F32 = Bool.pick(F32,U32.is_zero(U32.and(bits,2)),0.5,F32.neg(0.5))
+        +z:F32 = Bool.pick(F32,U32.is_zero(U32.and(bits,4)),0.5,F32.neg(0.5))
+        +w:F32 = Bool.pick(F32,U32.is_zero(U32.and(bits,8)),0.5,F32.neg(0.5))
+        transform(C.Transform{C.Vec3{1.0,2.0,3.0},C.Quat{x,y,z,w},C.Vec3{F32.neg(2.0),3.0,4.0}})
+        quaternions(rest,U32.inc(bits))
+
+def order() -> IO(Unit):
+  do IO<Unit>:
+    +translation:M.Mat4 = M.model(C.Transform{C.Vec3{2.0,3.0,4.0},C.Quat{0.0,0.0,0.0,1.0},C.Vec3{1.0,1.0,1.0}})
+    +scale:M.Mat4 = M.model(C.Transform{C.Vec3{0.0,0.0,0.0},C.Quat{0.0,0.0,0.0,1.0},C.Vec3{2.0,3.0,4.0}})
+    +expected:M.Mat4 = M.Mat4{M.Vec4{2.0,0.0,0.0,0.0},M.Vec4{0.0,3.0,0.0,0.0},M.Vec4{0.0,0.0,4.0,0.0},M.Vec4{2.0,3.0,4.0,1.0}}
+    Check.require(same(M.multiply(translation,scale),expected),"production left-times-right order differs")
+    Check.require(same(A.multiply(translation,scale),expected),"adapted left-times-right order differs")
+    Check.require(Bool.not(same(A.from_jon(J.Matrix.multiply(A.to_jon(translation),A.to_jon(scale))),expected)),"unadapted multiply unexpectedly matches")
+    IO.print("Unadapted multiply rejected. Swapped operands preserve left-times-right and exact expected translation 2,3,4.")
+
+def projection() -> IO(Unit):
+  do IO<Unit>:
+    +camera:Create.Camera = Create.Camera{C.Vec3{0.0,0.0,0.0},0.0,0.0,3.0,Create.Perspective{1.0,1.0,5.0}}
+    +matrix:M.Mat4 = Create.orbit(camera,640,640)
+    Check.require(same_words(M.column_words(M.apply(matrix,M.Vec4{0.0,0.0,2.0,1.0})),[0,0,0,1065353216]),"Vulkan near plane must be z=0,w=1")
+    Check.require(same_words(M.column_words(M.apply(matrix,M.Vec4{0.0,0.0,F32.neg(2.0),1.0})),[0,0,1084227584,1084227584]),"Vulkan far plane must be z=w=5")
+    Check.require(same_words(M.column_words(M.apply(matrix,M.Vec4{1.0,1.0,2.0,1.0})),[1065353216,3212836864,0,1065353216]),"Vulkan projection must flip Y")
+    Check.require(same_words(M.column_words(M.apply(Create.orbit(camera,1280,640),M.Vec4{1.0,1.0,2.0,1.0})),[1056964608,3212836864,0,1065353216]),"Vulkan projection aspect differs")
+    +jon:M.Mat4 = A.from_jon(J.Matrix.frustum(J.Float64.from_f32(F32.neg(1.0)),J.Float64.from_f32(1.0),J.Float64.from_f32(F32.neg(1.0)),J.Float64.from_f32(1.0),J.Float64.from_f32(1.0),J.Float64.from_f32(5.0)))
+    +jon_near:M.Vec4 = M.apply(jon,M.Vec4{0.0,0.0,F32.neg(1.0),1.0})
+    Check.require(same_words(M.column_words(jon_near),[0,0,3212836864,1065353216]),"Jonmath frustum near plane changed")
+    IO.print("Vulkan near/far z/w=0/1,1/1. Jonmath frustum near z/w=-1/1. Direct projection replacement rejected.")
+    IO.print("production default camera words " ++ words(M.matrix_words(Create.orbit(Create.default_camera(),640,480))))
+
+def main() -> IO(Unit):
+  do IO<Unit>:
+    order()
+    roundtrips(256n,0)
+    seeds(Seeds.defaults())
+    scene(Mesh.scene())
+    quaternions(16n,0)
+    +values:List<&2,F32> = [0.0,M.float_word(2147483648),M.float_word(1),M.float_word(8388608),1.0,F32.neg(1.0),0.6,0.8,16777216.0,F32.neg(16777216.0)]
+    grid(values,values)
+    projection()
+    IO.print("Exact words matched for 256 layout roundtrips, 100 retained nontrivial quaternion seeds, four mesh instances, 16 quaternion sign combinations and a 10x10 finite matrix/TRS grid. No libm profile selected.")

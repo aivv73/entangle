@@ -274,6 +274,54 @@ law render_matrix_word_roundtrip:
   for +matrix:Render.Mat4
   {Render.from_words(Render.matrix_words(matrix)) == Some{matrix} : Maybe<Render.Mat4>}
 
+law render_multiply_order:
+  for +left:Render.Mat4
+  for +a:Render.Vec4
+  for +b:Render.Vec4
+  for +c:Render.Vec4
+  for +d:Render.Vec4
+  {Render.multiply(left,Render.Mat4{a,b,c,d}) == Render.Mat4{Render.apply(left,a),Render.apply(left,b),Render.apply(left,c),Render.apply(left,d)} : Render.Mat4}
+
+law render_apply_order:
+  for +a:F32
+  for +b:F32
+  for +c:F32
+  for +d:F32
+  for +e:F32
+  for +f:F32
+  for +g:F32
+  for +h:F32
+  for +i:F32
+  for +j:F32
+  for +k:F32
+  for +l:F32
+  for +n:F32
+  for +o:F32
+  for +p:F32
+  for +q:F32
+  for +x:F32
+  for +y:F32
+  for +z:F32
+  for +w:F32
+  {Render.apply(Render.Mat4{Render.Vec4{a,b,c,d},Render.Vec4{e,f,g,h},Render.Vec4{i,j,k,l},Render.Vec4{n,o,p,q}},Render.Vec4{x,y,z,w}) == Render.Vec4{(a * x + e * y + i * z + n * w : F32),(b * x + f * y + j * z + o * w : F32),(c * x + g * y + k * z + p * w : F32),(d * x + h * y + l * z + q * w : F32)} : Render.Vec4}
+
+law render_model_contract:
+  for +tx:F32
+  for +ty:F32
+  for +tz:F32
+  for +x:F32
+  for +y:F32
+  for +z:F32
+  for +w:F32
+  for +sx:F32
+  for +sy:F32
+  for +sz:F32
+  {Render.model(C.Transform{C.Vec3{tx,ty,tz},C.Quat{x,y,z,w},C.Vec3{sx,sy,sz}}) == Render.Mat4{
+    Render.Vec4{((1.0 - 2.0 * (y * y + z * z)) * sx : F32),(2.0 * (x * y + z * w) * sx : F32),(2.0 * (x * z - y * w) * sx : F32),0.0},
+    Render.Vec4{(2.0 * (x * y - z * w) * sy : F32),((1.0 - 2.0 * (x * x + z * z)) * sy : F32),(2.0 * (y * z + x * w) * sy : F32),0.0},
+    Render.Vec4{(2.0 * (x * z + y * w) * sz : F32),(2.0 * (y * z - x * w) * sz : F32),((1.0 - 2.0 * (x * x + y * y)) * sz : F32),0.0},
+    Render.Vec4{tx,ty,tz,1.0}} : Render.Mat4}
+
 law render_word_matrix_layout:
   for +a:U32
   for +b:U32

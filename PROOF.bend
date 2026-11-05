@@ -136,6 +136,12 @@ def Laws.render_push_extent(matrix):
   match matrix:
     case Render.Mat4{Render.Vec4{a,b,c,d},Render.Vec4{e,f,g,h},Render.Vec4{i,j,k,l},Render.Vec4{m,n,o,p}}:{==}
 
+def Laws.render_multiply_order(left,a,b,c,d):{==}
+
+def Laws.render_apply_order(a,b,c,d,e,f,g,h,i,j,k,l,n,o,p,q,x,y,z,w):{==}
+
+def Laws.render_model_contract(tx,ty,tz,x,y,z,w,sx,sy,sz):{==}
+
 def conjunction_associative(+a:Bool,+b:Bool,+c:Bool) ->
   {Bool.and(a,Bool.and(b,c)) == Bool.and(Bool.and(a,b),c) : Bool}:
   match a:

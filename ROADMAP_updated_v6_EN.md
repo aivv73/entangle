@@ -14,7 +14,7 @@
 
 **Schedule:** no calendar deadlines; each stage ends with a verifiable result.
 
-**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. Subsequent runtime qualification selected Jonlib's narrow PNG and OBJ modules behind engine APIs. The [OBJ evidence](docs/verification/2026-11-04-model-obj/README.md) records its supported profile and validation limits. E4 remains incomplete.
+**Dependency research:** the Jonlib and BendHub review supplies candidates for E4 and R0–R2 [S41–S47]. Subsequent runtime qualification selected Jonlib's narrow PNG and OBJ modules behind engine APIs. The [OBJ evidence](docs/verification/2026-11-04-model-obj/README.md) records its supported profile and validation limits. The completed [S41 math evaluation](docs/verification/2026-11-05-jonmath/README.md) retains Entangle's production math after explicit adapter qualification and exact retained-scene comparisons. E4 remains incomplete.
 
 ## E1 progress, November 3, 2026
 
@@ -85,7 +85,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** review the locally verified [S44 JSON loader](docs/json-scene.md), then continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is on `main` through `a016c6b`, with source, cache/retry, Creation/ECS, offscreen, and X11 evidence. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The [S44 JSON loader](docs/json-scene.md) is on `main` at `ac805c7`, following the PNG and [OBJ importer](docs/model-obj.md) work. The [S41 math evaluation](docs/verification/2026-11-05-jonmath/README.md) is complete under [Trail 29](https://entire.com/et/bend-engine/-/trails/29), with production math retained. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
 
 ---
 
@@ -453,8 +453,8 @@ Capacity pools such as `bend-kit-resources` do not track recorded commands, subm
 - [x] Define an [internal mesh and material format](docs/content.md) independent of the importer.
 - [x] Select and integrate one [PNG image decoder](docs/image-decoder.md). Native comparison of pinned Jonlib and `emerging-ezimg` on retained cat photos, PNG variants, and engine captures qualifies Jonlib [S41, S43]. Accepted variants, limits, layout, errors, licenses, and reproduction are recorded in the [verification evidence](docs/verification/2026-11-04-image-decoder/README.md). QOI is not added.
 - [x] Start the [static-model importer](docs/model-obj.md) with validated Jonlib S41 `src/obj.bend`. Ordered mesh/material/label sources load synchronously through Assets without ECS or Vulkan ownership. The authored-triangle/diffuse profile, exact pin/licenses, properties, file/cache behavior, and real imported Creation/ECS/offscreen/X11 evidence are [recorded](docs/verification/2026-11-04-model-obj/README.md). Other E4 tasks remain incomplete.
-- [x] Select `bend-kit-json@0.7.0.0` for [JSON scene files and manifests](docs/json-scene.md) [S44]. The typed loading boundary validates schema, F32 ranges, decoded-key uniqueness, asset references and size/depth/count limits. The [verification record](docs/verification/2026-11-04-json-scene/README.md) covers real files, cache/retry, exact ECS/offscreen output, frontend laws and sensitivity controls. Implemented locally and uncommitted under [Trail 28](https://entire.com/et/bend-engine/-/trails/28); no code has been published or merged.
-- [ ] For math or collision routines needed by the chosen consumers, evaluate Jonlib reuse through explicit adapters [S41]. Preserve Entangle's matrix multiplication, quaternion, projection, and numerical contracts; verify any replacement against retained scene evidence.
+- [x] Select `bend-kit-json@0.7.0.0` for [JSON scene files and manifests](docs/json-scene.md) [S44]. The typed loading boundary validates schema, F32 ranges, decoded-key uniqueness, asset references and size/depth/count limits. The [verification record](docs/verification/2026-11-04-json-scene/README.md) covers real files, cache/retry, exact ECS/offscreen output, frontend laws and sensitivity controls. Present on local and remote `main` at `ac805c7`, as checked during the S41 evaluation. The original evidence retains its historical local implementation state under [Trail 28](https://entire.com/et/bend-engine/-/trails/28).
+- [x] Evaluate Jonlib math reuse through [explicit qualification adapters](docs/verification/2026-11-05-jonmath/README.md) for the current scene and mesh consumers [S41]. Retain Entangle's production math. Adapted multiplication and quaternion/TRS words match the checked inputs, while direct projection replacement violates Vulkan depth. Root arithmetic-contract laws, sensitivity controls, and exact retained ECS/geometry/RGBA/D32 comparisons pass. Current consumers need no geometric collision query. The completed evaluation and its publication state are tracked under [Trail 29](https://entire.com/et/bend-engine/-/trails/29).
 - [ ] Extend the position/color vertex format with the attributes needed for textures and lighting. Implement texture upload and lifetime management, a textured material, a simple light source, and a camera in the existing Vulkan path.
 - [ ] Add scene descriptions, a Transform → GlobalTransform hierarchy, and rejection of parent cycles.
 - [ ] Correctly update dependent transforms/bounds when a parent changes; this must feed into future render change tracking.
@@ -466,6 +466,8 @@ Capacity pools such as `bend-kit-resources` do not track recorded commands, subm
 At the reviewed revision, Jonlib's standard PNG profile limits dimensions to 4096 per side and encoded input to 2 MiB. It supports variants, including Adam7 and 16-bit samples, beyond ezimg's PNG subset. Validate the selected profile with real assets and explicit rejection paths; a compiler check alone does not choose a decoder [S41, S43].
 
 Jonmath's `Matrix.multiply(left, right)` computes `right × left` in column-vector notation. Entangle's matrix function computes `left × right`. Preserve the existing Vulkan projection and choose a fixed numerical contract instead of switching simulation results according to the host's libm profile [S41].
+
+The [native S41 qualification](docs/verification/2026-11-05-jonmath/README.md) confirms that operand reversal and explicit field conversion preserve the checked multiplication and quaternion/TRS words. Production keeps its existing column layout, F32 operation order, quaternion validation, and Vulkan projection. No Jonmath numerical profile or collision API is introduced. The opt-in `math` workflow profile reproduces the decision and retained-scene comparisons.
 
 Defer GLB until a consumer needs it. Jonlib's reviewed loader accepts a restricted binary glTF subset, rejects text `.gltf`, and truncates indices to 16 bits for raylib compatibility. An Entangle adapter must reject out-of-range indices before truncation or preserve U32 indices in a revised importer. Jonlib's software drawing and shader-uniform wrappers do not implement Entangle's textured Vulkan renderer or lighting [S41].
 
@@ -827,7 +829,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** review the locally verified [S44 JSON loader](docs/json-scene.md), then continue E4 with native texture upload, sampling, and textured materials through Assets. The Asset API, internal source format, and PNG decoder are on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is on `main` through `a016c6b`, with source, cache/retry, Creation/ECS, offscreen, and X11 evidence. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+**Next action:** continue E4 with native texture upload, sampling, and textured materials through Assets. The [S44 JSON loader](docs/json-scene.md) is on `main` at `ac805c7`, following the PNG and [OBJ importer](docs/model-obj.md) work. The [S41 math evaluation](docs/verification/2026-11-05-jonmath/README.md) is complete under [Trail 29](https://entire.com/et/bend-engine/-/trails/29), with production math retained. E4 and E5 still precede `v0.1-alpha`. Use the [development workflow](docs/development.md) to define required evidence before implementation.
 
 ---
 
