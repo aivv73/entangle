@@ -1,0 +1,58 @@
+Implement item E4: scene hierarchy.
+Transform → GlobalTransform, with updates propagated to dependent transforms/bounds.
+
+Expected outcome:
+An object’s parent can be assigned via the public API or within scene files.
+In a running application, moving, rotating, or scaling a parent correctly updates the position, world-space bounds, and lighting of all its descendants. The system maintains this state consistently.
+Existing flat (non-hierarchical) scenes retain their original behavior.
+
+Before implementation:
+Review AGENTS.md, docs/development.md, and existing contracts regarding scene creation, JSON scene definitions, and texture rendering.
+Define the semantics of parent-child relationships, the order of composition, constraints, acceptance criteria, and validation rules.
+Specify the behavior for changing a parent or attempting invalid modifications.
+
+Implementation:
+1. Establish the data flow:
+   Scene description → validation → ECS → world-space transforms/bounds
+   → off-screen and window-based renderers.
+2. Ensure the ECS maintains its own mutable state.
+   GlobalTransform and world-space bounds must be derived properties.
+3. Reject cycles, self-references, and references to non-existent parents before
+   committing changes. In the event of an error, the system must revert to the last valid state.
+4. Account for the fact that combining rotations with non-uniform scaling can
+   result in shearing. Define appropriate representations and constraints;
+   prevent unintended distortion of dimensions or surface normals.
+5. Begin with a straightforward, sequential full-recalculation approach;
+   this will serve as a baseline for future optimizations.
+   The persistent RenderScene (from E5) remains a separate component.
+
+Verification:
+Formulate relevant general properties in LAWS.bend and verify the
+derived state logic.  Verify the behavior of the actual ECS implementation
+through rendering and deterministic replay.
+Cover deep chains, branching, parent-node changes,
+independent branches, and the rejection of invalid connections.
+To ensure thorough validation, demonstrate the following:
+the initial implementation passes → detection logic is intentionally broken
+→ the restored implementation passes.
+Document the verification workflow and retain a record of the final results.
+
+Constrained improvement cycle:
+Once correctly implemented, measure its performance cost in relevant scenes.
+If a significant issue is identified, establish a target metric
+and carry out up to three rounds of improvements.
+Each attempt should follow this process: hypothesis → single change → re-measurement
+→ comparison against the best previously validated state.
+Retain a change only if it consistently yields a performance gain,
+maintains correct output, and leads to sound conclusions.
+Test the successful iteration against additional scenes outside the initial test set.
+If no clear, compelling gain is achieved, stick with the straightforward implementation.
+
+Finalization:
+Present the work, results, and limitations.
+Update the documentation, test coverage, and the roadmap of agreed-upon statuses.
+Clearly specify what has been implemented, what has been verified, and what has been evaluated.
+
+---
+
+commit and push
