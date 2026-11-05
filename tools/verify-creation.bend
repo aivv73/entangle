@@ -17,10 +17,10 @@ import ../deps/bendvy/src/ecs/inspector.bend as I
 import ../deps/bend-vulkan/Vulkan.bend as V
 
 def vertices() -> List<&2,F.Vertex>:
-  [F.Vertex{C.Vec3{F32.neg(0.6),F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
-   F.Vertex{C.Vec3{0.6,F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0}},
-   F.Vertex{C.Vec3{0.6,0.6,0.25},C.Vec3{1.0,1.0,1.0}},
-   F.Vertex{C.Vec3{F32.neg(0.6),0.6,0.25},C.Vec3{1.0,1.0,1.0}}]
+  [F.Vertex{C.Vec3{F32.neg(0.6),F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.6,F32.neg(0.6),0.25},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.6,0.6,0.25},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{F32.neg(0.6),0.6,0.25},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}]
 
 def transform(x:F32) -> C.Transform:
   C.Transform{C.Vec3{x,0.0,0.0},C.Quat{0.0,0.0,0.0,1.0},C.Vec3{1.0,1.0,1.0}}
@@ -110,7 +110,7 @@ def render_first(pair:R.Renderer & R.Readback,list:Draw.DrawList,check:Bool) -> 
 
 def render_geometry(geometry:Create.Geometry,+list:Draw.DrawList,check:Bool) -> V.Action(R.Readback):
   V.Entry.with(R.Readback,entry => do V.Action<R.Readback>:
-    renderer:R.Renderer <- R.create(entry,R.Config{128,64,camera()},geometry)
+    renderer:R.Renderer <- R.create(entry,R.Config{128,64,camera(),R.default_light()},geometry)
     pair:R.Renderer & R.Readback <- frame(renderer,list)
     render_first(pair,list,check))
 
@@ -140,7 +140,7 @@ def lists(seeds:List<&2,Create.Seed>) -> IO(Draw.DrawList & Draw.DrawList):
 
 def plan_ok(geometry:Create.Geometry) -> Bool:
   match geometry:
-    case Create.Geometry{vs,is1,[Create.Range{7,0,3},Create.Range{8,3,3},Create.Range{9,6,6}]}:Nat.is_eq(List.length(&2,F.Vertex,vs),12n) && Nat.is_eq(List.length(&2,U32,is1),12n)
+    case Create.Geometry{vs,is1,[Create.Range{7,0,3,None{}},Create.Range{8,3,3,None{}},Create.Range{9,6,6,None{}}]}:Nat.is_eq(List.length(&2,F.Vertex,vs),12n) && Nat.is_eq(List.length(&2,U32,is1),12n)
     case _:False{}
 
 def geometry_depth(rgba:List<&2,U32>,depth:List<&2,U32>,+expected:U32) -> Bool:

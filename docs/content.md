@@ -9,9 +9,10 @@ and future importer adapters use the same values.
 
 | Type | Fields | Meaning |
 | --- | --- | --- |
-| `Vertex` | `position:C.Vec3`, `color:C.Vec3` | Mesh-local XYZ position and vertex RGB. All six `F32` attributes are finite. |
+| `Vertex` | `position:C.Vec3`, `color:C.Vec3`, `uv:UV`, `normal:C.Vec3` | Mesh-local position, flat RGB, texture coordinates, and local normal. All eleven attributes are finite. Normal squared length lies in `(1e-12,1e12]`. |
+| `UV` | `u:F32`, `v:F32` | Top-left texture coordinates. Sampling clamps coordinates outside `[0,1]`. |
 | `Mesh` | `vertices:List<&2,Vertex>`, `indices:List<&2,U32>` | Ordered vertices and ordered indexed triangles. Each consecutive group of three indices is one triangle. |
-| `Material` | `Basic{tint:C.Vec3}` | Opaque, unlit RGB tint. Every channel is finite and lies in `[0,1]`. |
+| `Material` | `Basic{tint:C.Vec3}` or `Textured{tint:C.Vec3,image:SourceImage}` | Opaque RGB tint. Every tint channel lies in `[0,1]`. Textured materials sample an image and receive directional lighting. |
 
 Source RGB has no magnitude bound beyond finiteness. Negative values and values
 above one are valid. Position coordinates are local to the mesh. Instances apply
@@ -23,7 +24,7 @@ indices, and degenerate triangles are valid. Source order and winding are
 preserved. The format does not weld vertices, repair topology, or reverse faces.
 The window renderer culls back faces. The offscreen renderer does not.
 
-All three types are `Data`. Their exported constructors are raw and unchecked.
+These types are `Data`. Their exported constructors are raw and unchecked.
 `mesh_valid` and `material_valid` return admission predicates, not new wrapper
 types. Cache insertion does not validate content. `Create.compile` validates
 instances, and renderer admission validates compiled geometry again.
@@ -31,24 +32,24 @@ instances, and renderer admission validates compiled geometry again.
 ## Identity and material operations
 
 `same_mesh` compares the ordered vertex attributes by exact `F32` words and
-the ordered indices by exact `U32` values. `same_material` compares exact tint
-words. Signed zeros differ. There is no canonicalization or comparison of
+the ordered indices by exact `U32` values. `same_material` compares the variant,
+tint words, image dimensions, and every source pixel. Signed zeros differ. There is no canonicalization or comparison of
 baked appearance. Raw values with arbitrary float payloads still have exact
 identity, even when admission rejects them.
 
-`white()` produces tint `(1,1,1)`. `tint(vertex,material)` preserves position and
+`white()` produces tint `(1,1,1)`. `tint(vertex,material)` preserves position, UVs, and normals and
 multiplies RGB componentwise. A tint channel whose word is exactly `1.0` returns
 the original source channel without arithmetic. White therefore preserves every
 source bit, including signed zero and arbitrary non-finite payloads in raw values.
 `bake(vertices,material)` preserves list order and count. Mesh indices are unchanged.
 
 No transfer function, named color space, gamma conversion, or physically based
-color interpretation is promised. Textures, normals, UVs, lighting, transparency,
-and richer importer profiles remain separate work.
+color interpretation is promised. The [textured material reference](textured-materials.md)
+defines sampling and lighting. Transparency and richer importer profiles remain separate work.
 
 ## Current supported profile
 
-`mesh_fits(vertices:Nat,indices:Nat)` accepts at most 699,050 vertices and
+`mesh_fits(vertices:Nat,indices:Nat)` accepts at most 381,300 vertices and
 3,000,000 indices. These are current engine admission limits, separate from the
 topology and attribute representation. A source mesh over either bound is invalid
 and compilation reports `BadMesh` at its instance position.
@@ -75,9 +76,11 @@ or stable on-disk schema.
 ## Renderer upload boundary
 
 [`src/scene-geometry.bend`](../src/scene-geometry.bend) owns upload serialization
-and GPU residency. The existing upload ABI is six `F32` words per vertex in XYZ,
-then RGB order, with a 24-byte stride. Indices upload as `U32`. Tint is baked before
-upload. The current shaders use flat RGB interpolation and output alpha `1.0`.
+and GPU residency. [`render-format.bend`](../src/render-format.bend) serializes
+eleven `F32` words in position XYZ, color RGB, UV, and normal XYZ order.
+The stride is 44 bytes. Indices upload as `U32`. Tint is baked before upload.
+Both pipelines use flat RGB interpolation and output alpha `1.0`.
+The textured pipeline interpolates UVs and world normals across each triangle.
 This byte layout is a renderer contract, separate from the source format and its
 current admission limits.
 
@@ -99,8 +102,8 @@ predicate checks storage, not color or alpha semantics, and has no PNG-specific
 limits. Source constructors remain unchecked, and Asset does not revalidate them.
 
 The [PNG reference](image-decoder.md) specifies importer limits, variants,
-errors, native-extension tolerances, and verification. Image source storage does
-not establish a Vulkan texture, upload layout, or textured material.
+errors, native-extension tolerances, and verification. `Textured` validates this
+storage against the texture upload profile. GPU residency is separate from the source cache.
 
 ## Model sources
 

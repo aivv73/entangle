@@ -288,11 +288,13 @@ def Laws.headless_scene_successor(remaining,app):{==}
 
 def Laws.creation_white(vertex):
   match vertex:
-    case F.Vertex{position,C.Vec3{r,g,b}}:{==}
+    case F.Vertex{position,C.Vec3{r,g,b},+uv,+normal}:{==}
 
-def Laws.creation_tint_position(position,color,material):
+def Laws.creation_tint_position(position,color,uv,normal,material):
   match color material:
     case C.Vec3{r,g,b} F.Basic{C.Vec3{x,y,z}}:
+      (C.Vec3{F.tint_channel(r,x),F.tint_channel(g,y),F.tint_channel(b,z)},{==})
+    case C.Vec3{r,g,b} F.Textured{C.Vec3{x,y,z},_}:
       (C.Vec3{F.tint_channel(r,x),F.tint_channel(g,y),F.tint_channel(b,z)},{==})
 
 def Laws.creation_bundle_order(transform,mesh,rest):{==}
@@ -301,8 +303,8 @@ def Laws.creation_empty():{==}
 
 def Laws.creation_resolve_empty(id):{==}
 
-def Laws.creation_resolve_head(id,first,count,rest):
-  Equal.cong(Bool,Maybe<Create.Range>,b => Bool.pick(Maybe<Create.Range>,b,Some{Create.Range{id,first,count}},Create.resolve(rest,id)),U32.is_eq(id,id),True{},U32Proof.u32_eq_refl(id))
+def Laws.creation_resolve_head(id,first,count,image,rest):
+  Equal.cong(Bool,Maybe<Create.Range>,b => Bool.pick(Maybe<Create.Range>,b,Some{Create.Range{id,first,count,image}},Create.resolve(rest,id)),U32.is_eq(id,id),True{},U32Proof.u32_eq_refl(id))
 
 def Laws.creation_empty_prepend(geometry):{==}
 
@@ -327,12 +329,20 @@ def content_vec_identity(+v:C.Vec3) -> {F.same_vec(v,v) == True{} : Bool}:
         conjunction_true(U32.is_eq(F32.bits(x),F32.bits(x)),U32.is_eq(F32.bits(y),F32.bits(y)),U32Proof.u32_eq_refl(F32.bits(x)),U32Proof.u32_eq_refl(F32.bits(y))),
         U32Proof.u32_eq_refl(F32.bits(z)))
 
+def content_uv_identity(+uv:F.UV) -> {F.same_uv(uv,uv) == True{} : Bool}:
+  match uv:
+    case F.UV{+u,+v}:
+      conjunction_true(U32.is_eq(F32.bits(u),F32.bits(u)),U32.is_eq(F32.bits(v),F32.bits(v)),U32Proof.u32_eq_refl(F32.bits(u)),U32Proof.u32_eq_refl(F32.bits(v)))
+
 def content_vertices_identity(+vertices:List<&2,F.Vertex>) -> {F.same_vertices(vertices,vertices) == True{} : Bool}:
   match vertices:
     case []:{==}
-    case F.Vertex{+p,+c} <> +rest:
-      conjunction_true(Bool.and(F.same_vec(p,p),F.same_vec(c,c)),F.same_vertices(rest,rest),
-        conjunction_true(F.same_vec(p,p),F.same_vec(c,c),content_vec_identity(p),content_vec_identity(c)),content_vertices_identity(rest))
+    case F.Vertex{+p,+c,+uv,+normal} <> +rest:
+      conjunction_true(F.same_vec(p,p) && F.same_vec(c,c) && F.same_uv(uv,uv) && F.same_vec(normal,normal),F.same_vertices(rest,rest),
+        conjunction_true(F.same_vec(p,p) && F.same_vec(c,c) && F.same_uv(uv,uv),F.same_vec(normal,normal),
+          conjunction_true(F.same_vec(p,p) && F.same_vec(c,c),F.same_uv(uv,uv),
+            conjunction_true(F.same_vec(p,p),F.same_vec(c,c),content_vec_identity(p),content_vec_identity(c)),content_uv_identity(uv)),content_vec_identity(normal)),content_vertices_identity(rest))
+
 
 def content_indices_identity(+indices:List<&2,U32>) -> {F.same_indices(indices,indices) == True{} : Bool}:
   match indices:
@@ -348,6 +358,10 @@ def Laws.content_mesh_identity(mesh):
 def Laws.content_material_identity(material):
   match material:
     case F.Basic{+tint}:content_vec_identity(tint)
+    case F.Textured{+tint,F.SourceImage{+w,+h,+pixels}}:
+      conjunction_true(F.same_vec(tint,tint),F.same_image(F.SourceImage{w,h,pixels},F.SourceImage{w,h,pixels}),content_vec_identity(tint),
+        conjunction_true(U32.is_eq(w,w) && U32.is_eq(h,h),F.same_indices(pixels,pixels),
+          conjunction_true(U32.is_eq(w,w),U32.is_eq(h,h),U32Proof.u32_eq_refl(w),U32Proof.u32_eq_refl(h)),content_indices_identity(pixels)))
 
 def Laws.content_bake_count(vertices,material):
   match vertices:
@@ -736,3 +750,22 @@ def json_checked(+scene:Create.Scene,path:String,valid:Bool,equal:{SceneFile.sce
 
 def Laws.json_admitted_scene_compiles(scene,path):json_checked(scene,path,SceneFile.scene_valid(scene),{==})
 def Laws.json_depth_limit():{==}
+
+def Laws.vertex_upload_stride(vertex):
+  match vertex:
+    case F.Vertex{C.Vec3{_,_,_},C.Vec3{_,_,_},F.UV{_,_},C.Vec3{_,_,_}}:{==}
+
+def Laws.texture_rgba_bytes(pixel):{==}
+
+def Laws.textured_source_retained(tint,image):{==}
+
+def and_false_right(value:Bool) -> {Bool.and(value,False{}) == False{} : Bool}:
+  match value:
+    case False{}:{==}
+    case True{}:{==}
+
+def Laws.texture_zero_width(height,pixels):
+  and_false_right(Bool.and(U32.is_le(height,4096),True{}))
+
+def Laws.light_requires_direction(direction,color,ambient,intensity,invalid):
+  Equal.cong(Bool,Bool,b => b && F.tint_valid(color) && F.channel(ambient) && F.channel(intensity),F.normal_valid(direction),False{},invalid)

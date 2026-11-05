@@ -7,6 +7,8 @@ import ./proofs/image-array.bend as ImageArray
 import ./src/image-png.bend as Png
 import ./deps/jonlib-png/codec.bend as PngCodec
 import ./src/content.bend as F
+import ./src/render-format.bend as Format
+import ./src/lighting.bend as Light
 import ./proofs/upload-range/spec.bend as UploadValue
 import ./deps/bend-vulkan/src/core.bend as UploadCore
 import ./deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as UploadWord
@@ -462,9 +464,11 @@ law creation_white:
 law creation_tint_position:
   for +position:C.Vec3
   for color:C.Vec3
+  for +uv:F.UV
+  for +normal:C.Vec3
   for material:F.Material
   exs tinted:C.Vec3
-  {F.tint(F.Vertex{position,color},material) == F.Vertex{position,tinted} : F.Vertex}
+  {F.tint(F.Vertex{position,color,uv,normal},material) == F.Vertex{position,tinted,uv,normal} : F.Vertex}
 
 law creation_bundle_order:
   for transform:C.Transform
@@ -483,8 +487,9 @@ law creation_resolve_head:
   for +id:U32
   for first:U32
   for count:U32
+  for +image:Maybe<&2,F.SourceImage>
   for rest:List<&2,Create.Range>
-  {Create.resolve(Create.Range{id,first,count} <> rest,id) == Some{Create.Range{id,first,count}} : Maybe<Create.Range>}
+  {Create.resolve(Create.Range{id,first,count,image} <> rest,id) == Some{Create.Range{id,first,count,image}} : Maybe<Create.Range>}
 
 law creation_empty_prepend:
   for geometry:Create.Geometry
@@ -971,9 +976,9 @@ law model_reject_incomplete_read:
   {Obj.exact(Done{bytes},size,path) == Fail{Obj.error(8,path,0n,"file size changed or read was incomplete")} : Result<&2,&2,Asset.Error,List<&2,U32>>}
 
 law model_expanded_limit:
-  {F.mesh_fits(699048n,699048n) == True{} : Bool}
+  {F.mesh_fits(381300n,381300n) == True{} : Bool}
 law model_expanded_over_limit:
-  {F.mesh_fits(699051n,699051n) == False{} : Bool}
+  {F.mesh_fits(381303n,381303n) == False{} : Bool}
 
 law model_admit_result:
   for result:Result<&2,&2,Asset.Error,F.SourceModel>
@@ -1064,3 +1069,29 @@ law json_admitted_scene_compiles:
 
 law json_depth_limit:
   {Json.depth_limit() == 8 : U32}
+
+law vertex_upload_stride:
+  for vertex:F.Vertex
+  {U32.from_nat(Nat.mul(4n,List.length(&1,U32,Format.vertex_words(vertex)))) == F.vertex_stride() : U32}
+
+law texture_rgba_bytes:
+  for +pixel:U32
+  {Format.pixel_bytes(pixel) == [UploadCore.word_byte(pixel,3),UploadCore.word_byte(pixel,2),UploadCore.word_byte(pixel,1),UploadCore.word_byte(pixel,0)] : List<&2,U32>}
+
+law textured_source_retained:
+  for tint:C.Vec3
+  for +image:F.SourceImage
+  {F.material_image(F.Textured{tint,image}) == Some{image} : Maybe<&2,F.SourceImage>}
+
+law texture_zero_width:
+  for height:U32
+  for pixels:List<&2,U32>
+  {F.texture_valid(F.SourceImage{0,height,pixels}) == False{} : Bool}
+
+law light_requires_direction:
+  for +direction:C.Vec3
+  for +color:C.Vec3
+  for +ambient:F32
+  for +intensity:F32
+  for invalid:{F.normal_valid(direction) == False{} : Bool}
+  {Light.valid(Light.Directional{direction,color,ambient,intensity}) == False{} : Bool}

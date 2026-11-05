@@ -10,7 +10,7 @@ type Scene is Data:
 type Seed is Data:
   Seed{transform:C.Transform,mesh:C.MeshRef}
 type Range is Data:
-  Range{id:U32,first_index:U32,index_count:U32}
+  Range{id:U32,first_index:U32,index_count:U32,texture:Maybe<&2,F.SourceImage>}
 type Geometry is Data:
   Geometry{vertices:List<&2,F.Vertex>,indices:List<&2,U32>,ranges:List<&2,Range>}
 type Compiled is Data:
@@ -51,7 +51,7 @@ def resolve(ranges:List<&2,Range>,+id:U32) -> Maybe<Range>:
   match ranges:
     case []:None{}
     case +range <> rest:
-      Range{other,_,_} = range
+      Range{other,_,_,_} = range
       Bool.pick(Maybe<Range>,U32.is_eq(other,id),Some{range},resolve(rest,id))
 
 def prepend(seed:Seed,result:Result<&2,&2,Error,Compiled>) -> Result<&2,&2,Error,Compiled>:
@@ -85,7 +85,7 @@ def compile_pair(found:Maybe<U32>,+mesh:F.Mesh,+material:F.Material,pairs:List<&
       do Result<&2,&2,Error,Plan>:
         checked:Unit <- capacity(F.mesh_fits(Nat.add(vc,List.length(&2,F.Vertex,vertices)),Nat.add(ic,List.length(&2,U32,indices))))
         return Plan{Used{mesh,material,next} <> pairs,
-          Geometry{List.append(&2,F.Vertex,vs,F.bake(vertices,material)),List.append(&2,U32,packed_indices,rebase(indices,U32.from_nat(vc))),List.append(&2,Range,ranges,[Range{next,U32.from_nat(ic),U32.from_nat(List.length(&2,U32,indices))}])},next,U32.inc(next)}
+          Geometry{List.append(&2,F.Vertex,vs,F.bake(vertices,material)),List.append(&2,U32,packed_indices,rebase(indices,U32.from_nat(vc))),List.append(&2,Range,ranges,[Range{next,U32.from_nat(ic),U32.from_nat(List.length(&2,U32,indices)),F.material_image(material)}])},next,U32.inc(next)}
 
 def apply_plan(-A:Data,plan:Plan,next:List<&2,Used> -> Geometry -> U32 -> U32 -> Result<&2,&2,Error,A>) -> Result<&2,&2,Error,A>:
   Plan{pairs,geometry,id,index} = plan
@@ -109,13 +109,19 @@ def compile(scene:Scene) -> Result<&2,&2,Error,Compiled>:
 def unique(ranges:List<&2,Range>,+id:U32) -> Bool:
   match ranges:
     case []:True{}
-    case Range{other,_,_} <> rest:U32.is_ne(id,other) && unique(rest,id)
+    case Range{other,_,_,_} <> rest:U32.is_ne(id,other) && unique(rest,id)
+
+def texture_valid(image:Maybe<&2,F.SourceImage>) -> Bool:
+  match image:
+    case None{}:True{}
+    case Some{image}:F.texture_valid(image)
 
 def ranges_valid(ranges:List<&2,Range>,+count:U32) -> Bool:
   match ranges:
     case []:True{}
-    case Range{+id,+first,+size} <> +rest:
-      U32.is_le(first,count) && U32.is_le(size,U32.sub(count,first)) && U32.is_zero(U32.mod(size,3)) && unique(rest,id) && ranges_valid(rest,count)
+    case Range{+id,+first,+size,image} <> +rest:
+      U32.is_le(first,count) && U32.is_le(size,U32.sub(count,first)) && U32.is_zero(U32.mod(size,3)) && texture_valid(image) && unique(rest,id) && ranges_valid(rest,count)
+
 
 def geometry_valid(geometry:Geometry) -> Bool:
   Geometry{+vertices,+indices,ranges} = geometry

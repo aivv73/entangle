@@ -5,9 +5,9 @@ import ../src/components.bend as C
 
 def triangle() -> F.Mesh:
   F.Mesh{[
-    F.Vertex{C.Vec3{F32.neg(0.25),F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0}},
-    F.Vertex{C.Vec3{0.25,F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0}},
-    F.Vertex{C.Vec3{0.0,0.25,0.0},C.Vec3{1.0,1.0,1.0}}],[0,1,2]}
+    F.Vertex{C.Vec3{F32.neg(0.25),F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+    F.Vertex{C.Vec3{0.25,F32.neg(0.25),0.0},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+    F.Vertex{C.Vec3{0.0,0.25,0.0},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}],[0,1,2]}
 
 def red() -> F.Material:
   F.Basic{C.Vec3{1.0,0.0,0.0}}

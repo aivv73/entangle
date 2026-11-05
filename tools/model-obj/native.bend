@@ -21,7 +21,7 @@ def model(result:Result<&2,&2,Asset.Error,F.SourceModel>) -> IO(F.SourceModel):
 def same_ranges(a:List<&2,Create.Range>,b:List<&2,Create.Range>) -> Bool:
   match a b:
     case [],[]:True{}
-    case Create.Range{x,y,z} <> xs,Create.Range{u,v,w} <> ys:U32.is_eq(x,u) && U32.is_eq(y,v) && U32.is_eq(z,w) && same_ranges(xs,ys)
+    case Create.Range{x,y,z,None{}} <> xs,Create.Range{u,v,w,None{}} <> ys:U32.is_eq(x,u) && U32.is_eq(y,v) && U32.is_eq(z,w) && same_ranges(xs,ys)
     case _,_:False{}
 
 def geometry_equal(a:Create.Geometry,b:Create.Geometry) -> Bool:
@@ -66,16 +66,17 @@ def same_draws(a:Draw.DrawList,b:Draw.DrawList) -> Bool:
 def vertex_words(values:List<&2,F.Vertex>) -> String:
   match values:
     case []:""
-    case F.Vertex{p,c} <> rest:words(vec_words(p)) ++ words(vec_words(c)) ++ "\n" ++ vertex_words(rest)
+    case F.Vertex{p,c,F.UV{u,v},normal} <> rest:words(vec_words(p)) ++ words(vec_words(c)) ++ words([F32.bits(u),F32.bits(v)]) ++ words(vec_words(normal)) ++ "\n" ++ vertex_words(rest)
 
 def range_words(values:List<&2,Create.Range>) -> String:
   match values:
     case []:""
-    case Create.Range{id,first,count} <> rest:words([id,first,count]) ++ "\n" ++ range_words(rest)
+    case Create.Range{id,first,count,None{}} <> rest:words([id,first,count]) ++ "\n" ++ range_words(rest)
+    case Create.Range{id,first,count,Some{_}} <> rest:"unexpected textured OBJ range " ++ words([id,first,count]) ++ "\n" ++ range_words(rest)
 
 def packed(geometry:Create.Geometry) -> String:
   Create.Geometry{v,i,r} = geometry
-  "vertices position/RGB words\n" ++ vertex_words(v) ++ "indices\n" ++ words(i) ++ "\nranges id/first/count\n" ++ range_words(r)
+  "vertices position/RGB/UV/normal words\n" ++ vertex_words(v) ++ "indices\n" ++ words(i) ++ "\nranges id/first/count\n" ++ range_words(r)
 
 def write_image(path:String,image:R.Readback) -> IO(Unit):
   R.Readback{w,h,rgba,_} = image

@@ -3,6 +3,7 @@ import Base
 import ../src/scene-geometry.bend as G
 import ../src/scene-buffer.bend as B
 import ../src/scene-render.bend as R
+import ../src/scene-pipeline.bend as P
 import ../src/scene-draw.bend as Draw
 import ../src/scene-matrix.bend as M
 import ../src/creation.bend as Create
@@ -20,21 +21,21 @@ import ../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W
 def camera() -> M.Mat4:M.model(C.Transform.identity())
 
 def vertices(+color:C.Vec3) -> List<&2,F.Vertex>:
-  [F.Vertex{C.Vec3{F32.neg(0.75),F32.neg(0.75),0.25},color},
-   F.Vertex{C.Vec3{0.75,F32.neg(0.75),0.25},color},
-   F.Vertex{C.Vec3{0.75,0.75,0.25},color},
-   F.Vertex{C.Vec3{F32.neg(0.75),0.75,0.25},color}]
+  [F.Vertex{C.Vec3{F32.neg(0.75),F32.neg(0.75),0.25},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.75,F32.neg(0.75),0.25},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.75,0.75,0.25},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{F32.neg(0.75),0.75,0.25},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}]
 
 def red() -> Create.Geometry:
-  Create.Geometry{vertices(C.Vec3{1.0,0.0,0.0}),[0,1,2,2,3,0],[Create.Range{7,0,6}]}
+  Create.Geometry{vertices(C.Vec3{1.0,0.0,0.0}),[0,1,2,2,3,0],[Create.Range{7,0,6,None{}}]}
 
 def green() -> Create.Geometry:
-  Create.Geometry{vertices(C.Vec3{0.0,1.0,0.0}),[0,1,2,2,3,0],[Create.Range{9,3,3},Create.Range{10,0,6}]}
+  Create.Geometry{vertices(C.Vec3{0.0,1.0,0.0}),[0,1,2,2,3,0],[Create.Range{9,3,3,None{}},Create.Range{10,0,6,None{}}]}
 
-def empty() -> Create.Geometry:Create.Geometry{[],[],[Create.Range{11,0,0}]}
+def empty() -> Create.Geometry:Create.Geometry{[],[],[Create.Range{11,0,0,None{}}]}
 
 def invalid() -> Create.Geometry:
-  Create.Geometry{vertices(C.Vec3{0.0,1.0,0.0}),[0,1,99],[Create.Range{9,0,3}]}
+  Create.Geometry{vertices(C.Vec3{0.0,1.0,0.0}),[0,1,99],[Create.Range{9,0,3,None{}}]}
 
 def draws(id:U32) -> Draw.DrawList:
   Draw.DrawList{[Draw.DrawItem{C.Transform.identity(),C.MeshRef{id}}]}
@@ -136,7 +137,7 @@ def gone(device:V.Device,buffer:B.Buffer) -> V.Action(Unit):
     gone_result(V.MemoryRequirements,result)
 
 def retained_buffers(resident:G.Resident) -> V.Action(G.Buffers):
-  G.Resident{value,ranges} = resident
+  G.Resident{value,ranges,_} = resident
   match value:
     case Some{buffers}:V.Action.pure(G.Buffers,buffers)
     case None{}:Error.failure(G.Buffers,1,"Expected resident allocations")
@@ -155,7 +156,7 @@ def bytes_equal(actual:List<U32>,expected:List<&2,U32>) -> Bool:
 def readable(+device:V.Device,+buffers:G.Buffers) -> V.Action(Unit):
   G.Buffers{vb,ib} = buffers
   do V.Action<Unit>:
-    a:List<U32> <- B.read(device,vb,W.zero(),96)
+    a:List<U32> <- B.read(device,vb,W.zero(),176)
     b:List<U32> <- B.read(device,ib,W.zero(),24)
     Error.require(bytes_equal(a,G.vertices_bytes(vertices(C.Vec3{1.0,0.0,0.0}))) && bytes_equal(b,G.indices_bytes([0,1,2,2,3,0])),"Retirement rejection sealed or altered part of the old allocation pair")
 
@@ -195,11 +196,11 @@ def lifetime(renderer:R.Renderer,+first:R.Readback,+buffers:G.Buffers) -> V.Acti
     V.CommandBuffer.reset(extra)
     V.CommandBuffer.begin(extra)
     R.geometry_barrier(extra,G.buffers(resident))
-    V.CommandBuffer.bind_graphics_pipeline(extra,pipeline)
+    V.CommandBuffer.bind_graphics_pipeline(extra,P.basic(pipeline))
     R.bind_geometry(extra,G.buffers(resident))
     V.CommandBuffer.end(extra)
     V.CommandBuffer.begin(recorded)
-    V.CommandBuffer.bind_graphics_pipeline(recorded,pipeline)
+    V.CommandBuffer.bind_graphics_pipeline(recorded,P.basic(pipeline))
     R.bind_geometry(recorded,G.buffers(resident))
     V.CommandBuffer.end(recorded)
     V.Device.submit(device,extra,wait)
@@ -258,7 +259,7 @@ def baseline(pair:R.Renderer & R.Readback) -> V.Action(Unit):
 
 def run(entry:V.Entry) -> V.Action(Unit):
   do V.Action<Unit>:
-    renderer:R.Renderer <- R.create(entry,R.Config{64,64,camera()},red())
+    renderer:R.Renderer <- R.create(entry,R.Config{64,64,camera(),R.default_light()},red())
     pair:R.Renderer & R.Readback <- Existing.frame(renderer,draws(7))
     baseline(pair)
 

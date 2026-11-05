@@ -194,7 +194,7 @@ def shape_counts(mesh:F.Mesh,vertices:Nat,triangles:Nat) -> Bool:
 
 def ranges(geometry:Create.Geometry) -> Bool:
   match geometry:
-    case Create.Geometry{_,_,[Create.Range{7,0,24},Create.Range{8,24,12},Create.Range{9,36,24},Create.Range{10,60,36}]}:True{}
+    case Create.Geometry{_,_,[Create.Range{7,0,24,None{}},Create.Range{8,24,12,None{}},Create.Range{9,36,24,None{}},Create.Range{10,60,36,None{}}]}:True{}
     case _:False{}
 
 def retained_unchanged(+later:List<&2,Old.Row>,pair:Play.Application() & List<&2,Old.Row>) -> IO(Unit):

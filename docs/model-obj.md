@@ -118,7 +118,7 @@ an atomic snapshot spanning OBJ and MTL are outside this contract.
 | Materials | 128 |
 | Emitted parts | 4096 |
 | Source position declarations | 699,050 |
-| Aggregate expanded vertices | 699,050 |
+| Aggregate expanded vertices | 381,300 |
 | Aggregate indices | 3,000,000 |
 | Root and joined path UTF-8 bytes | 4096 |
 

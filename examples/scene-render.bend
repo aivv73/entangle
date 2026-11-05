@@ -19,15 +19,15 @@ def camera() -> M.Mat4:
   M.Mat4{M.Vec4{0.015625,F32.neg(0.125),0.0,0.0},M.Vec4{0.0,0.0625,0.0,0.0},M.Vec4{0.0,0.0,0.00390625,0.0},M.Vec4{F32.neg(0.96875),0.25,0.5,1.0}}
 
 def quad(+z:F32,+color:C.Vec3) -> List<&2,F.Vertex>:
-  [F.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color},
-   F.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color},
-   F.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color},
-   F.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color}]
+  [F.Vertex{C.Vec3{F32.neg(0.515),F32.neg(F32.div(1.0,75.0)),z},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.035,F32.neg(0.08),z},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{0.515,F32.div(1.0,75.0),z},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+   F.Vertex{C.Vec3{F32.neg(0.035),0.08,z},color,F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}]
 
 def mesh(reverse:Bool) -> Create.Geometry:
   vertices = List.append(&2,F.Vertex,quad(0.03125,C.Vec3{1.0,0.0,0.0}),quad(0.09375,C.Vec3{0.0,1.0,0.0}))
   +indices = Bool.pick(List<&2,U32>,reverse,[4,5,6,6,7,4,0,1,2,2,3,0],[0,1,2,2,3,0,4,5,6,6,7,4])
-  Create.Geometry{vertices,indices,[Create.Range{7,0,U32.from_nat(List.length(&2,U32,indices))}]}
+  Create.Geometry{vertices,indices,[Create.Range{7,0,U32.from_nat(List.length(&2,U32,indices)),None{}}]}
 
 def depth_word(+numerator:U32) -> U32:
   +power = U32.log2(numerator)
@@ -330,14 +330,14 @@ def main() -> IO(Unit):
     V.or_exit(Unit,verified)
     IO.print("Scalar quaternion cross-product and independent coverage bound verified.")
     IO.print("index-order=near-first")
-    result : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(False{}),run)
+    result : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera(),R.default_light()},mesh(False{}),run)
     V.or_exit(Unit,result)
     no_live()
     IO.print("index-order=far-first")
-    reverse : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(True{}),run)
+    reverse : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera(),R.default_light()},mesh(True{}),run)
     V.or_exit(Unit,reverse)
     no_live()
-    terminal : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera()},mesh(False{}),renderer => Error.require(False{},"intentional scope termination"))
+    terminal : V.VkResult(Unit) <- R.with(R.Config{1024,256,camera(),R.default_light()},mesh(False{}),renderer => Error.require(False{},"intentional scope termination"))
     terminal_expected(terminal)
     IO.print("Terminal Action cleanup verified.")
     live : V.VkResult(U32) <- V.debug_live_objects()

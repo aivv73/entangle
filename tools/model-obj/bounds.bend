@@ -39,12 +39,12 @@ def indices(values:List<&2,U32>,+next:U32) -> Bool:
 def vertices(values:List<&2,F.Vertex>) -> Bool:
   match values:
     case []:True{}
-    case value <> rest:F.same_vertices([value],[F.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,1.0,1.0}}]) && vertices(rest)
+    case value <> rest:F.same_vertices([value],[F.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}]) && vertices(rest)
 
 def geometry_words(model:F.SourceModel) -> Bool:
   match model:
     case F.SourceModel{[F.ModelPart{F.Mesh{+vs,+is1},m,l}]}:
-      Nat.is_eq(List.length(&2,F.Vertex,vs),699048n) && Nat.is_eq(List.length(&2,U32,is1),699048n) && vertices(vs) && indices(is1,0) && F.same_material(m,F.white()) && F.same_labels(l,F.ModelLabels{None{},[],None{}})
+      Nat.is_eq(List.length(&2,F.Vertex,vs),381300n) && Nat.is_eq(List.length(&2,U32,is1),381300n) && vertices(vs) && indices(is1,0) && F.same_material(m,F.white()) && F.same_labels(l,F.ModelLabels{None{},[],None{}})
     case _:False{}
 
 def geometry(result:Result<&2,&2,Asset.Error,F.SourceModel>) -> IO(Unit):
@@ -73,10 +73,10 @@ def main() -> IO(Unit):
     Runtime.rejected(Obj.decode(Obj.text(exact_bytes(obj,Obj.obj_limit()) ++ "x"),None{}),7,"OBJ over 2 MiB")
     Runtime.accepted(Obj.decode(Obj.text("mtllib a\n" ++ obj),Some{Obj.text(exact_bytes("newmtl a\nKd 0 0 0\n",Obj.mtl_limit()))}),P.expected(1n),"MTL at 256 KiB")
     Runtime.rejected(Obj.decode(Obj.text("mtllib a\n" ++ obj),Some{Obj.text(exact_bytes("newmtl a\nKd 0 0 0\n",Obj.mtl_limit()) ++ "x")}),7,"MTL over 256 KiB")
-    geometry(Obj.decode(Obj.text("v 0 0 0\n" ++ P.repeats(233016n,"f 1 1 1\n")),None{}))
-    Runtime.rejected(Obj.decode(Obj.text("v 0 0 0\n" ++ P.repeats(233017n,"f 1 1 1\n")),None{}),7,"expanded geometry over 699050 vertices")
+    geometry(Obj.decode(Obj.text("v 0 0 0\n" ++ P.repeats(127100n,"f 1 1 1\n")),None{}))
+    Runtime.rejected(Obj.decode(Obj.text("v 0 0 0\n" ++ P.repeats(127101n,"f 1 1 1\n")),None{}),7,"expanded geometry over 381300 vertices")
     path:Result<&2,&2,Asset.Error,F.SourceModel> <- Obj.load(String.repeat("x",4097n))
     Runtime.rejected(path,6,"root path over 4096 UTF-8 bytes")
     path:Result<&2,&2,Asset.Error,F.SourceModel> <- Obj.load(SCon{Char.from_u32(0),"x"})
     Runtime.rejected(path,6,"root path NUL")
-    IO.print("Production byte/material/part/expanded-geometry bounds checked at and over admission limits; every one of 699048 emitted vertices and indices checked.")
+    IO.print("Production byte/material/part/expanded-geometry bounds checked at and over admission limits; every one of 381300 emitted vertices and indices checked.")

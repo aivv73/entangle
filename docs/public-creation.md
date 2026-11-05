@@ -19,7 +19,7 @@ ranges. Mesh and material source values come from
 `compile` first rejects more than 100,000 instances with `TooLarge`. It then
 validates instances in source order. Each instance reports `BadMesh` before
 `BadMaterial`, then `BadTransform`, carrying the zero-based instance position.
-A source mesh over the current 699,050-vertex or 3,000,000-index profile reports
+A source mesh over the current 381,300-vertex or 3,000,000-index profile reports
 `BadMesh`. A new pair that overflows aggregate packed counts reports `TooLarge`.
 A duplicate pair reuses its range before any aggregate growth check. Validation
 and packing complete before any GPU allocation.
@@ -33,8 +33,9 @@ Applications consume generated references instead of selecting them.
 `Compiled{seeds,geometry}` is the single result. Each `Seed{transform,mesh}`
 contains the existing `MeshRef`, which identifies baked geometry. It is not an
 entity identity. `Geometry{vertices,indices,ranges}` contains tinted vertices,
-rebased indices, and `Range{id,first_index,index_count}` values. Positions remain
-unchanged. `resolve(ranges,id)` returns the matching range or `None`.
+rebased indices, and `Range{id,first_index,index_count,texture}` values.
+The texture is `None` for Basic materials and `Some{SourceImage}` for textured materials.
+Positions, UVs, and normals remain unchanged. `resolve(ranges,id)` returns the matching range or `None`.
 
 `Scene.create(seeds)` registers the existing Bendvy application. The first tick
 queues and publishes initial entities, then runs the existing movement system.
@@ -88,9 +89,10 @@ creation example imports no Vulkan module and handles no Vulkan values.
 
 Creation supplies startup entities and packed renderer geometry. Both renderers
 support [whole-mesh replacement](mesh-replacement.md), including deferred destruction
-and preservation on rejected candidates. Runtime entity insertion, per-asset deletion,
-textures, lighting, transparency, and persistent GPU scene storage remain separate
-work. Packing uses sequential structural lookup for small startup scenes. No
+and preservation on rejected candidates. [Textured materials](textured-materials.md)
+use the same geometry and camera APIs. Runtime entity insertion, per-asset deletion,
+transparency, and persistent GPU scene storage remain separate work.
+Packing uses sequential structural lookup for small startup scenes. No
 performance or cross-backend bitwise determinism claim is made.
 
 The [verification record](verification/2026-11-03-public-creation/README.md)

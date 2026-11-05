@@ -463,7 +463,7 @@ def vertex(item:J.Item,+line:Nat) -> Result<&2,&2,Asset.Error,F.Vertex>:
     x:F32 <- parsed(x,"OBJ",line)
     y:F32 <- parsed(y,"OBJ",line)
     z:F32 <- parsed(z,"OBJ",line)
-    return F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0}}
+    return F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}
 
 def corner(c:J.FC,tree:J.ITree,depth:Nat,count:U32,+line:Nat) -> Result<&2,&2,Asset.Error,F.Vertex>:
   match c:

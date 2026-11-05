@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+entangle_extended=${1:-}
+test "$#" -le 1
+case "$entangle_extended" in ""|extended) ;; *) exit 2 ;; esac
 entangle_repo="$PWD"
 test -f "$entangle_repo/toolchain.bend"
 mkdir -p "$entangle_repo/build/verification"
@@ -17,6 +20,7 @@ cleanup() {
   fi
   cd "$entangle_repo"
   for entangle_file in \
+    "$entangle_runtime/assets" \
     "$entangle_runtime/build/indexed-window" \
     "$entangle_runtime/build/window-evidence" \
     "$entangle_runtime/build/public-creation-window.log" \
@@ -59,7 +63,7 @@ git rev-parse HEAD > "$entangle_evidence/revision.txt"
 git status --short > "$entangle_evidence/worktree.txt"
 git diff --binary > "$entangle_evidence/worktree.patch"
 git submodule status --recursive > "$entangle_evidence/dependencies.txt"
-find src examples tools -type f -name '*.bend' -print0 | sort -z | xargs -0 sha256sum > "$entangle_evidence/sources.sha256"
+find src examples tools assets -type f -print0 | sort -z | xargs -0 sha256sum > "$entangle_evidence/sources.sha256"
 sha256sum toolchain.bend LAWS.bend PROOF.bend >> "$entangle_evidence/sources.sha256"
 test "$(bend version)" = 'bend 2.0.39'
 clang --version > "$entangle_evidence/clang.txt"
@@ -69,6 +73,17 @@ run proof bend PROOF.bend
 run build-app bend examples/mesh-playground.bend -o "$entangle_evidence/bin/mesh-playground"
 run build-driver bend tools/verify-mesh-window.bend -o "$entangle_evidence/bin/verify-mesh-window"
 run build-replay bend tools/replay-mesh-window.bend -o "$entangle_evidence/bin/replay-mesh-window"
+if [ "$entangle_extended" = extended ]; then
+  run build-cube bend examples/scene-window.bend -o "$entangle_evidence/bin/cube-window"
+  run build-cube-driver bend tools/verify-window.bend -o "$entangle_evidence/bin/verify-window"
+  run build-creation bend tools/creation-window-app.bend -o "$entangle_evidence/bin/creation-window"
+  run build-creation-driver bend tools/verify-creation-window.bend -o "$entangle_evidence/bin/verify-creation-window"
+  run build-replacement bend tools/mesh-replacement-window.bend -o "$entangle_evidence/bin/replacement-window"
+  run build-replacement-driver bend tools/verify-mesh-replacement-window.bend -o "$entangle_evidence/bin/verify-replacement-window"
+  run build-textured bend examples/textured-scene.bend -o "$entangle_evidence/bin/textured-window"
+  run build-textured-driver bend tools/verify-textured-window.bend -o "$entangle_evidence/bin/verify-textured-window"
+  ln -s "$entangle_repo/assets" "$entangle_runtime/assets"
+fi
 sha256sum "$entangle_evidence"/bin/* > "$entangle_evidence/binaries.sha256"
 cp "$entangle_evidence/bin/mesh-playground" "$entangle_runtime/build/indexed-window"
 ln -s "$entangle_evidence/mesh" "$entangle_runtime/build/window-evidence"
@@ -102,6 +117,32 @@ doctor() {
 }
 run doctor doctor
 cd "$entangle_runtime"
+if [ "$entangle_extended" = extended ]; then
+  mkdir -p "$entangle_evidence/cube" "$entangle_evidence/creation" "$entangle_evidence/replacement" "$entangle_evidence/textured"
+  cp "$entangle_evidence/bin/cube-window" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/cube" build/window-evidence
+  run cube-live timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=live "$entangle_evidence/bin/verify-window" live plain
+  run cube-replay timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=replay "$entangle_evidence/bin/verify-window" replay plain
+  run cube-terminal timeout --signal=KILL 120s env ENTANGLE_WINDOW_MODE=terminal "$entangle_evidence/bin/verify-window" terminal plain
+  cp "$entangle_evidence/bin/creation-window" build/indexed-window
+  ln -s "$entangle_evidence/creation" docs/verification/2026-11-03-public-creation
+  ln -s "$entangle_evidence/creation/native.log" build/public-creation-window.log
+  run creation-window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-creation-window"
+  cp "$entangle_evidence/bin/replacement-window" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/replacement" build/window-evidence
+  ln -s "$entangle_evidence/replacement/native.log" build/replacement-window.log
+  run replacement-window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-replacement-window"
+  cp "$entangle_evidence/bin/textured-window" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/textured" build/window-evidence
+  run textured-window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-textured-window"
+  cp "$entangle_evidence/bin/mesh-playground" build/indexed-window
+  rm build/window-evidence
+  ln -s "$entangle_evidence/mesh" build/window-evidence
+  run doctor-after-extended doctor
+fi
 run window timeout --signal=KILL 120s "$entangle_evidence/bin/verify-mesh-window"
 run replay-live "$entangle_evidence/bin/replay-mesh-window" "$entangle_evidence/mesh/native-live.log"
 run replay-close "$entangle_evidence/bin/replay-mesh-window" "$entangle_evidence/mesh/native-close.log"

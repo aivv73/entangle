@@ -78,9 +78,9 @@ def indices(n:Nat) -> List<&2,U32>:
 
 def mesh(+n:Nat) -> Create.Geometry:
   Create.Geometry{[
-    F.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
-    F.Vertex{C.Vec3{1.0,0.0,0.0},C.Vec3{1.0,0.0,0.0}},
-    F.Vertex{C.Vec3{0.0,1.0,0.0},C.Vec3{1.0,0.0,0.0}}],indices(n),[Create.Range{7,0,U32.from_nat(Nat.mul(3n,n))}]}
+    F.Vertex{C.Vec3{0.0,0.0,0.0},C.Vec3{1.0,0.0,0.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+    F.Vertex{C.Vec3{1.0,0.0,0.0},C.Vec3{1.0,0.0,0.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}},
+    F.Vertex{C.Vec3{0.0,1.0,0.0},C.Vec3{1.0,0.0,0.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}],indices(n),[Create.Range{7,0,U32.from_nat(Nat.mul(3n,n)),None{}}]}
 
 def counts(probe:Diag.Probe,writes:U32,bytes:U32) -> V.Action(Unit):
   match probe:
@@ -157,9 +157,9 @@ def bytes_equal(a:List<U32>,b:List<&2,U32>) -> Bool:
 
 def original(+device:V.Device,resident:G.Resident) -> V.Action(Unit):
   match resident:
-    case G.Resident{Some{G.Buffers{vb,ib}},[Create.Range{7,0,3}]}:
+    case G.Resident{Some{G.Buffers{vb,ib}},[Create.Range{7,0,3,None{}}],_}:
       do V.Action<Unit>:
-        vertices:List<U32> <- B.read(device,vb,W.zero(),72)
+        vertices:List<U32> <- B.read(device,vb,W.zero(),132)
         indices:List<U32> <- B.read(device,ib,W.zero(),12)
         Error.require(bytes_equal(vertices,vertex_data(mesh(1n))) && Retention.equal_bytes(indices,[0,0,0,0,1,0,0,0,2,0,0,0]),"Failed preparation changed old resident bytes or ranges")
     case _:Error.require(False{},"Failed preparation replaced old resident")
@@ -171,7 +171,7 @@ def same_pair(a:V.Buffer & V.DeviceMemory,b:V.Buffer & V.DeviceMemory) -> Bool:
 
 def same_owner(a:G.Resident,b:G.Resident) -> Bool:
   match a b:
-    case G.Resident{Some{G.Buffers{av,ai}},_} G.Resident{Some{G.Buffers{bv,bi}},_}:
+    case G.Resident{Some{G.Buffers{av,ai}},_,_} G.Resident{Some{G.Buffers{bv,bi}},_,_}:
       same_pair(B.allocation(av),B.allocation(bv)) && same_pair(B.allocation(ai),B.allocation(bi))
     case _ _:False{}
 
@@ -212,7 +212,7 @@ def allocated(+context:G.Context,pair:G.Resident & Diag.Probe) -> V.Action(Unit)
   (old,_) = pair
   do V.Action<Unit>:
     probe:Diag.Probe <- V.Action.lift(Diag.Probe,Diag.create(G.device(context)))
-    # A valid, serialized mesh below the production 16 MiB per-buffer limit.
+    # Three vertices and just under 8 MiB of indices exceed the 4 MiB headroom.
     payload:G.Payload <- G.payload(mesh(699050n))
     partial(context,old,probe,payload)
 

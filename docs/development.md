@@ -32,11 +32,13 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 | `images` | Assets plus PNG corpus, full-pixel comparison, real file/cache behavior and decoder mutations. |
 | `json` | Assets plus strict scene/manifest files, reference and resource limits, cache/retry, parser qualification, production mutations and real ECS/offscreen comparison. |
 | `math` | Pinned S41 adapter qualification, exact numerical contracts, production projection and adapter controls, root law mutations, and retained native scene/state/readback comparisons. Downloads the rejected candidate for evaluation only. |
+| `textures` | Source laws, shader regeneration, real RGBA/D32 sampling and lighting, camera updates, texture rollback/retention/replacement, production mutations, and the native failure profile. |
 | `upload` | Root frontend proofs, upload kernel verdict, law and source-policy mutations, real production/native upload boundaries and readback. |
 | `native-failures` | Root frontend proofs and law mutations, bounded production-handler proofs with all mutations, real resource failure/rollback/retry. |
 | `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler sensitivity controls. |
 | `window` | Owned Xwayland mesh controls, focus/resize/Close, captures and full-state replay. Requires the parent Wayland session and validation layer. |
-| `all` | `native` and `window`. This covers the registered profiles, not every feature-map scenario or backend. |
+| `textured-window` | Owned Xwayland mesh, cube, creation, replacement, and textured windows. Includes camera controls, resize, restore, cleanup, and mesh replay. |
+| `all` | `native` and the extended window scenarios. This covers the registered profiles, not every feature-map scenario or backend. |
 
 No arguments selects `native`. Profiles combine by union. Run affected profiles during implementation and include their dependent consumers before completion. Use the [feature map](../.agents/skills/verify-entangle/features/README.md) for other scenarios, including cube/public-creation windows and replacement windows. Add a required scenario when a change introduces a new behavior; do not treat the current profile list as exhaustive. The merged OBJ importer is covered by `verify-models` within the default native gate. Its supported profile and additional X11 evidence are recorded in the feature map; there is no separate `models` profile.
 

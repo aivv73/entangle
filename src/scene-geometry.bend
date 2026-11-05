@@ -2,6 +2,8 @@ import ./content.bend as F
 import Base
 import ./scene-buffer.bend as B
 import ./scene-geometry-policy.bend as Policy
+import ./scene-materials.bend as Materials
+import ./render-format.bend as Format
 import ./creation.bend as Create
 import ./components.bend as C
 import ./error.bend as Error
@@ -16,7 +18,7 @@ type Context is Data:
 type Buffers is Data:
   Buffers{vertices:B.Buffer,indices:B.Buffer}
 type Resident is Data:
-  Resident{buffers:Maybe<&2,Buffers>,ranges:List<&2,Create.Range>}
+  Resident{buffers:Maybe<&2,Buffers>,ranges:List<&2,Create.Range>,materials:Materials.Resident}
 type Failure is Type:
   Failure{cause:U32 & String,cleanup:List<(U32 & String)>}
 type ReplaceStatus is Type:
@@ -33,12 +35,16 @@ def device(context:Context) -> V.Device:
   device
 
 def buffers(resident:Resident) -> Maybe<&2,Buffers>:
-  Resident{buffers,_} = resident
+  Resident{buffers,_,_} = resident
   buffers
 
 def ranges(resident:Resident) -> List<&2,Create.Range>:
-  Resident{_,ranges} = resident
+  Resident{_,ranges,_} = resident
   ranges
+
+def materials(resident:Resident) -> Materials.Resident:
+  Resident{_,_,materials} = resident
+  materials
 
 def word_bytes(+word:U32) -> List<&2,U32>:
   [Core.word_byte(word,0),Core.word_byte(word,1),Core.word_byte(word,2),Core.word_byte(word,3)]
@@ -48,14 +54,10 @@ def bytes(words:List<U32>) -> List<&2,U32>:
     case []:[]
     case word <> rest:List.append(&2,U32,word_bytes(word),bytes(rest))
 
-def vertex_words(v:F.Vertex) -> List<U32>:
-  F.Vertex{C.Vec3{x,y,z},C.Vec3{r,g,b}} = v
-  [F32.bits(x),F32.bits(y),F32.bits(z),F32.bits(r),F32.bits(g),F32.bits(b)]
-
 def vertices_bytes(vertices:List<&2,F.Vertex>) -> List<&2,U32>:
   match vertices:
     case []:[]
-    case v <> rest:List.append(&2,U32,bytes(vertex_words(v)),vertices_bytes(rest))
+    case v <> rest:List.append(&2,U32,bytes(Format.vertex_words(v)),vertices_bytes(rest))
 
 def indices_bytes(indices:List<&2,U32>) -> List<&2,U32>:
   match indices:
@@ -113,7 +115,7 @@ def write(+device:V.Device,buffer:B.Buffer,bytes:List<&2,U32>,+probe:Diag.Probe,
 def uploaded(device:V.Device,+value:Buffers,ranges:List<&2,Create.Range>,pair:V.VkResult(U32) & Diag.Probe) -> IO(Preparation):
   match pair:
     case (Fail{cause},probe):failed(device,Some{value},cause,probe)
-    case (Done{_},probe):IO.pure(Preparation,Prepared{Resident{Some{value},ranges},probe})
+    case (Done{_},probe):IO.pure(Preparation,Prepared{Resident{Some{value},ranges,Materials.empty()},probe})
 
 def vertex_uploaded(+device:V.Device,+value:Buffers,payload:Payload,pair:V.VkResult(U32) & Diag.Probe) -> IO(Preparation):
   Buffers{vb,+ib} = value
@@ -163,13 +165,29 @@ def validated(context:Context,probe:Diag.Probe,result:V.VkResult(Payload)) -> IO
     case Done{+value}:
       Payload{vertices,indices,vs,isz,+ranges} = value
       match indices:
-        case []:IO.pure(Preparation,Prepared{Resident{None{},ranges},probe})
+        case []:IO.pure(Preparation,Prepared{Resident{None{},ranges,Materials.empty()},probe})
         case _:allocate(context,value,probe)
 
-def prepare(context:Context,mesh:Create.Geometry,probe:Diag.Probe) -> IO(Preparation):
+def materialized(device:V.Device,resident:Resident,probe:Diag.Probe,result:V.VkResult(List<&2,Materials.Binding>)) -> IO(Preparation):
+  Resident{buffers,ranges,_} = resident
+  match result:
+    case Fail{cause}:failed(device,buffers,cause,probe)
+    case Done{active}:IO.pure(Preparation,Prepared{Resident{buffers,ranges,Materials.Resident{active,[]}},probe})
+
+def with_materials(context:Context,value:Preparation) -> IO(Preparation):
+  Context{instance,physical,+device} = context
+  match value:
+    case Unprepared{error,probe}:IO.pure(Preparation,Unprepared{error,probe})
+    case Prepared{+resident,probe}:
+      do IO<Preparation>:
+        result:V.VkResult(List<&2,Materials.Binding>) <- Materials.create(instance,physical,device,ranges(resident))
+        materialized(device,resident,probe,result)
+
+def prepare(+context:Context,mesh:Create.Geometry,probe:Diag.Probe) -> IO(Preparation):
   do IO<Preparation>:
     result:V.VkResult(Payload) <- payload(mesh)
-    validated(context,probe,result)
+    value:Preparation <- validated(context,probe,result)
+    with_materials(context,value)
 
 def retire_pairs(device:V.Device,pairs:List<(V.Buffer & V.DeviceMemory)>) -> V.Action(Unit):
   match pairs:
@@ -179,14 +197,20 @@ def retire_pairs(device:V.Device,pairs:List<(V.Buffer & V.DeviceMemory)>) -> V.A
 def retire(device:V.Device,resident:Resident) -> V.Action(Unit):
   retire_pairs(device,allocations(buffers(resident)))
 
+def published(old:Resident,fresh:Resident) -> Resident:
+  Resident{_,_,previous} = old
+  Resident{buffers,ranges,next} = fresh
+  Resident{buffers,ranges,Materials.retire(previous,next)}
+
 def sealed(+device:V.Device,+old:Resident,+fresh:Resident,result:V.VkResult(Unit)) -> IO(Resident & ReplaceStatus):
   match result:
     # Publication must be the next effect after successful paired retirement.
-    case Done{_}:IO.pure(Resident & ReplaceStatus,(Policy.select(Resident,old,fresh,True{}),Installed{}))
+    case Done{_}:IO.pure(Resident & ReplaceStatus,(published(old,fresh),Installed{}))
     case Fail{cause}:
       do IO<Resident & ReplaceStatus>:
         cleanup:List<(U32 & String)> <- dispose(device,buffers(fresh))
-        return (Policy.select(Resident,old,fresh,False{}),Rejected{Failure{cause,cleanup}})
+        material_cleanup:V.VkResult(Unit) <- Materials.dispose(device,materials(fresh))
+        return (Policy.select(Resident,old,fresh,False{}),Rejected{Failure{cause,List.append(&1,U32 & String,cleanup,errors(material_cleanup))}})
 
 def install(+device:V.Device,+old:Resident,+fresh:Resident) -> IO(Resident & ReplaceStatus):
   do IO<Resident & ReplaceStatus>:
@@ -233,3 +257,14 @@ def create(context:Context,mesh:Create.Geometry,probe:Diag.Probe) -> V.Action(Re
   do IO<V.VkResult(Resident & Diag.Probe)>:
     value:Preparation <- prepare(context,mesh,probe)
     created(value)
+
+def collected(buffers:Maybe<&2,Buffers>,ranges:List<&2,Create.Range>,result:V.VkResult(Unit),pair:Materials.Resident & V.VkResult(Unit)) -> Resident & V.VkResult(Unit):
+  (materials,material_result) = pair
+  (Resident{buffers,ranges,materials},V.Entry.finish(Unit,result,material_result))
+
+def collect(+device:V.Device,resident:Resident) -> IO(Resident & V.VkResult(Unit)):
+  Resident{buffers,ranges,materials} = resident
+  do IO<Resident & V.VkResult(Unit)>:
+    result:V.VkResult(Unit) <- V.Device.collect_retired(device)
+    pair:Materials.Resident & V.VkResult(Unit) <- Materials.collect(device,materials)
+    return collected(buffers,ranges,result,pair)

@@ -42,5 +42,6 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [Public scene creation](scene-creation.md): scene descriptions, compilation, separate instances, shared geometry, and validation.
 - [Headless simulation](headless-simulation.md): eight production ticks, zero-step preservation, split batches, and observations.
 - [Offscreen rendering](offscreen-rendering.md): image output, exact coverage/depth, retained draws, and resource cleanup.
+- [Textured materials](../../../../docs/textured-materials.md): vertex attributes, PNG cache release, sampling and lighting, camera updates, texture replacement and retention, shader controls, and the textured X11 example.
 
 Application module registration is a developer API described in `docs/modules-registration.md`. This seed map does not claim exhaustive API coverage. Extend it when a task changes an unmapped user path.

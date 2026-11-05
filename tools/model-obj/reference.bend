@@ -3,7 +3,7 @@ import ../../src/content.bend as F
 import ../../src/components.bend as C
 
 def v(x:F32,y:F32,z:F32) -> F.Vertex:
-  F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0}}
+  F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}
 
 def quad(+a:F.Vertex,+b:F.Vertex,+c:F.Vertex,d:F.Vertex,material:F.Material,groups:List<&2,String>,name:Maybe<&2,String>) -> F.ModelPart:
   F.ModelPart{F.Mesh{[a,b,c,a,c,d],[0,1,2,3,4,5]},material,F.ModelLabels{Some{"sign"},groups,name}}

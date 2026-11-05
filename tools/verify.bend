@@ -2,6 +2,8 @@ import Base
 import ../toolchain.bend as Pin
 import ./verify-headless.bend as Headless
 import ./verify-json.bend as Json
+import ./verify-textures.bend as Textures
+import ./verify-models.bend as Models
 
 def require(ok: Bool, message: String) -> IO(Unit):
   match ok:
@@ -81,9 +83,9 @@ def main() -> IO(Unit):
     command("./build/verify-assets",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-images.bend","-o","build/verify-images"])
     command("./build/verify-images",["+RTS","--threads","1","--gpu","off"])
-    command("bend",["tools/verify-models.bend","-o","build/verify-models"])
-    command("./build/verify-models",["+RTS","--threads","1","--gpu","off"])
+    Models.main()
     Json.main()
+    Textures.main()
     command("bend",["tools/verify-native-failures.bend","-o","build/verify-native-failures"])
     command("./build/verify-native-failures",["+RTS","--threads","1","--gpu","off"])
     command("bend",["tools/verify-upload-runtime.bend","-o","build/verify-upload-runtime"])

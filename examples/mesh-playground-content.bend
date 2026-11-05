@@ -3,7 +3,7 @@ import Base
 import ../src/creation.bend as Create
 import ../src/components.bend as C
 
-def vertex(x:F32,y:F32,z:F32) -> F.Vertex:F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0}}
+def vertex(x:F32,y:F32,z:F32) -> F.Vertex:F.Vertex{C.Vec3{x,y,z},C.Vec3{1.0,1.0,1.0},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}}
 
 def octahedron() -> F.Mesh:
   F.Mesh{[vertex(0.0,0.65,0.0),

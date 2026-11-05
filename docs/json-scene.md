@@ -103,7 +103,7 @@ valid under the existing Creation contract.
 | Manifest entries | 64 |
 | Scene placements | 256 |
 | Expanded model parts | 4096 |
-| Aggregate loaded source geometry | 699050 vertices and 3000000 indices |
+| Aggregate loaded source geometry | 381300 vertices and 3000000 indices |
 | Aggregate loaded image pixels | 16777216 |
 | Each OBJ, MTL, or PNG | Existing importer limits apply |
 

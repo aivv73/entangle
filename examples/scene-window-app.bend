@@ -25,7 +25,7 @@ type State is Type:
 def vertices(words:List<U32>) -> List<&2,F.Vertex>:
   match words:
     case a <> b <> c <> r <> g <> b1 <> rest:
-      F.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)}} <> vertices(rest)
+      F.Vertex{C.Vec3{M.float_word(a),M.float_word(b),M.float_word(c)},C.Vec3{M.float_word(r),M.float_word(g),M.float_word(b1)},F.UV{0.0,0.0},C.Vec3{0.0,0.0,1.0}} <> vertices(rest)
     case _:[]
 
 def indices(words:List<U32>) -> List<&2,U32>:
@@ -34,7 +34,7 @@ def indices(words:List<U32>) -> List<&2,U32>:
     case x <> rest:x <> indices(rest)
 
 def mesh() -> Create.Geometry:
-  Create.Geometry{vertices(List.take(&1,U32,Geometry.vertices(),144n)),indices(List.take(&1,U32,Geometry.indices(),36n)),[Create.Range{7,0,36}]}
+  Create.Geometry{vertices(List.take(&1,U32,Geometry.vertices(),144n)),indices(List.take(&1,U32,Geometry.indices(),36n)),[Create.Range{7,0,36,None{}}]}
 
 def tick_one_framing(width:U32,height:U32) -> M.Mat4:
   tick_one_center_x : F32 = 50.5

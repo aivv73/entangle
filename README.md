@@ -19,6 +19,7 @@ is not yet a general-purpose game engine.
 ## What works today
 
 - Define 3D scenes in Bend with meshes, basic color materials, instances, and cameras.
+- Render UV-mapped textures with directional lighting, transformed normals, and tracked GPU resource lifetimes.
 - Run scheduled systems with Bendvy while keeping world state separate from rendering data.
 - Render scenes in an interactive X11 or XWayland window, or to an image without a window.
 - Advance simulations without a window, Vulkan, or a GPU.
@@ -65,6 +66,17 @@ bend examples/mesh-playground.bend -o build/mesh-playground
 Hold I/K and J/L to move the orange octahedron across the platform, and U/O to
 move it vertically. Space resets the object. The other shapes stay fixed.
 Camera controls are the same as in the cube demo.
+
+### Try textured lighting
+
+```sh
+bend examples/textured-scene.bend -o build/textured-scene
+./build/textured-scene
+```
+
+This example loads a PNG through Asset and draws two textured, lit cubes.
+It uses the same camera controls. See the [material and lifetime reference](docs/textured-materials.md)
+for the vertex layout, lighting parameters, limits, and verification commands.
 
 ## Create a scene
 

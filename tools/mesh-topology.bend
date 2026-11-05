@@ -22,7 +22,7 @@ def paired(+a:U32,+b:U32,+all:List<&2,Face>) -> Bool:
 
 def vertex(vs:List<&2,F.Vertex>,i:Nat) -> C.Vec3:
   match vs i:
-    case F.Vertex{p,_} <> _ 0n:p
+    case F.Vertex{p,_,uv,normal} <> _ 0n:p
     case _ <> rest 1n+tail:vertex(rest,tail)
     case [] _:C.Vec3{0.0,0.0,0.0}
 
