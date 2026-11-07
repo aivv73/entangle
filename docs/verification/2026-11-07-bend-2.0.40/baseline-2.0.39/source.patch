@@ -1,0 +1,222 @@
+diff --git a/LAWS.bend b/LAWS.bend
+index eef732b..9fc2d16 100644
+--- a/LAWS.bend
++++ b/LAWS.bend
+@@ -733,7 +733,7 @@ law player_active_clock_policy:
+ 
+ law player_native_focus_boundary:
+   for rest:List<Event>
+-  {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest,True{}) : List<Event> & Bool}
++  {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest,True{}) : List<Event> & Bool}
+ 
+ law player_query_gate:
+   for ~H:Type
+diff --git a/src/mesh-control.bend b/src/mesh-control.bend
+index 1072ee4..b8dd910 100644
+--- a/src/mesh-control.bend
++++ b/src/mesh-control.bend
+@@ -152,7 +152,7 @@ def boundary_tail(head:Event,pair:List<Event> & Bool) -> List<Event> & Bool:
+ # The pinned native backend emits this release batch even if FocusIn follows FocusOut in one poll.
+ def focus_boundary(events:List<Event>) -> List<Event> & Bool:
+   match events:
+-    case Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest:
+-      (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest,True{})
++    case Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest:
++      (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest,True{})
+     case head <> tail:boundary_tail(head,focus_boundary(tail))
+     case []:([],False{})
+diff --git a/toolchain.bend b/toolchain.bend
+index 7376ce2..3616b2b 100644
+--- a/toolchain.bend
++++ b/toolchain.bend
+@@ -1,10 +1,12 @@
+ import Base
+ 
+-def bend_version() -> String: "bend 2.0.39"
++def bend_version() -> String: "bend 2.0.40"
++def bend_revision() -> String: "624dd9f4607cd29b0871a9b96d413bfb11e92f52"
++def bend_host_version() -> String: "1.4.4"
+ def clang_version() -> String: "clang version 23.1.4"
+ def native_target() -> String: "x86_64-pc-linux-gnu"
+ 
+ def dependencies() -> List<(String & String)>:
+   [("deps/bendvy", "16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee"),
+-   ("deps/bend-vulkan", "a144f7dd4fb4835ca3d5ce17350fc850de049038"),
++   ("deps/bend-vulkan", "979a8c2840dcdfd53f41cd70ebaed8de74ec8bed"),
+    ("deps/bend-vulkan/deps/bend-collections", "bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c")]
+diff --git a/tools/hierarchy/window-driver.bend b/tools/hierarchy/window-driver.bend
+index 008099c..7708700 100644
+--- a/tools/hierarchy/window-driver.bend
++++ b/tools/hierarchy/window-driver.bend
+@@ -1,5 +1,5 @@
+ import Base
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+ import ../../deps/bend-vulkan/examples/verify_window.bend as Existing
+diff --git a/tools/jonmath/qualify.bend.in b/tools/jonmath/qualify.bend.in
+index 3d4d7b2..b3a6a66 100644
+--- a/tools/jonmath/qualify.bend.in
++++ b/tools/jonmath/qualify.bend.in
+@@ -51,6 +51,10 @@ def instances(values:List<&2,Create.Instance>) -> IO(Unit):
+       do IO<Unit>:
+         transform(t)
+         instances(rest)
++    case Create.Parented{_,_,t,_} <> rest:
++      do IO<Unit>:
++        transform(t)
++        instances(rest)
+ 
+ def scene(value:Create.Scene) -> IO(Unit):
+   Create.Scene{values} = value
+diff --git a/tools/model-obj/window-session.sh b/tools/model-obj/window-session.sh
+index f503713..e14d1c3 100644
+--- a/tools/model-obj/window-session.sh
++++ b/tools/model-obj/window-session.sh
+@@ -46,7 +46,7 @@ git submodule status --recursive > "$model_evidence/dependencies.txt"
+ sha256sum src/model-obj.bend src/content.bend examples/model-assets.bend tools/model-obj/*.bend tools/model-obj/window-session.sh > "$model_evidence/sources.sha256"
+ bend version > "$model_evidence/bend.txt"
+ clang --version > "$model_evidence/clang.txt"
+-test "$(bend version)" = 'bend 2.0.39'
++run toolchain bend tools/verify-toolchain.bend
+ test "$(head -n 1 "$model_evidence/clang.txt")" = 'clang version 23.1.4'
+ test "$(clang -dumpmachine)" = 'x86_64-pc-linux-gnu'
+ run build-app bend tools/model-obj/window-app.bend -o "$model_evidence/bin/window-app"
+diff --git a/tools/model-obj/window.bend b/tools/model-obj/window.bend
+index 2e523bc..b1fb539 100644
+--- a/tools/model-obj/window.bend
++++ b/tools/model-obj/window.bend
+@@ -1,5 +1,5 @@
+ import Base
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import bend-window-capture@0.1.0.2/capture.bend as Capture
+ import ../../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+diff --git a/tools/upload-boundary/dependencies.txt b/tools/upload-boundary/dependencies.txt
+index b0bcf59..ea8fcef 100644
+--- a/tools/upload-boundary/dependencies.txt
++++ b/tools/upload-boundary/dependencies.txt
+@@ -549,6 +549,13 @@ module deps/bend-vulkan/src/constants.bend
+ module deps/bend-vulkan/src/core.bend
+ module deps/bend-vulkan/tools/verification.bend
+ module deps/bend-vulkan/tools/window_verification/bridge.bend
++module deps/bend-vulkan/tools/window_verification/input/uitest.bend
++deps/bend-vulkan/tools/window_verification/input/uitest.bend send_to
++deps/bend-vulkan/Vulkan.bend Entry.open_window
++deps/bend-vulkan/Vulkan.bend NativeWindow.close
++deps/bend-vulkan/Vulkan.bend NativeWindow
++module deps/bend-vulkan/examples/buffer_roundtrip.bend
++deps/bend-vulkan/examples/buffer_roundtrip.bend require
+ module deps/bend-vulkan/tools/window_verification/pixels.bend
+ module deps/bendvy/examples/scheduled-health/main.bend
+ module deps/bendvy/src/ecs/capabilities.bend
+diff --git a/tools/verify-creation-window.bend b/tools/verify-creation-window.bend
+index 7e84363..72d72df 100644
+--- a/tools/verify-creation-window.bend
++++ b/tools/verify-creation-window.bend
+@@ -1,5 +1,5 @@
+ import Base
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+ import ../deps/bend-vulkan/examples/verify_window.bend as Existing
+diff --git a/tools/verify-headless.bend b/tools/verify-headless.bend
+index 4747cad..0b573c1 100644
+--- a/tools/verify-headless.bend
++++ b/tools/verify-headless.bend
+@@ -54,6 +54,7 @@ def build(+source:String,+name:String,+expected:String) -> IO(Unit):
+ def main() -> IO(Unit):
+   do IO<Unit>:
+     exact("bend",["version"],Pin.bend_version())
++    exact("env",["BUN_BE_BUN=1","bend","--version"],Pin.bend_host_version())
+     +compiler : String <- run("clang",["--version"])
+     require(String.starts_with(compiler,Pin.clang_version() ++ "\n"),"Wrong Clang version:\n" ++ compiler)
+     IO.write(compiler)
+diff --git a/tools/verify-mesh-replacement-window.bend b/tools/verify-mesh-replacement-window.bend
+index f262379..469ad66 100644
+--- a/tools/verify-mesh-replacement-window.bend
++++ b/tools/verify-mesh-replacement-window.bend
+@@ -1,6 +1,6 @@
+ import Base
+ import bend-window-capture@0.1.0.2/capture.bend as Capture
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+ import ../deps/bend-vulkan/examples/verify_window.bend as Existing
+diff --git a/tools/verify-mesh-window.bend b/tools/verify-mesh-window.bend
+index 4f614b7..2742258 100644
+--- a/tools/verify-mesh-window.bend
++++ b/tools/verify-mesh-window.bend
+@@ -1,6 +1,6 @@
+ import bend-window-capture@0.1.0.2/capture.bend as Capture
+ import Base
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+ import ../deps/bend-vulkan/examples/verify_window.bend as Existing
+diff --git a/tools/verify-textured-window.bend b/tools/verify-textured-window.bend
+index e5ea0ae..d1c04cc 100644
+--- a/tools/verify-textured-window.bend
++++ b/tools/verify-textured-window.bend
+@@ -1,5 +1,5 @@
+ import Base
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+ import ../deps/bend-vulkan/examples/verify_window.bend as Existing
+diff --git a/tools/verify-window-session.sh b/tools/verify-window-session.sh
+index f580daf..6b09702 100644
+--- a/tools/verify-window-session.sh
++++ b/tools/verify-window-session.sh
+@@ -65,11 +65,12 @@ git diff --binary > "$entangle_evidence/worktree.patch"
+ git submodule status --recursive > "$entangle_evidence/dependencies.txt"
+ find src examples tools assets -type f -print0 | sort -z | xargs -0 sha256sum > "$entangle_evidence/sources.sha256"
+ sha256sum toolchain.bend LAWS.bend PROOF.bend >> "$entangle_evidence/sources.sha256"
+-test "$(bend version)" = 'bend 2.0.39'
++run toolchain bend tools/verify-toolchain.bend
+ clang --version > "$entangle_evidence/clang.txt"
+ test "$(head -n 1 "$entangle_evidence/clang.txt")" = 'clang version 23.1.4'
+ test "$(clang -dumpmachine)" = 'x86_64-pc-linux-gnu'
+ run proof bend PROOF.bend
++run build-pointer-driver bend tools/verify-pointer-mutations.bend -o "$entangle_evidence/bin/verify-pointer-mutations"
+ run build-app bend examples/mesh-playground.bend -o "$entangle_evidence/bin/mesh-playground"
+ run build-driver bend tools/verify-mesh-window.bend -o "$entangle_evidence/bin/verify-mesh-window"
+ run build-replay bend tools/replay-mesh-window.bend -o "$entangle_evidence/bin/replay-mesh-window"
+@@ -121,6 +122,7 @@ doctor() {
+   ps -p "$entangle_xwayland_pid" -o pid,ppid,args
+ }
+ run doctor doctor
++run pointer "$entangle_evidence/bin/verify-pointer-mutations" +RTS --threads 1 --gpu off
+ cd "$entangle_runtime"
+ if [ "$entangle_extended" = extended ]; then
+   mkdir -p "$entangle_evidence/cube" "$entangle_evidence/creation" "$entangle_evidence/replacement" "$entangle_evidence/textured"
+diff --git a/tools/verify-window.bend b/tools/verify-window.bend
+index dc0099c..3b002b4 100644
+--- a/tools/verify-window.bend
++++ b/tools/verify-window.bend
+@@ -1,6 +1,6 @@
+ import Base
+ import bend-window-capture@0.1.0.2/capture.bend as Capture
+-import bend-ui-test@0.1.0.1/uitest.bend as UI
++import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
+ import ../deps/bend-vulkan/tools/verification.bend as Check
+ import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
+ import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
+diff --git a/tools/verify.bend b/tools/verify.bend
+index 47f7ea5..a11771a 100644
+--- a/tools/verify.bend
++++ b/tools/verify.bend
+@@ -66,6 +66,7 @@ def render_expected() -> String:
+ def preflight() -> IO(Unit):
+   do IO<Unit>:
+     exact("bend",["version"],Pin.bend_version())
++    exact("env",["BUN_BE_BUN=1","bend","--version"],Pin.bend_host_version())
+     +compiler : String <- run("clang",["--version"])
+     require(String.starts_with(compiler,Pin.clang_version() ++ "\n"),"Wrong Clang version:\n" ++ compiler)
+     exact("clang",["-dumpmachine"],Pin.native_target())

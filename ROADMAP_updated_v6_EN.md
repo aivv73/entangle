@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 7, 2026 · updated for hierarchy formal verification
+**Revision:** 6 · November 8, 2026 · updated for the Bend 2.0.40 migration
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
@@ -23,6 +23,14 @@ The [skill](.agents/skills/verify-hierarchy-formal/SKILL.md) and
 [task record](proofs/hierarchy/plan.md) distinguish those proofs from the remaining
 general certificate-construction obligations. All-forest atomic publication is
 still unproved. Product code and dependency revisions are unchanged.
+
+**Bend upgrade:** the working tree pins Bend 2.0.40, its exact release source,
+and the Bun 1.4.4 compiler host. The pointer ABI, native window bridge, and
+input adapter are migrated. Implementation and verification are complete locally. The
+[upgrade record](docs/verification/2026-11-07-bend-2.0.40/README.md) distinguishes
+the complete product and math receipts, headless and OBJ window evidence,
+proof limits, and the unpushed dependency compatibility commit. This does
+not complete R0's ownership audit.
 
 **Next release:** `v0.1-alpha` — two non-voxel applications, a public API, a persistent scene representation, and the first practically useful proven guarantee.
 
@@ -101,7 +109,7 @@ still unproved. Product code and dependency revisions are unchanged.
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** use the qualified Bend 2.0.40 toolchain. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -127,7 +135,7 @@ step(state, tick_input, tick_config) -> next_state + events + diagnostics
 
 Ownership of `state` is transferred to the computation. The interface does not promise that the previous state remains available. Snapshots, rollback, and replay are different capabilities: an input log does not replace a snapshot, and a pure function does not make snapshots free. I/O, real clocks, devices, and publication of results remain in App; each tick receives explicit inputs and configuration.
 
-The current Bend guide describes a uniquely owned `Array` with in-place writes and a binary fork–join scheduler that does not move already assigned tasks. It also documents wrapping array indices [S14]. This describes the documentation reviewed, **not the results of checking the project's pinned Bend 2.0.39**. R0 will check applicability; the compiler must not be silently upgraded.
+The reviewed Bend guide describes a uniquely owned `Array` with in-place writes and a binary fork–join scheduler that does not move already assigned tasks. It also documents wrapping array indices [S14]. These documentation claims do not establish R0's ownership and scaling results. The explicit [Bend 2.0.40 upgrade](docs/verification/2026-11-07-bend-2.0.40/README.md) records compiler compatibility separately.
 
 Project rules:
 
@@ -619,7 +627,7 @@ Khronos publishes a separate GPU-culling and multi-draw-indirect example; it can
 
 ### Tasks
 
-- [ ] Pin compiler/dependency commits, the native target, and the corresponding guide/runtime source. Distinguish “described in the current guide” from “compiled and measured on our pinned version.”
+- [ ] Audit ownership on the pinned compiler/dependency commits and native target. The [Bend 2.0.40 upgrade](docs/verification/2026-11-07-bend-2.0.40/README.md) pins and qualifies the release source, guide, and compiler host. R0 must still distinguish documented operations from compiled and measured ownership behavior.
 - [ ] Check creation, reading, writing, and transfer of an array owned by the function; separately check safe splitting/reassembly. If no views/split API exists, start with independently allocated chunks rather than inventing such an API.
 - [ ] Audit the `Array.fork` and `Array.join` path used by `bend-parallel@0.1.0.0` [S46]. The local strict check rejects its unsafe dependencies. Its compiled sharing semantics are outside the proof model; do not treat it as a proven split API or evaluate these kernels in the checker. Prefer independently owned chunks until a justified alternative passes real execution checks.
 - [ ] Check indexing rules, logical size, and physical capacity. The engine API rejects invalid indices before access; index wrapping is not considered a valid way to access a different entity.
@@ -855,7 +863,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** use the qualified Bend 2.0.40 toolchain to implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 

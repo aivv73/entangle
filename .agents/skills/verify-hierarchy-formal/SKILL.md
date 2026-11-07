@@ -69,7 +69,7 @@ theorem of floating-point accuracy, normal invertibility or numerical admission
 for all acyclic graphs. Certificates check production array operations directly;
 they do not yet establish the general `fill` invariant or U32/capacity bounds.
 
-All 22 claims require the frontend. Four additionally require the Bend 2.0.39
+All 22 claims require the frontend. Four additionally require the pinned Bend
 kernel: `evaluate_length`, `forest_visit`, `rejection_visit`, and `sequence_order`.
 All eight production hierarchy mutations must also reject through that kernel
 entry point, followed by a restored kernel pass.

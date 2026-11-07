@@ -46,7 +46,7 @@ git submodule status --recursive > "$model_evidence/dependencies.txt"
 sha256sum src/model-obj.bend src/content.bend examples/model-assets.bend tools/model-obj/*.bend tools/model-obj/window-session.sh > "$model_evidence/sources.sha256"
 bend version > "$model_evidence/bend.txt"
 clang --version > "$model_evidence/clang.txt"
-test "$(bend version)" = 'bend 2.0.39'
+run toolchain bend tools/verify-toolchain.bend
 test "$(head -n 1 "$model_evidence/clang.txt")" = 'clang version 23.1.4'
 test "$(clang -dumpmachine)" = 'x86_64-pc-linux-gnu'
 run build-app bend tools/model-obj/window-app.bend -o "$model_evidence/bin/window-app"

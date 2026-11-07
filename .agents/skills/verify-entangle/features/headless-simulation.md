@@ -15,7 +15,7 @@ Call `Headless.advance` from `src/headless.bend` with the application's tick cal
 
 ## Driving it with the Bend CPU gate
 
-Preconditions: Bend 2.0.39, Clang 23.1.4, Linux x86-64, and `deps/bendvy`. The gate does not require bend-vulkan, graphics headers, a display, or a GPU. No other process may write `build/headless` during the run.
+Preconditions: the Bend and Clang versions in `toolchain.bend`, Linux x86-64, and `deps/bendvy`. The gate does not require bend-vulkan, graphics headers, a display, or a GPU. No other process may write `build/headless` during the run.
 
 - **Advance and inspect.** Run this independent block from the repository root.
 

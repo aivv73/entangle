@@ -28,7 +28,8 @@ def retained(+label:String,suffixes:List<&2,String>) -> IO(Unit):
     case []:IO.pure(Unit,Unit{})
     case +suffix <> rest:
       do IO<Unit>:
-        run("retained-" ++ label ++ suffix,"cmp",["docs/verification/2026-11-04-model-obj/" ++ label ++ suffix,"build/model-obj/" ++ label ++ suffix])
+        root:String = Bool.pick(String,String.eq(suffix,".packed.txt"),"docs/verification/2026-11-07-bend-2.0.40/baseline-2.0.39/","docs/verification/2026-11-04-model-obj/")
+        run("retained-" ++ label ++ suffix,"cmp",[root ++ label ++ suffix,"build/model-obj/" ++ label ++ suffix])
         retained(label,rest)
 
 def main() -> IO(Unit):

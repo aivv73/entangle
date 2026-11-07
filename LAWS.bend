@@ -733,7 +733,7 @@ law player_active_clock_policy:
 
 law player_native_focus_boundary:
   for rest:List<Event>
-  {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest,True{}) : List<Event> & Bool}
+  {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest,True{}) : List<Event> & Bool}
 
 law player_query_gate:
   for ~H:Type

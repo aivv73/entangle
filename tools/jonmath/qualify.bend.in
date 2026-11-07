@@ -51,6 +51,10 @@ def instances(values:List<&2,Create.Instance>) -> IO(Unit):
       do IO<Unit>:
         transform(t)
         instances(rest)
+    case Create.Parented{_,_,t,_} <> rest:
+      do IO<Unit>:
+        transform(t)
+        instances(rest)
 
 def scene(value:Create.Scene) -> IO(Unit):
   Create.Scene{values} = value
