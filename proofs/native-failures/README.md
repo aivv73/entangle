@@ -1,5 +1,11 @@
 # Production native failure and lifetime verification
 
+Acquisition and presentation ownership use the separate
+[presentation suite](../presentation/README.md) and
+[verify-presentation skill](../../.agents/skills/verify-presentation/SKILL.md).
+The presentation exclusions below still describe these original native suites.
+Window workflow profiles require the dedicated presentation checks as well.
+
 The resource-lifecycle failure item uses two kinds of evidence: real Vulkan
 execution for allocation failure, rollback, lifetime rejection, recovery and
 teardown; bounded formal verification for rare driver errors. The native

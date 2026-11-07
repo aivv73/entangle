@@ -1,12 +1,19 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 7, 2026 · updated for resource-lifetime verification
+**Revision:** 6 · November 7, 2026 · updated for presentation ownership verification
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
 **Status:** E0, E1, and E2 are complete on `main` through `2faa879` [S24–S37]. Entangle has two interactive non-voxel applications: the moving 100-entity scene and the mesh playground with a controllable object. App extraction, static startup registration, public scene creation, bounded fixed steps, the sequential step contract, and CPU-only headless execution are implemented and verified within the limits below. E3 is complete on `main` under the documented trust limits [S52]. The selected upload-range checker [S38] has a [kernel-checked universal containment proof](docs/upload-range.md). Both production renderers enforce that exact checker through a shared buffer API, with repository verification rejecting ordinary API bypasses [S39]. Scoped native ABI and exact transport-limit verification pass [S40]. Both renderers support [mesh replacement with deferred destruction](docs/mesh-replacement.md) [S48]. Retention verification covers recorded and unsubmitted commands, multiple submissions, uniform and sampled-image descriptor slots and sets, and memory aliases [S49, S52]. Native failure handling is verified through real-runtime checks and bounded proofs of production handlers [S50, S51]. E4 has landed the [Asset API](docs/assets.md), [internal source format](docs/content.md), and [PNG decoder](docs/image-decoder.md) on `main` through `90c7b7e`. The bounded [OBJ importer](docs/model-obj.md) is verified and merged on `main` through `a016c6b`. The [S44 JSON loader](docs/json-scene.md) is on `main` at `ac805c7`; [textured rendering](docs/textured-materials.md) is on `main` at `dc70d54` [S53]. [Scene hierarchy](docs/scene-hierarchy.md) is implemented and verified under [Trail 31](https://entire.com/et/bend-engine/-/trails/31) [S54]. The remaining E4 tasks, E5–E7, and R0–R4 are planned. `v0.1-alpha` remains an E5 milestone.
 
 **Resource-lifetime verification:** complete in the working tree [S55]. The extended skill checks production retirement, reference graphs, staging, collection, completion/reset, and pure cleanup ownership. The [task record](proofs/native-failures/lifetime-plan.md) retains acceptance, source-specific receipts, sensitivity controls, and real Vulkan evidence with separate proof limits. Product sources and dependency revisions are unchanged.
+
+**Presentation ownership verification:** complete locally [S56]. The dedicated
+[skill](.agents/skills/verify-presentation/SKILL.md) and
+[task record](proofs/presentation/plan.md) cover acquisition identities, separate
+render/presentation completion, semaphore/fence reuse, retry and uncertainty,
+and resize/Close. Multiple frames in flight and asynchronous presentation require
+an extended passing production proof and live teardown evidence before enablement.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -87,7 +94,7 @@
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -437,6 +444,11 @@ Acceptance establishes numeric containment only. A native operation may impose s
 - [x] Extend retaining-reference verification to sampled-image descriptors. The [sampled helper](tools/verify-sampled-retention.bend) covers views, samplers, images, and bound memory through two submissions, rebinding, completion, reset, partial slot rewrites, independent sets, final overwrite, set free, pool reset, and pool destruction. Exact counts, stale handles, and zero-object cleanup pass in the default native gate [S52].
 - [x] Document the mesh lifetime contract and its [native trust boundary](docs/mesh-replacement.md) separately. The contract distinguishes submission completion, recorded references, descriptor slots and sets, memory bindings, and copied handle values. Failure-handler verification has explicit native proof bounds [S51]; sampled-image retention has real-runtime coverage [S52]. A complete lifetime proof is not a hidden alpha requirement.
 - [x] Extend the native skill with atomic retirement, transitive ownership, reference staging, safe collection, completion/reset, and material cleanup-queue proofs [S55]. Nine new logical lifetime groups, 23 new native source controls, and seven new cleanup laws pass. The final affected-profile snapshot includes all native proofs/controls/restorations and validation-enabled retention, rollback/retry, and teardown. [Acceptance and task state](proofs/native-failures/lifetime-plan.md).
+- [x] Add dedicated presentation ownership verification for acquisition leases,
+  separate render/present completion, reuse, allocation failure/uncertainty, and
+  resize/Close [S56]. The 21 native entries, 35 source controls, 18 frontend
+  controls, restored checks, and owned-window evidence pass within the recorded
+  bounds. [Acceptance and task state](proofs/presentation/plan.md).
 
 The current backend distinguishes execution completion from releasing retaining references [S6]. The expanded native gate verifies this distinction for buffer retirement and sampled-image resource destruction without changing the renderer or dependency implementations [S49, S52].
 
@@ -501,6 +513,10 @@ The Skyrim blog proposes a persistent GPU scene representation with event-driven
 - [ ] Upload dirty ranges after the E3 check; record upload volume and count.
 - [ ] Start with correct single-threaded application of changes at the frame boundary. A separate render thread and a lock-free mailbox are not required.
 - [ ] With multiple frame slots, track the applied revision of each dataset and do not modify memory still in use by the GPU.
+- [ ] Before enabling multiple frames in flight or asynchronous presentation,
+  extend [verify-presentation](.agents/skills/verify-presentation/SKILL.md) to the
+  actual ownership topology and completion orders. Require production controls
+  and live resize/Close evidence for that design.
 - [ ] Clear the change log only after the necessary consumer acknowledgments, or replace it with a complete consistent revision. Skipping a frame must not lose an object removal.
 - [ ] If delta packets are introduced later, include `base_revision` and `new_revision`. A base mismatch triggers replay/resync rather than silently applying the latest delta.
 - [ ] Distinguish prepared data, successfully queued uploads, and completed use. A backend error must not falsely acknowledge an applied revision.
@@ -832,7 +848,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation.
+**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -984,5 +1000,22 @@ Tracked by [trail 21](https://entire.com/et/bend-engine/-/trails/21).
 ### Entangle resource-lifetime verification
 
 - [S55] Working-tree implementation and verification based on `834e23d`, November 7, 2026. The [extended skill](.agents/skills/verify-native-failures/SKILL.md) and [task record](proofs/native-failures/lifetime-plan.md) add nine logical lifetime groups with 261 checks per baseline/restored pass, 23 native production controls, and seven pure cleanup laws. The final `native-failures` [receipt](build/verification/workflow-H51QSNBC/manifest.tsv) and evidence audit pass all 14 stages, both native suites, all 41 native controls, all ten publication/cleanup controls, and restored sources. Loader-confirmed Vulkan validation covers retention, genuine allocation failure, rollback/retry, and zero-object teardown. The earlier native snapshot retains unchanged-source product/texture/rendering and upload-kernel/policy evidence; its two invalid mutation traces were rejected, corrected, and superseded. The runner now rejects every failed unwind assertion. Native scope is at most eight scanned registry rows at the documented boundaries. Product sources and dependency revisions are unchanged. Implementation and verification are complete locally; this records no new commit or publication.
+
+- [S56] Working-tree verification based on `9fc2eba`, November 7, 2026. The
+  [presentation skill](.agents/skills/verify-presentation/SKILL.md) and
+  [task record](proofs/presentation/plan.md) add production-extracted acquisition,
+  recording, submit/completion, presentation, release, and resize/Close checks.
+  The final suite passes 21 baseline/restored entries, 35 native controls, and
+  18 frontend controls. The full `presentation` workflow passes all 12 stages;
+  the task record separates its snapshot from the later numeric-token proof
+  extension and records the matching runtime sources. Validation-enabled window
+  controls, repeated resize, restore, hidden Close, complete-state replay,
+  inspected pixels, exact reset, and zero-object cleanup pass. All 272 existing
+  native positive checks pass. Scope is one command, two images, four lease
+  slots with at most two active, and at most five scanned rows. Product sources
+  and dependencies are unchanged. Multiple frames in flight and asynchronous
+  presentation require an extended passing proof and runtime evidence before
+  enablement. Implementation and verification are complete locally; no new
+  commit or publication is recorded.
 
 Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], mesh replacement [S48], buffer-retention verification [S49], failure-handler verification [S50–S51], and sampled-image retention [S52] complete E3 under the recorded verification limits. Resource-lifetime verification [S55] extends those checks. Dependency research [S41–S47] narrows future candidates without changing those statuses. Textured rendering [S53] and scene hierarchy [S54] complete their E4 tasks. E4–E7 and R0–R4 remain incomplete.

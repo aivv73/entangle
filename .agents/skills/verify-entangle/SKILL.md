@@ -12,6 +12,9 @@ That entry records covered code, assumptions, commands, mutation controls, and
 the synchronization commit separately from live-window evidence.
 Accepted geometry publication uses freshly extracted pure declarations;
 follow the linked publication driver as well as root `PROOF.bend`.
+Acquisition, presentation, swapchain replacement, and window-close changes also
+use [verify-presentation](../verify-presentation/SKILL.md). Window profiles require
+its bounded proofs and sensitivity controls alongside the live evidence.
 
 ## Select required evidence
 
