@@ -1,5 +1,10 @@
 # Native resource failures
 
+Acquisition leases, WSI fences, presentation semaphore reuse, and resize/Close
+use [verify-presentation](../../verify-presentation/SKILL.md). That separate
+bounded proof and live-window profile are required before multiple frames in
+flight or asynchronous presentation.
+
 `tools/verify-resource-failures.bend` drives the unchanged production buffer and geometry helpers against the pinned native Vulkan registry. `tools/verify.bend` runs it after mesh replacement. This path needs Linux `/proc`, `prlimit`, the pinned toolchain, a Vulkan device, and the validation layer. It needs no display.
 
 Run the standalone driver from the repository root:

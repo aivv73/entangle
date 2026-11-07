@@ -38,11 +38,18 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 | `upload` | Root frontend proofs, upload kernel verdict, law and source-policy mutations, real production/native upload boundaries and readback. |
 | `native-failures` | Root/publication/cleanup frontend proofs and law mutations, bounded production-handler and lifetime proofs with all mutations, real mesh/descriptor retention and resource failure/rollback/retry. |
 | `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler/lifetime sensitivity controls. |
+| `presentation` | Root/publication laws, owned mesh Xwayland resize/restore/Close and replay, bundle correspondence, bounded production acquisition/render/present/teardown sequences, native mutations, frontend ordering controls, and restored baselines. |
 | `window` | Owned Xwayland mesh controls, focus/resize/Close, captures and full-state replay. Requires the parent Wayland session and validation layer. |
 | `textured-window` | Owned Xwayland mesh, cube, creation, replacement, textured, and hierarchy windows. Includes camera controls, resize, restore, cleanup, and full-state replay. |
 | `all` | `native` and the extended window scenarios. This covers the registered profiles, not every feature-map scenario or backend. |
 
-No arguments selects `native`. Profiles combine by union. Run affected profiles during implementation and include their dependent consumers before completion. Use the [feature map](../.agents/skills/verify-entangle/features/README.md) for other scenarios, including cube/public-creation windows and replacement windows. Add a required scenario when a change introduces a new behavior; do not treat the current profile list as exhaustive. The merged OBJ importer is covered by `verify-models` within the default native gate. Its supported profile and additional X11 evidence are recorded in the feature map; there is no separate `models` profile.
+No arguments selects `native`. Profiles combine by union. All window profiles
+also require the [presentation ownership checks](../.agents/skills/verify-presentation/SKILL.md).
+Multiple frames in flight or asynchronous presentation require extending those
+checks to the proposed ownership topology and completion orders before enablement.
+The current synchronous renderer's receipt cannot certify that future design.
+
+Run affected profiles during implementation and include their dependent consumers before completion. Use the [feature map](../.agents/skills/verify-entangle/features/README.md) for other scenarios, including cube/public-creation windows and replacement windows. Add a required scenario when a change introduces a new behavior; do not treat the current profile list as exhaustive. The merged OBJ importer is covered by `verify-models` within the default native gate. Its supported profile and additional X11 evidence are recorded in the feature map; there is no separate `models` profile.
 
 The runner preserves a source snapshot under a fresh `build/verification/workflow-XXXXXXXX/source` directory. It copies current uncommitted sources, creates independent Git repositories for the root and pinned dependencies, checks source fingerprints before and after copying, and executes sequentially inside the snapshot. This supports both ordinary clones and Git worktrees; snapshot Git commands resolve to the copied files. Fixed legacy build paths and mutation copies stay there. It does not switch branches, overwrite another session's binaries, publish code, or remove evidence. Source changes during copying fail the run. Changes after copying do not invalidate the snapshot result, but that result does not certify the new working tree. The snapshot includes other uncommitted work already present in the source directories. Start from a task-specific checkout when that work must be excluded; snapshotting isolates execution, not the choice of patch.
 

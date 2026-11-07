@@ -38,6 +38,7 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
 - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.
 - [Native resource failures and lifetime](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded production proofs of rare driver errors, retirement, reference graphs, and collection.
+- [Presentation ownership](../../verify-presentation/SKILL.md): acquisition serials, stale leases, separate render/present completion, binary semaphore and fence reuse, retry/uncertainty, and resize/Close. Required by window profiles and before multiple frames in flight or asynchronous presentation.
 - [Mesh movement](mesh-movement.md): six movement keys, held/repeated/opposing input, release, Space reset, and focus loss.
 - [Camera and window controls](camera-window.md): both interactive apps, camera reset, resize, hide/restore, Escape, and Close.
 - [Public scene creation](scene-creation.md): scene descriptions, compilation, separate instances, shared geometry, and validation.

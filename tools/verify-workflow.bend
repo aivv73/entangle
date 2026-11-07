@@ -12,7 +12,7 @@ def native(+name:String,kind:String,path:String,args:List<&2,String>) -> List<&2
    Step{name,kind,"./" ++ binary,List.append(&2,String,args,["+RTS","--threads","1","--gpu","off"])}]
 
 def known(name:String) -> Bool:
-  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-window","upload","native-failures","native","window","textured-window","all"],name)
+  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-window","upload","native-failures","presentation","native","window","textured-window","all"],name)
 
 def valid(names:List<&2,String>) -> Bool:
   match names:
@@ -31,7 +31,8 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
   +assets:Bool = selected(names,"assets") || selected(names,"images") || selected(names,"json")
   +upload:Bool = selected(names,"upload") || baseline
   +failures:Bool = selected(names,"native-failures") || selected(names,"textures") || baseline
-  +laws:Bool = proofs || assets || upload || failures || selected(names,"math") || selected(names,"hierarchy")
+  +presentation:Bool = selected(names,"presentation") || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window")
+  +laws:Bool = proofs || assets || upload || failures || presentation || selected(names,"math") || selected(names,"hierarchy")
   List.concat(&2,Step,[
     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
     add(laws || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
@@ -48,13 +49,15 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
     add(failures && Bool.not(baseline),native("retention","runtime","tools/verify-mesh-replacement.bend",[])),
     add(failures && Bool.not(baseline),native("resource-failures","runtime","tools/verify-resource-failures.bend",[])),
     add(baseline,native("native","native-baseline","tools/verify.bend",[])),
-    add(selected(names,"window") && Bool.not(selected(names,"textured-window")),[Step{"window","mesh-window-and-replay","bash",["tools/verify-window-session.sh"]}]),
+    add((selected(names,"window") || selected(names,"presentation")) && Bool.not(selected(names,"textured-window")) && Bool.not(selected(names,"hierarchy-window")),[Step{"window","mesh-window-and-replay","bash",["tools/verify-window-session.sh"]}]),
     add(selected(names,"textured-window"),[Step{"textured-window","all-renderer-windows-and-replay","bash",["tools/verify-window-session.sh","extended"]}]),
     add(selected(names,"hierarchy-window") && Bool.not(selected(names,"textured-window")),[Step{"hierarchy-window","hierarchy-mesh-windows-and-replay","bash",["tools/verify-window-session.sh","hierarchy"]}]),
     add(proofs || upload,[Step{"upload-kernel","kernel","bend",["proofs/upload-range/PROOF.bend","--verdict"]}]),
     add(laws,native("law-mutations","sensitivity","tools/verify-law-mutations.bend",[])),
     add(upload,native("upload-mutations","sensitivity","tools/verify-upload-mutations.bend",[])),
-    add(failures,native("native-failures","bounded-proof-and-sensitivity","tools/verify-native-failures.bend",["--mutations"]))])
+    add(failures,native("native-failures","bounded-proof-and-sensitivity","tools/verify-native-failures.bend",["--mutations"])),
+    add(presentation,[Step{"presentation-bundle","source-correspondence","python3",["deps/bend-vulkan/tools/generate.py","--check"]}]),
+    add(presentation,native("presentation","bounded-presentation-and-sensitivity","tools/verify-presentation.bend",["--mutations"]))])
 
 def inputs() -> List<&2,String>:
   ["src","tools","examples","assets","proofs","deps","docs",".agents","LAWS.bend","PROOF.bend","toolchain.bend",".gitmodules","AGENTS.md","README.md"]
@@ -208,7 +211,7 @@ def run(+names:List<&2,String>) -> IO(Unit):
     S.require(ok,"Required verification failed; inspect manifest.tsv and per-stage logs.")
 
 def usage() -> String:
-  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images json math textures upload native-failures native window textured-window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nwindow covers mesh controls and replay; textured-window also covers cube, creation, replacement and textured scenes."
+  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images json math textures hierarchy hierarchy-window upload native-failures presentation native window textured-window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nWindow profiles require presentation ownership proofs. presentation includes mesh resize/Close and replay."
 
 def choose(names:List<&2,String>,dry:Bool) -> IO(Unit):
   +names:List<&2,String> = names

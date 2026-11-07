@@ -84,6 +84,15 @@ def completion_bounds() -> String:
   "bv_referenced.0:3,bv_referenced.1:8,bv_validate_retirement.0:8,bv_validate_retirement.1:3,bv_validate_retirement.2:8," ++
   "proof_retire.0:3,proof_retire.1:3,proof_collect.0:8,clear_registry.0:8,proof_destroy_boundary.0:3,proof_free_boundary.0:3"
 
+def presentation_bounds() -> String:
+  "bv_dependency.0:3,bv_may_reach_depth.0:3,bv_sealed.0:3," ++
+  "bv_get.0:6,bv_active.0:6,bv_uncertain.0:5,bv_uncertain.1:6,bv_image_lease.0:5," ++
+  "bv_device_result.0:6,bv_referenced.0:3,bv_referenced.1:6," ++
+  "bv_prepare_refs.0:2,bv_prepare_refs.1:6,bv_prepare_refs.2:3,bv_prepare_refs.3:3,bv_prepare_refs.4:3,bv_prepare_refs.5:3," ++
+  "bv_complete.0:4,bv_complete.1:1,bv_complete.2:6," ++
+  "proof_submit.0:3,proof_submit.1:6,proof_idle.0:2,proof_drain.0:5,proof_drain.1:6," ++
+  "proof_acquire.0:5,proof_acquire.1:5,proof_lookup.0:5,proof_swapchain_destroy.0:5,proof_swapchain_destroy.2:6"
+
 def valid_configuration(value:Maybe<&2,U32>,+text:String) -> IO(Unit):
   match value:
     case Some{+n}:S.require(U32.is_lt(n,64) && String.eq(U32.show(n),text),"Collection configuration must be a canonical number from 0 through 63")
@@ -92,12 +101,13 @@ def valid_configuration(value:Maybe<&2,U32>,+text:String) -> IO(Unit):
 def check(+binary:String,+source:String,+dest:String,+label:String,+target:String,failure:String,+configuration:String) -> IO(Unit):
   do IO<Unit>:
     +lifetime:Bool = String.starts_with(target,"verify_lifetime_")
+    +presentation:Bool = String.starts_with(target,"verify_presentation_")
     +collection:Bool = String.contains(target,"_collection_")
     S.require(Bool.pick(Bool,collection,Bool.not(String.is_empty(configuration)),String.is_empty(configuration)),"Collection checks require an explicit configuration; other entries do not accept one")
     Bool.pick(IO(Unit),collection,valid_configuration(U32.read(configuration),configuration),IO.pure(Unit,Unit{}))
     function:String = target ++ Bool.pick(String,collection,"_case_" ++ configuration,"")
     +bounds:String = Bool.pick(String,collection,collection_bounds(),Bool.pick(String,String.contains(target,"_completion_reset_"),completion_bounds(),lifetime_bounds()))
-    +args:List<&2,String> = List.append(&2,String,[source,"--function",function,"--unwind","6","--unwindset",Bool.pick(String,lifetime,bounds,"proof_idle.0:2,bv_complete.0:4,bv_complete.1:1"),"--unwinding-assertions","--bounds-check","--pointer-check","--pointer-overflow-check","--signed-overflow-check","--object-bits","10","--drop-unused-functions","--symex-cache-dereferences","--slice-formula","--trace"],Bool.pick(List<&2,String>,lifetime,["--malloc-may-fail","--malloc-fail-null","--memory-leak-check"],["--no-array-field-sensitivity"]))
+    +args:List<&2,String> = List.append(&2,String,[source,"--function",function,"--unwind",Bool.pick(String,presentation,"4","6"),"--unwindset",Bool.pick(String,presentation,presentation_bounds(),Bool.pick(String,lifetime,bounds,"proof_idle.0:2,bv_complete.0:4,bv_complete.1:1")),"--unwinding-assertions","--bounds-check","--pointer-check","--pointer-overflow-check","--signed-overflow-check","--object-bits","10","--drop-unused-functions","--symex-cache-dereferences","--slice-formula","--trace"],Bool.pick(List<&2,String>,lifetime || presentation,["--malloc-may-fail","--malloc-fail-null","--memory-leak-check"],["--no-array-field-sensitivity"]))
     Output.write(dest ++ "/" ++ label ++ ".argv",binary ++ "\n" ++ arguments(args))
     result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(binary,owned_arguments(args),"",16777216,300000))
     record(result,dest,label,failure)

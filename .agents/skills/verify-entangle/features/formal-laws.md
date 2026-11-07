@@ -1,5 +1,10 @@
 # Verify the Bend laws
 
+Presentation ownership uses a separate
+[production-extracted CBMC suite](../../verify-presentation/SKILL.md).
+Its foreign C assertions and frontend ordering policy are separate evidence
+from the Bend laws below. Window profiles require both.
+
 Run from the repository root with the versions and dependencies in
 `toolchain.bend`. Read `AGENTS.md` and run `bend guide` first.
 

@@ -5,6 +5,11 @@ description: Verify production Vulkan failures and resource lifetime after chang
 
 # Verify native failures and resource lifetime
 
+Presentation ownership has a separate
+[verify-presentation skill](../verify-presentation/SKILL.md). Use it for lease
+serials, WSI completion, binary semaphore reuse, resize, and close. This skill's
+existing scopes do not imply presentation verification.
+
 Use the `native` profile in [the development workflow](../../../docs/development.md) for retirement, collection, replacement, or material lifetime changes. It retains the source snapshot and combines bounded C proofs, pure Bend publication/cleanup proofs, production mutations, and real Vulkan retention, texture, rollback/retry, and teardown checks. The narrower `native-failures` profile runs native proofs and mutations with real mesh/descriptor retention and resource-failure drivers. Preserve the evidence kinds and limits separately.
 
 Run from the Entangle root. Read `AGENTS.md`, run `bend guide`, and read
