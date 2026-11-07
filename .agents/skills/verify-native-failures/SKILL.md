@@ -32,15 +32,18 @@ The dependency's existing Python 3 generator check also verifies that the
 window bundle embeds the same native implementation.
 
 All eleven proof entries were synchronized against root commit
-`71c16701a0bba33e9635624dfc916acfb87d9344` on November 4, 2026, and `deps/bend-vulkan` commit
+`94665a580af130b7d13ae1b29228eec14d032ccd` on November 7, 2026, and `deps/bend-vulkan` commit
 `a144f7dd4fb4835ca3d5ce17350fc850de049038`.
 Their outcome is **in sync**. The production dependency is unchanged since
-the previous root sync, `e0dfa4b4bd9ff548447382585931484cd66be511`.
-The intervening commits, `5ef97bb` and `71c1670`, add formal and runtime
-verification. They change no production handler, property, or bound.
-All positive proofs, all 18 production mutations, and the restored proofs
-passed maintenance. Sampled-image retention added in `71c1670` is runtime
-coverage, not an additional CBMC theorem.
+the previous root sync, `71c16701a0bba33e9635624dfc916acfb87d9344`.
+Every commit in `71c1670..94665a5` was reviewed. New texture/material lifetime
+callers and hierarchy paths change no extracted C handler, assertion, or
+bound. All positive proofs, all 18 production mutations, and the restored
+proofs pass. The [maintenance record](../../../proofs/maintenance/2026-11-07/README.md)
+lists the commits, runtime evidence, and limits. New material resource lists
+and deeper native graphs are not additional CBMC theorems. Their pure
+publication policy has a separate
+[frontend proof](../../../proofs/geometry-publication/README.md).
 The authoritative function/region list is
 [`handlers.in.c`](../../../proofs/native-failures/handlers.in.c).
 It covers begin/end/reset return handling, submission and synced semaphore

@@ -199,37 +199,51 @@ law draw_payload:
   for handle:W.Handle<SceneSchema.Schema>
   for +transform:C.Transform
   for +mesh:C.MeshRef
-  {Observe.draw_item(handle,transform,mesh) == Draw.DrawItem{transform,mesh} : Draw.DrawItem}
+  for accepted:C.Transform
+  for local_bounds:H.Bounds
+  for lit:Bool
+  for global:H.GlobalTransform
+  for bounds:H.Bounds
+  {Hierarchy.drawing(Hierarchy.Row{handle,transform,mesh,H.Spatial{H.Local{accepted,None{},local_bounds,lit},global,bounds}}) == Draw.DrawItem{transform,mesh} : Draw.DrawItem}
+
+law draw_child_payload:
+  for handle:W.Handle<SceneSchema.Schema>
+  for transform:C.Transform
+  for +mesh:C.MeshRef
+  for accepted:C.Transform
+  for parent:U32
+  for local_bounds:H.Bounds
+  for lit:Bool
+  for +global:H.GlobalTransform
+  for bounds:H.Bounds
+  {Hierarchy.drawing(Hierarchy.Row{handle,transform,mesh,H.Spatial{H.Local{accepted,Some{parent},local_bounds,lit},global,bounds}}) == Draw.GlobalItem{global,mesh} : Draw.DrawItem}
 
 law draw_handle_independent:
   for left:W.Handle<SceneSchema.Schema>
   for right:W.Handle<SceneSchema.Schema>
   for +transform:C.Transform
   for +mesh:C.MeshRef
-  {Observe.draw_item(left,transform,mesh) == Observe.draw_item(right,transform,mesh) : Draw.DrawItem}
+  for +spatial:H.Spatial
+  {Hierarchy.drawing(Hierarchy.Row{left,transform,mesh,spatial}) == Hierarchy.drawing(Hierarchy.Row{right,transform,mesh,spatial}) : Draw.DrawItem}
 
 law draw_found_order:
-  for H:Type
-  for next:H -> List<&2,Draw.DrawItem> -> H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>
-  for frame:H
+  for next:Hierarchy.Scope() -> List<&2,Hierarchy.Row> -> Hierarchy.Scope() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>
+  for frame:Hierarchy.Scope()
   for handle:W.Handle<SceneSchema.Schema>
   for +transform:C.Transform
   for +mesh:C.MeshRef
-  for acc:List<&2,Draw.DrawItem>
-  for added:Bool
-  for changed:Bool
-  {Observe.found_mesh(~Draw.DrawItem,~Observe.draw_item,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.Found{mesh},added,changed})) == next(frame,Draw.DrawItem{transform,mesh} <> acc) : H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+  for +spatial:H.Spatial
+  for acc:List<&2,Hierarchy.Row>
+  {Hierarchy.mesh_read(next,handle,transform,spatial,acc,(frame,Some{mesh})) == next(frame,Hierarchy.Row{handle,transform,mesh,spatial} <> acc) : Hierarchy.Scope() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>}
 
 law draw_absent_strict:
-  for H:Type
-  for next:H -> List<&2,Draw.DrawItem> -> H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>
-  for frame:H
+  for next:Hierarchy.Scope() -> List<&2,Hierarchy.Row> -> Hierarchy.Scope() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>
+  for frame:Hierarchy.Scope()
   for handle:W.Handle<SceneSchema.Schema>
   for transform:C.Transform
-  for acc:List<&2,Draw.DrawItem>
-  for added:Bool
-  for changed:Bool
-  {Observe.found_mesh(~Draw.DrawItem,~Observe.draw_item,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.ComponentAbsent{},added,changed})) == (frame,Fail{Unit{}}) : H & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+  for spatial:H.Spatial
+  for acc:List<&2,Hierarchy.Row>
+  {Hierarchy.mesh_read(next,handle,transform,spatial,acc,(frame,None{})) == (frame,Fail{H.MissingEntity{}}) : Hierarchy.Scope() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>}
 
 law row_missing_strict:
   for H:Type
@@ -242,14 +256,61 @@ law row_missing_strict:
   for changed:Bool
   {Observe.found_mesh(~Observe.Row,~Observe.row,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.MissingEntity{},added,changed})) == (frame,Fail{Unit{}}) : H & Result<&2,&2,Unit,List<&2,Observe.Row>>}
 
-law draw_finish_order:
+law row_found_order:
+  for H:Type
+  for next:H -> List<&2,Observe.Row> -> H & Result<&2,&2,Unit,List<&2,Observe.Row>>
+  for frame:H
+  for +handle:W.Handle<SceneSchema.Schema>
+  for +transform:C.Transform
+  for +mesh:C.MeshRef
+  for acc:List<&2,Observe.Row>
+  for added:Bool
+  for changed:Bool
+  {Observe.found_mesh(~Observe.Row,~Observe.row,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.Found{mesh},added,changed})) == next(frame,Observe.Row{handle,transform,mesh} <> acc) : H & Result<&2,&2,Unit,List<&2,Observe.Row>>}
+
+law row_absent_strict:
+  for H:Type
+  for next:H -> List<&2,Observe.Row> -> H & Result<&2,&2,Unit,List<&2,Observe.Row>>
+  for frame:H
+  for handle:W.Handle<SceneSchema.Schema>
+  for transform:C.Transform
+  for acc:List<&2,Observe.Row>
+  for added:Bool
+  for changed:Bool
+  {Observe.found_mesh(~Observe.Row,~Observe.row,~H,next,handle,transform,acc,(frame,Inspector.Value{Component.ComponentAbsent{},added,changed})) == (frame,Fail{Unit{}}) : H & Result<&2,&2,Unit,List<&2,Observe.Row>>}
+
+law row_finish_order:
   for frame:Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>
-  for acc:List<&2,Draw.DrawItem>
-  {Observe.values(~Draw.DrawItem,~Observe.draw_item,
+  for acc:List<&2,Observe.Row>
+  {Observe.values(~Observe.Row,~Observe.row,
     ~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,
     ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
       ~SceneSchema.components(),~Layout.InRight{Layout.InLeft{Layout.AtLeaf{}}},~{==}),[],frame,acc) ==
-    (frame,Done{List.reverse(&2,Draw.DrawItem,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Draw.DrawItem>>}
+    (frame,Done{List.reverse(&2,Observe.Row,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Observe.Row>>}
+
+law draw_finish_order:
+  for frame:Hierarchy.Scope()
+  for acc:List<&2,Hierarchy.Row>
+  {Hierarchy.read_rows([],frame,acc) == (frame,Done{List.reverse(&2,Hierarchy.Row,acc)}) : Hierarchy.Scope() & Result<&2,&2,H.Error,List<&2,Hierarchy.Row>>}
+
+law draw_rows_order:
+  for +row:Hierarchy.Row
+  for rest:List<&2,Hierarchy.Row>
+  {Hierarchy.draw_rows(row <> rest) == Hierarchy.drawing(row) <> Hierarchy.draw_rows(rest) : List<&2,Draw.DrawItem>}
+
+law draw_rows_count:
+  for +rows:List<&2,Hierarchy.Row>
+  {List.length(&2,Draw.DrawItem,Hierarchy.draw_rows(rows)) == List.length(&2,Hierarchy.Row,rows) : Nat}
+
+law draw_failure_strict:
+  for world:SceneSchema.World()
+  for error:H.Error
+  {Hierarchy.drawn((world,Fail{error})) == (world,Fail{Unit{}}) : SceneSchema.World() & Result<&2,&2,Unit,Draw.DrawList>}
+
+law draw_success_rows:
+  for world:SceneSchema.World()
+  for rows:List<&2,Hierarchy.Row>
+  {Hierarchy.drawn((world,Done{rows})) == (world,Done{Draw.DrawList{Hierarchy.draw_rows(rows)}}) : SceneSchema.World() & Result<&2,&2,Unit,Draw.DrawList>}
 
 
 law render_push_extent:
@@ -695,12 +756,6 @@ law upload_conversion_exact:
   for +n:Nat
   for h:{UploadSize.exact(n) == True{} : Bool}
   {UploadValue.value(UploadSize.encode(n)) == n : Nat}
-
-law geometry_install_accept:
-  for -A:Data
-  for old:A
-  for +fresh:A
-  {Geometry.select(A,old,fresh,True{}) == fresh : A}
 
 law geometry_install_reject:
   for -A:Data

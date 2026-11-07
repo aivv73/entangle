@@ -36,6 +36,7 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
     add(laws || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
     add(laws && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
+    add(laws,native("publication","frontend-and-sensitivity","tools/verify-publication.bend",["--mutations"])),
     add(assets && Bool.not(baseline),native("assets","runtime","tools/verify-assets.bend",[])),
     add(selected(names,"images") && Bool.not(baseline),native("images","runtime-and-sensitivity","tools/verify-images.bend",[])),
     add(selected(names,"json") && Bool.not(baseline),native("json","runtime-and-sensitivity","tools/verify-json.bend",[])),

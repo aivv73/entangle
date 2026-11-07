@@ -16,4 +16,9 @@ hierarchy-compose	src/hierarchy.bend	PROOF.bend	    case Some{GlobalTransform{ma
 hierarchy-cycle	src/hierarchy.bend	PROOF.bend	    case (array,Visiting{}):Fail{Cycle{index}}	    case (array,Visiting{}):Fail{MissingParent{index}}	hierarchy_visiting_rejected
 hierarchy-bounds	src/hierarchy.bend	PROOF.bend	  transformed(corners(bounds),matrix,Empty{})	  bounds	hierarchy_derived_bounds
 hierarchy-rejected-write	src/scene-hierarchy.bend	PROOF.bend	    case _:(world,Fail{error})	    case _:(commit(world,rows,rollback(rows)),Fail{error})	hierarchy_parent_rejection_preserves_world
-hierarchy-child-extraction	src/scene-draw.bend	PROOF.bend	    case Some{_}:GlobalItem{global,mesh}	    case Some{_}:DrawItem{local,mesh}	hierarchy_child_draw
+hierarchy-child-extraction	src/scene-draw.bend	PROOF.bend	    case Some{_}:GlobalItem{global,mesh}	    case Some{_}:DrawItem{local,mesh}	draw_child_payload
+hierarchy-draw-payload	src/scene-hierarchy.bend	PROOF.bend	  Draw.item(parent,t,mesh,global)	  Draw.item(parent,C.Transform.identity(),mesh,global)	draw_payload
+hierarchy-read-drops-row	src/scene-hierarchy.bend	PROOF.bend	    case (frame,Some{m}):next(frame,Row{entity,t,m,s} <> acc)	    case (frame,Some{m}):next(frame,acc)	draw_found_order
+hierarchy-read-order	src/scene-hierarchy.bend	PROOF.bend	    case []:(frame,Done{List.reverse(&2,Row,acc)})	    case []:(frame,Done{acc})	draw_finish_order
+hierarchy-draw-drops-row	src/scene-hierarchy.bend	PROOF.bend	    case row <> rest:drawing(row) <> draw_rows(rest)	    case row <> rest:draw_rows(rest)	draw_rows_order
+hierarchy-draw-hides-failure	src/scene-hierarchy.bend	PROOF.bend	    case (world,Fail{_}):(world,Fail{Unit{}})	    case (world,Fail{_}):(world,Done{Draw.DrawList{[]}})	draw_failure_strict

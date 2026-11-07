@@ -1,0 +1,3 @@
+publication-drops-buffers	src/scene-geometry.bend	  Resident{buffers,ranges,Materials.retire(previous,next)}	  Resident{None{},ranges,Materials.retire(previous,next)}	geometry_install_accept
+publication-loses-materials	src/scene-materials.bend	  Resident{next,List.concat(&2,List<&2,T.Resource>,[ownership(active),retired,pending])}	  Resident{next,pending}	geometry_install_accept
+publication-drops-ownership	src/scene-materials.bend	    case Binding{_,T.Material{_,owned}} <> rest:owned <> ownership(rest)	    case Binding{_,T.Material{_,owned}} <> rest:ownership(rest)	material_ownership_cons

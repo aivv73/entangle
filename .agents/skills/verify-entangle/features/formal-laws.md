@@ -8,11 +8,18 @@ bend PROOF.bend
 bend proofs/upload-range/PROOF.bend --verdict
 bend tools/verify-law-mutations.bend -o build/verify-law-mutations
 ./build/verify-law-mutations +RTS --threads 1 --gpu off
+bend tools/verify-publication.bend -o build/verify-publication
+./build/verify-publication --mutations +RTS --threads 1 --gpu off
 ```
 
 Require exit zero and `ALL PROOFS CHECK` from both proof commands. The root
 command is a frontend proof check. Only the standalone upload command above
 runs the BendTT kernel. Do not describe the root result as a kernel verdict.
+The publication driver checks freshly extracted pure production declarations.
+Require its baseline, three named mutation rejections, and restored pass.
+The `proofs` workflow profile includes all these commands and preserves a
+source-specific receipt. Pair it with `native hierarchy` after changes to the
+draw-extraction or publication correspondence.
 
 The mutation driver copies production sources and dependencies into a fresh
 `build/verification/law-mutations-*` directory. It checks unchanged sources,
@@ -36,20 +43,47 @@ quaternion cross-term sign. They must fail `render_multiply_order`,
 keeps candidate-adapter qualification and native scene evidence separate from
 these frontend expression proofs.
 
+Five extraction controls now replace the live root transform, drop a checked
+mesh row, omit the final row reversal, drop a draw row, and turn a read failure
+into an empty successful drawing. They must fail `draw_payload`,
+`draw_found_order`, `draw_finish_order`, `draw_rows_order`, and
+`draw_failure_strict`. These controls exercise `src/scene-hierarchy.bend`,
+which both application draw-list paths now use. The old inspector helpers
+still serve snapshots and have separate `row_*` laws.
+The existing child-extraction control now fails `draw_child_payload` before
+the lower-level `hierarchy_child_draw` law. Keep its expected diagnostic
+bound to that current entry-path claim.
+
+Accepted geometry publication moved from `Geometry.select(...,True{})` to
+`src/scene-geometry.bend:published`. Its law now lives in the
+[publication harness](../../../../proofs/geometry-publication/README.md).
+That harness copies complete production types and pure definitions, including
+material retirement and native handle layouts. It changes only imports.
+The `.bend.in` claim and proof templates become `LAWS.bend` and `PROOF.bend`
+inside each fresh evidence directory. Directly importing the effect modules
+would fail Bend's foreign-effect proof-safety gate. Keep that gate enabled.
+
 ## Coverage and assumptions
 
-The authoritative claims are [root LAWS.bend](../../../../LAWS.bend) and
-[upload LAWS.bend](../../../../proofs/upload-range/LAWS.bend). Proofs import
-production definitions directly. There is no separate transition model.
+The authoritative claims are [root LAWS.bend](../../../../LAWS.bend),
+[upload LAWS.bend](../../../../proofs/upload-range/LAWS.bend), and the
+[publication law template](../../../../proofs/geometry-publication/LAWS.bend.in).
+Root and upload proofs import production definitions directly. Publication
+copies the named production declarations. There is no separate transition model.
 
 | Check | Covered production code | Scope |
 | --- | --- | --- |
-| Root component and scene laws | `src/components.bend`, `scene.bend`, `scene-step.bend`, `scene-motion.bend`, `scene-spawn.bend`, `scene-schema.bend`, `scene-draw.bend`, `scene-observe.bend`, `headless.bend`, `tools/component-consumer.bend`, `examples/scene-seeds.bend` | Field reconstruction, update/query behavior, ordered extraction, bootstrap, seeds, and batch recursion. Imported Bendvy definitions are pinned by `toolchain.bend`. |
+| Root component and scene laws | `src/components.bend`, `scene.bend`, `scene-step.bend`, `scene-motion.bend`, `scene-spawn.bend`, `scene-schema.bend`, `scene-draw.bend`, `scene-observe.bend`, `scene-hierarchy.bend`, `headless.bend`, `tools/component-consumer.bend`, `examples/scene-seeds.bend` | Field reconstruction, update/query behavior, actual draw-row acquisition and extraction, root and child payloads, order, count, failure propagation, separate inspector snapshot laws, bootstrap, seeds, and batch recursion. Imported Bendvy definitions are pinned by `toolchain.bend`. |
 | Root content, creation, and rendering laws | `src/content.bend`, `creation.bend`, `scene-matrix.bend`, `measurement-counters.bend`, `scene-geometry-policy.bend` | Source equality reflexivity, universal white identity, tint position, ordered baking and count, validation error priority, duplicate reuse, ranges, index validation, bit layouts, matrix multiplication order, F32 dot-product grouping, quaternion/TRS expressions, counter independence, and pure geometry-selection policy. |
 | Root time, input, and player laws | `src/time.bend`, `input.bend`, `mesh-control.bend` | Fixed-step accounting and bounds, high-water clock samples, input draining, camera reset, movement intent, and query refusal. |
 | Root upload laws | `src/upload-size.bend`, `deps/bend-vulkan/src/core.bend` | Byte-list length, exact conversion under its stated premise, and the universal range theorem. |
 | Root asset laws | `src/asset.bend` | Request hit/miss, terminal states, key preservation, eviction, released lookup/load, scope rejection, and monotonic allocation counter preservation. |
+| Root PNG laws | `src/image-png.bend`, `src/content.bend`, `proofs/image-array.bend`, `deps/jonlib-png/codec.bend` | Array flattening order, tail and length equations, positive dimensions and exact storage, one padding equation, incomplete-read rejection, and decoder error mapping. The reusable tree witness describes array shape. This is not a proof of PNG decoding or inflate. |
+| Root OBJ laws | `src/model-obj.bend`, `src/content.bend`, `deps/jonlib-obj/obj.bend` | Part validity, triangle and index emission, run boundaries and coalescing, selected parser/index behavior under stated premises, incomplete reads, and successful-result validity through decode. Rejected results satisfy validity vacuously. Source fidelity and successful parsing need real-input checks. |
+| Root JSON laws | `src/json-boundary.bend`, `src/scene-file.bend`, pinned JSON and bytes packages | Rejected guards, oversized input, incomplete reads, wrong-kind and missing references, model-part preservation, admitted-scene compilability, and depth eight. They do not prove the parser, the complete loader, or parent-anchor expansion. |
+| Root texture and lighting laws | `src/content.bend`, `src/render-format.bend`, `src/lighting.bend` | The 44-byte vertex stride, RGBA byte order, source-image retention, zero-width rejection, and invalid light-direction rejection. Shader behavior and normal-matrix accuracy require separate evidence. |
 | Root hierarchy laws | `src/hierarchy.bend`, `scene-hierarchy.bend`, `scene-draw.bend` | Root and parent matrix expressions, root/child extraction, empty/derived bounds, visiting/missing/invalid rejection, and unchanged world after rejected public edits. Five source mutations bind these claims to production behavior. Numerical and graph coverage additionally use the real ECS/render/replay drivers. |
+| Accepted publication frontend proofs | `src/scene-geometry.bend:published`, `src/scene-materials.bend:ownership,retire`, their complete type closure | Candidate buffers, ranges, and active bindings are published. Prior ownership and both retirement queues are preserved in order. The binding ownership step retains the complete resource list. Three production mutations establish sensitivity. Inspect `sealed` and its callers at every sync. No finite list bound is imposed. |
 | Standalone upload kernel verdict | `proofs/upload-range/*.bend`, `deps/bend-vulkan/src/core.bend`, imported bend-collections arithmetic | All three U64 inputs, all limb bit patterns, and unbounded natural arithmetic. No offset or no-overflow premise. |
 
 Count root claims with `rg -c '^law ' LAWS.bend`. Quantifiers and premises in
@@ -60,41 +94,47 @@ code generation, and GPU execution are outside these proofs. The standalone
 kernel also trusts Bend's translation into its kernel language.
 
 Pure geometry selection does not establish native resource retirement or
-descriptor retention. Follow [native resource failures](resource-failures.md),
+descriptor retention. The publication proof establishes pure list retention,
+not successful native retirement or cleanup. Hierarchy branch equations do
+not prove the complete ECS access layer or every parent forest. Follow
+[native resource failures](resource-failures.md),
 [mesh replacement](mesh-replacement.md), and the separate
 [native failure skill](../../verify-native-failures/SKILL.md) for those checks.
 The feature recipes establish runtime behavior separately.
 
 ## Synchronization
 
-Both checks were compared with root commit
-`71c16701a0bba33e9635624dfc916acfb87d9344` on November 4, 2026, with the
-dependency commits in `toolchain.bend`. Their outcome is **in sync**.
-No pre-Asset property or bound changed in that audit. The Asset API addition,
-based at `49a6adf`, adds 16 root claims and three mutation controls. Its root
-proof and seven-control mutation run pass in
-`build/verification/asset-api-VAx7I8tG`; the unchanged standalone upload checks
-pass in the same mutation run. This does not change the standalone kernel theorem.
+| Check | Outcome | Checked production revision |
+| --- | --- | --- |
+| Root frontend proofs, 192 laws | Updated: actual hierarchy draw path and separate inspector snapshots | `94665a580af130b7d13ae1b29228eec14d032ccd` |
+| Accepted publication, two frontend laws | Updated: source-extracted publication and material retirement | `94665a580af130b7d13ae1b29228eec14d032ccd` |
+| Standalone upload, two kernel laws | In sync: theorem and imported production definitions unchanged | `94665a580af130b7d13ae1b29228eec14d032ccd` |
 
-The source-format extraction moves existing claims to `src/content.bend` and
-adds eight root claims for equality reflexivity, baking, error priority, and
-duplicate reuse. Root proofs and real native execution pass. The
-[format verification record](../../../../docs/verification/2026-11-04-content-format/README.md)
-records these checks separately from the earlier mutation and kernel runs.
+The November 7, 2026 audit reads every commit in `71c1670..94665a5`, including
+the Asset, content extraction, PNG, OBJ, JSON, math, texture, hierarchy, and
+hosting changes. Dependency revisions remain those in `toolchain.bend`.
+The [maintenance record](../../../../proofs/maintenance/2026-11-07/README.md)
+lists each commit, correspondence change, control, and retained receipt.
 
-Before this record existed, the audit used the last verification-file commits:
-`ea6743da89c0eaf134287dee4e3b0832ce41a6d8` for root laws and
-`8a93ddde63474da13779174e8a6542bb1ae228cc` for standalone upload proofs.
-The only later engine change was the diagnostic timing boundary in
-`b9ca65622018613de994014cd38354529a3e879e`. It changes no term described by
-these laws. The upload theorem and its production dependency are unchanged.
+The old 185-law root check passed on a stale description of drawing and
+accepted publication. The repaired laws check the current functions. The
+snapshot helpers remain covered under `row_*`; the unused positive
+`Geometry.select` law is replaced by the publication harness. Public root
+draws still use local transforms, while parented draws use globals, as
+specified by `2c3a442`. Publication retains deferred materials as specified
+by `dc70d54`. No promise is weakened and no bound is reduced in this audit.
+
+Earlier feature commits had already updated the content, vertex, range,
+spawn, and schema claims. In particular, `dc70d54` intentionally changed the
+admitted vertex count from 699,050 to 381,300 for the 44-byte vertex format
+within the 16 MiB upload limit. Its limit laws already reflect that change.
+The current audit does not alter those claims.
+
+The [November 4 record](../../../../docs/verification/2026-11-04-formal-maintenance/README.md)
+retains the previous synchronization and its fallback verification-file
+commits. Historical receipts describe their original sources.
 
 When maintaining this record, inspect diffs and commit messages from the sync
 commit, including dependencies and new writers of guarded state. Rerun the
 commands above after checking the correspondence. Advance the sync commit
 only for checks that run successfully. Record blocked checks separately.
-
-The local S44 JSON loading change adds eight root laws and two law mutation
-controls. The [JSON verification record](../../../../docs/verification/2026-11-04-json-scene/README.md)
-retains their source-specific frontend and sensitivity evidence. It does not
-advance the earlier synchronization commit or add a kernel verdict for JSON.
