@@ -7,6 +7,21 @@ import ../deps/bend-vulkan/tools/verification.bend as Output
 def targets() -> List<&2,String>:
   ["verify_device_loss","verify_record_reset_failure","verify_submit_result","verify_synced_submission","verify_uncertain_guards","verify_lost_guards","verify_descriptor_failure","verify_fence_reset_failure","verify_idle_failure","verify_completion","verify_idle_success"]
 
+type Suite is Data:
+  Suite{label:String,template:String,claims:String,targets:List<&2,String>,controls:String}
+
+def suites(lifetime_only:Bool) -> List<&2,Suite>:
+  List.append(&2,Suite,Bool.pick(List<&2,Suite>,lifetime_only,[],
+    [Suite{"handlers","proofs/native-failures/handlers.in.c","proofs/native-failures/claims.h",targets(),"proofs/native-failures/mutations.tsv"}]),
+    [Suite{"lifetime","proofs/native-failures/lifetime.in.c","proofs/native-failures/lifetime-claims.h",
+      ["verify_lifetime_retirement","verify_lifetime_graph","verify_lifetime_prepare","verify_lifetime_collection_00","verify_lifetime_collection_01","verify_lifetime_collection_10","verify_lifetime_collection_11","verify_lifetime_completion_reset_pending","verify_lifetime_completion_reset_uncertain"],"proofs/native-failures/lifetime-mutations.tsv"}])
+
+def failed_unwind(lines:List<&2,String>) -> Bool:
+  match lines:
+    case []:False{}
+    case +line <> rest:
+      (String.contains(line,"unwinding assertion") && String.contains(line,": FAILURE")) || failed_unwind(rest)
+
 def record(result:U32 & (String & String),+dest:String,+label:String,+failure:String) -> IO(Unit):
   (+status,pair) = result
   (out,err) = pair
@@ -15,20 +30,96 @@ def record(result:U32 & (String & String),+dest:String,+label:String,+failure:St
   do IO<Unit>:
     Output.write(dest ++ "/" ++ label ++ ".log",log)
     Output.write(dest ++ "/" ++ label ++ ".status",U32.show(status) ++ "\n")
+    S.require(Bool.not(failed_unwind(String.lines(log))),"Native proof exceeded an unwind bound: " ++ label ++ "; see " ++ dest)
     S.require(Bool.pick(Bool,negative,U32.is_eq(status,10) && String.contains(log,failure ++ ": FAILURE"),U32.is_zero(status) && String.contains(log,"VERIFICATION SUCCESSFUL")),"Unexpected native proof verdict: " ++ label ++ "; see " ++ dest)
-    IO.print(label ++ Bool.pick(String,negative," rejected (expected counterexample)"," proved"))
+    Bool.pick(IO(Unit),String.contains(label,"-case-"),IO.pure(Unit,Unit{}),IO.print(label ++ Bool.pick(String,negative," rejected (expected counterexample)"," proved")))
 
-def check(+binary:String,+source:String,+dest:String,+label:String,target:String,failure:String) -> IO(Unit):
+def arguments(values:List<&2,String>) -> String:
+  match values:
+    case []:""
+    case head <> rest:head ++ "\n" ++ arguments(rest)
+
+def owned_arguments(values:List<&2,String>) -> List<String>:
+  match values:
+    case []:[]
+    case head <> rest:head <> owned_arguments(rest)
+
+def compiled(result:U32 & (String & String),+source:String,+output:String,+dest:String,+label:String) -> IO(String):
+  (+status,(out,err)) = result
+  do IO<String>:
+    Output.write(dest ++ "/" ++ label ++ "-compile.log",out ++ err)
+    Output.write(dest ++ "/" ++ label ++ "-compile.status",U32.show(status) ++ "\n")
+    S.require(U32.is_zero(status),"Native GOTO compilation failed: " ++ label ++ "; see " ++ dest)
+    hashes:String <- S.run("sha256sum",[source,output])
+    Output.write(dest ++ "/" ++ label ++ "-compile.sha256",hashes)
+    return output
+
+def compile(+source:String,+dest:String,+label:String) -> IO(String):
+  do IO<String>:
+    +binary:String = Tool.compiler()
+    +output:String = source ++ ".goto"
+    +args:List<&2,String> = [source,"-o",output]
+    Output.write(dest ++ "/" ++ label ++ "-compile.argv",binary ++ "\n" ++ arguments(args))
+    Output.write(dest ++ "/" ++ label ++ "-compile.status","1\n")
+    result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(binary,owned_arguments(args),"",16777216,300000))
+    compiled(result,source,output,dest,label)
+
+def lifetime_bounds() -> String:
+  "bv_get.0:9,bv_remove.0:9,bv_remove.1:4," ++
+  "bv_dependency.0:3,bv_may_reach_depth.0:3,bv_sealed.0:3," ++
+  "bv_complete.0:4,bv_complete.1:1,bv_complete.2:9,bv_device_result.0:9," ++
+  "bv_memory_busy.0:9,bv_referenced.0:4,bv_referenced.1:9," ++
+  "bv_prepare_refs.0:3,bv_prepare_refs.1:9,bv_prepare_refs.2:2,bv_prepare_refs.3:3,bv_prepare_refs.4:3,bv_prepare_refs.5:3," ++
+  "bv_validate_retirement.0:9,bv_validate_retirement.1:4,bv_validate_retirement.2:9," ++
+  "proof_retire.0:3,proof_retire.1:3,proof_collect.0:9,clear_registry.0:9," ++
+  "verify_lifetime_prepare.0:4,verify_lifetime_prepare.1:3"
+
+def collection_bounds() -> String:
+  "bv_get.0:8,bv_remove.0:5,bv_remove.1:2,bv_dependency.0:2," ++
+  "bv_referenced.0:3,bv_referenced.1:8,proof_collect.0:8,proof_destroy_boundary.0:3,proof_free_boundary.0:3"
+
+def completion_bounds() -> String:
+  "bv_get.0:8,bv_remove.0:8,bv_remove.1:3,bv_dependency.0:2,bv_may_reach_depth.0:3," ++
+  "bv_complete.0:3,bv_complete.1:1,bv_complete.2:8,bv_device_result.0:8," ++
+  "bv_referenced.0:3,bv_referenced.1:8,bv_validate_retirement.0:8,bv_validate_retirement.1:3,bv_validate_retirement.2:8," ++
+  "proof_retire.0:3,proof_retire.1:3,proof_collect.0:8,clear_registry.0:8,proof_destroy_boundary.0:3,proof_free_boundary.0:3"
+
+def valid_configuration(value:Maybe<&2,U32>,+text:String) -> IO(Unit):
+  match value:
+    case Some{+n}:S.require(U32.is_lt(n,64) && String.eq(U32.show(n),text),"Collection configuration must be a canonical number from 0 through 63")
+    case None{}:IO.die(Unit,1,"Invalid collection configuration")
+
+def check(+binary:String,+source:String,+dest:String,+label:String,+target:String,failure:String,+configuration:String) -> IO(Unit):
   do IO<Unit>:
-    result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(binary,[source,"--function",target,"--unwind","6","--unwindset","proof_idle.0:2,bv_complete.0:4,bv_complete.1:1","--unwinding-assertions","--bounds-check","--pointer-check","--pointer-overflow-check","--signed-overflow-check","--object-bits","10","--drop-unused-functions","--symex-cache-dereferences","--no-array-field-sensitivity","--slice-formula","--trace"],"",16777216,300000))
+    +lifetime:Bool = String.starts_with(target,"verify_lifetime_")
+    +collection:Bool = String.contains(target,"_collection_")
+    S.require(Bool.pick(Bool,collection,Bool.not(String.is_empty(configuration)),String.is_empty(configuration)),"Collection checks require an explicit configuration; other entries do not accept one")
+    Bool.pick(IO(Unit),collection,valid_configuration(U32.read(configuration),configuration),IO.pure(Unit,Unit{}))
+    function:String = target ++ Bool.pick(String,collection,"_case_" ++ configuration,"")
+    +bounds:String = Bool.pick(String,collection,collection_bounds(),Bool.pick(String,String.contains(target,"_completion_reset_"),completion_bounds(),lifetime_bounds()))
+    +args:List<&2,String> = List.append(&2,String,[source,"--function",function,"--unwind","6","--unwindset",Bool.pick(String,lifetime,bounds,"proof_idle.0:2,bv_complete.0:4,bv_complete.1:1"),"--unwinding-assertions","--bounds-check","--pointer-check","--pointer-overflow-check","--signed-overflow-check","--object-bits","10","--drop-unused-functions","--symex-cache-dereferences","--slice-formula","--trace"],Bool.pick(List<&2,String>,lifetime,["--malloc-may-fail","--malloc-fail-null","--memory-leak-check"],["--no-array-field-sensitivity"]))
+    Output.write(dest ++ "/" ++ label ++ ".argv",binary ++ "\n" ++ arguments(args))
+    result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(binary,owned_arguments(args),"",16777216,300000))
     record(result,dest,label,failure)
+
+def configurations(left:Nat,+n:U32,+binary:String,+source:String,+dest:String,+label:String,+target:String) -> IO(Unit):
+  match left:
+    case 0n:IO.pure(Unit,Unit{})
+    case 1n+rest:
+      do IO<Unit>:
+        check(binary,source,dest,label ++ "-case-" ++ U32.show(n),target,"",U32.show(n))
+        configurations(rest,U32.inc(n),binary,source,dest,label,target)
 
 def prove(items:List<&2,String>,+binary:String,+source:String,+dest:String,+prefix:String) -> IO(Unit):
   match items:
     case []:IO.pure(Unit,Unit{})
     case +target <> rest:
       do IO<Unit>:
-        check(binary,source,dest,prefix ++ target,target,"")
+        Bool.pick(IO(Unit),String.contains(target,"_collection_"),
+          do IO<Unit>:
+            configurations(64n,0,binary,source,dest,prefix ++ target,target)
+            IO.print(prefix ++ target ++ " proved all 64 configurations"),
+          check(binary,source,dest,prefix ++ target,target,"",""))
         prove(rest,binary,source,dest,prefix)
 
 def replace_line(value:Nat & String,+line:String,before:String,after:String) -> Nat & String:
@@ -48,50 +139,79 @@ def replaced(value:Nat & String) -> IO(String):
     S.require(Nat.is_eq(count,1n),"Mutation must match exactly one production source line")
     return text
 
-def mutation(parts:List<&2,String>,+native:String,+binary:String,+dest:String) -> IO(Unit):
+def configured_mutation(parts:List<&2,String>,+native:String,+binary:String,+dest:String,+template:String,+claims:String) -> IO(Unit):
   match parts:
-    case [+label,target,before,after,failure]:
+    case [+label,target,before,after,failure,configuration]:
       do IO<Unit>:
         changed:String <- replaced(replace(String.split(native,'\n'),before,after))
         Output.write(dest ++ "/" ++ label ++ ".native.c",changed)
-        Extract.extract(dest ++ "/" ++ label ++ ".native.c",dest ++ "/" ++ label ++ ".c")
-        check(binary,dest ++ "/" ++ label ++ ".c",dest,label,target,failure)
+        Extract.harness(dest ++ "/" ++ label ++ ".native.c",template,claims,dest ++ "/" ++ label ++ ".c")
+        code:String <- compile(dest ++ "/" ++ label ++ ".c",dest,label)
+        check(binary,code,dest,label,target,failure,configuration)
     case _:IO.die(Unit,1,"Malformed native source mutation")
 
-def mutations(lines:List<&2,String>,+native:String,+binary:String,+dest:String) -> IO(Unit):
+def mutation(+parts:List<&2,String>,native:String,binary:String,dest:String,template:String,claims:String) -> IO(Unit):
+  match parts:
+    case [label,target,before,after,failure]:configured_mutation([label,target,before,after,failure,""],native,binary,dest,template,claims)
+    case _:configured_mutation(parts,native,binary,dest,template,claims)
+
+def mutations(lines:List<&2,String>,+native:String,+binary:String,+dest:String,+template:String,+claims:String) -> IO(Unit):
   match lines:
     case []:IO.pure(Unit,Unit{})
     case line <> rest:
       do IO<Unit>:
-        mutation(String.split(line,'\t'),native,binary,dest)
-        mutations(rest,native,binary,dest)
+        mutation(String.split(line,'\t'),native,binary,dest,template,claims)
+        mutations(rest,native,binary,dest,template,claims)
 
-def run(negative:Bool) -> IO(Unit):
+def suite(value:Suite,+binary:String,+dest:String,negative:Bool) -> IO(Unit):
+  Suite{+label,+template,+claims,+items,controls} = value
+  do IO<Unit>:
+    Extract.harness("deps/bend-vulkan/src/native.c",template,claims,dest ++ "/" ++ label ++ ".c")
+    code:String <- compile(dest ++ "/" ++ label ++ ".c",dest,label)
+    prove(items,binary,code,dest,"")
+    Bool.pick(IO(Unit),negative,
+      do IO<Unit>:
+        native:String <- S.read("deps/bend-vulkan/src/native.c")
+        cases:String <- S.read(controls)
+        mutations(String.lines(String.trim(cases)),native,binary,dest,template,claims)
+        Extract.harness("deps/bend-vulkan/src/native.c",template,claims,dest ++ "/restored-" ++ label ++ ".c")
+        restored:String <- compile(dest ++ "/restored-" ++ label ++ ".c",dest,"restored-" ++ label)
+        prove(items,binary,restored,dest,"restored-"),
+      IO.pure(Unit,Unit{}))
+
+def verify(values:List<&2,Suite>,+binary:String,+dest:String,+negative:Bool) -> IO(Unit):
+  match values:
+    case []:IO.pure(Unit,Unit{})
+    case value <> rest:
+      do IO<Unit>:
+        suite(value,binary,dest,negative)
+        verify(rest,binary,dest,negative)
+
+def run(+negative:Bool,+lifetime_only:Bool) -> IO(Unit):
   do IO<Unit>:
     +binary:String <- Tool.ensure()
+    +compiler:String <- Tool.ensure_compiler()
     _:String <- S.run("mkdir",["-p","build/verification"])
     directory:String <- S.run("mktemp",["-d","build/verification/native-formal-XXXXXXXX"])
     +dest:String = String.trim(directory)
     IO.print("Native formal evidence: " ++ dest)
-    Extract.extract("deps/bend-vulkan/src/native.c",dest ++ "/handlers.c")
-    hashes:String <- S.run("sha256sum",["deps/bend-vulkan/src/native.c","proofs/native-failures/extract.bend","proofs/native-failures/handlers.in.c","proofs/native-failures/prelude.h","proofs/native-failures/claims.h","proofs/native-failures/mutations.tsv","tools/verify-native-failures.bend",binary])
+    Output.write(dest ++ "/run.status","1\n")
+    Output.write(dest ++ "/selection.txt",Bool.pick(String,lifetime_only,"lifetime","handlers lifetime") ++ "\nmutations=" ++ Bool.show(negative) ++ "\n")
+    hashes:String <- S.run("sha256sum",["deps/bend-vulkan/src/native.c","proofs/native-failures/extract.bend","proofs/native-failures/tool.bend","proofs/native-failures/collection-cases.bend","proofs/native-failures/handlers.in.c","proofs/native-failures/prelude.h","proofs/native-failures/claims.h","proofs/native-failures/mutations.tsv","proofs/native-failures/lifetime.in.c","proofs/native-failures/lifetime-claims.h","proofs/native-failures/lifetime-mutations.tsv","tools/verify-native-failures.bend",binary,compiler])
     Output.write(dest ++ "/sources.sha256",hashes)
-    prove(targets(),binary,dest ++ "/handlers.c",dest,"")
-    Bool.pick(IO(Unit),negative,
-      do IO<Unit>:
-        native:String <- S.read("deps/bend-vulkan/src/native.c")
-        cases:String <- S.read("proofs/native-failures/mutations.tsv")
-        mutations(String.lines(String.trim(cases)),native,binary,dest)
-        Extract.extract("deps/bend-vulkan/src/native.c",dest ++ "/restored.c")
-        prove(targets(),binary,dest ++ "/restored.c",dest,"restored-"),
-      IO.pure(Unit,Unit{}))
-    IO.print("Production native failure properties verified within the documented bounds.")
+    version:String <- S.run(compiler,["--version"])
+    Output.write(dest ++ "/goto-cc-version.txt",version)
+    verify(suites(lifetime_only),binary,dest,negative)
+    Output.write(dest ++ "/run.status","0\n")
+    IO.print("Selected production native properties verified within the documented bounds.")
 
 def args(values:List<String>) -> IO(Unit):
   match values:
-    case [_]:run(False{})
-    case [_,"--mutations"]:run(True{})
-    case _:IO.die(Unit,1,"usage: verify-native-failures [--mutations]")
+    case [_]:run(False{},False{})
+    case [_,"--mutations"]:run(True{},False{})
+    case [_,"--lifetime"]:run(False{},True{})
+    case [_,"--lifetime","--mutations"]:run(True{},True{})
+    case _:IO.die(Unit,1,"usage: verify-native-failures [--lifetime] [--mutations]")
 
 def main() -> IO(Unit):
   do IO<Unit>:

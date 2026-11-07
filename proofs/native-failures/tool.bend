@@ -29,3 +29,13 @@ def ensure() -> IO(String):
     version:String <- S.run(ready,["--version"])
     S.require(String.eq(String.trim(version),"6.9.0 (cbmc-6.9.0)"),"Native proof requires CBMC 6.9.0")
     return ready
+
+def compiler() -> String:
+  "build/verification/native-formal-tools/package/usr/bin/goto-cc"
+
+def ensure_compiler() -> IO(String):
+  do IO<String>:
+    +binary:String = compiler()
+    version:String <- S.run(binary,["--version"])
+    S.require(String.contains(version,"CBMC version: 6.9.0 (cbmc-6.9.0)"),"Native proof requires goto-cc from CBMC 6.9.0")
+    return binary

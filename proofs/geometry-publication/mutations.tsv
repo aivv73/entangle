@@ -1,3 +1,10 @@
 publication-drops-buffers	src/scene-geometry.bend	  Resident{buffers,ranges,Materials.retire(previous,next)}	  Resident{None{},ranges,Materials.retire(previous,next)}	geometry_install_accept
 publication-loses-materials	src/scene-materials.bend	  Resident{next,List.concat(&2,List<&2,T.Resource>,[ownership(active),retired,pending])}	  Resident{next,pending}	geometry_install_accept
 publication-drops-ownership	src/scene-materials.bend	    case Binding{_,T.Material{_,owned}} <> rest:owned <> ownership(rest)	    case Binding{_,T.Material{_,owned}} <> rest:ownership(rest)	material_ownership_cons
+collection-loses-success-tail	src/scene-materials.bend	    case T.Released{}, (rest,status):(rest,status)	    case T.Released{}, (rest,status):([],status)	material_collection_released
+collection-loses-deferred-resources	src/scene-materials.bend	    case T.Pending{remaining,(1610612740,_)}, (rest,status):(remaining <> rest,status)	    case T.Pending{remaining,(1610612740,_)}, (rest,status):(rest,status)	material_collection_deferred
+collection-loses-failed-resources	src/scene-materials.bend	    case T.Pending{remaining,error}, (rest,status):(remaining <> rest,V.Entry.finish(Unit,Fail{error},status))	    case T.Pending{remaining,error}, (rest,status):(rest,V.Entry.finish(Unit,Fail{error},status))	material_collection_failure
+collection-loses-active-materials	src/scene-materials.bend	  (Resident{active,retired},result)	  (Resident{[],retired},result)	material_collection_preserves_active
+disposal-hides-pending-resources	src/scene-materials.bend	    case (_,Done{_}):Fail{(1610612740,"Material cleanup deferred by retained commands")}	    case (_,Done{_}):Done{Unit{}}	material_disposal_reports_pending
+release-forgets-failed-resource	src/scene-texture.bend	    case Fail{error}:IO.pure(Release,Pending{resource <> rest,error})	    case Fail{error}:IO.pure(Release,Pending{rest,error})	texture_release_failure_retains_suffix
+release-skips-remaining-cleanup	src/scene-texture.bend	    case Done{_}:next	    case Done{_}:IO.pure(Release,Released{})	texture_release_success_continues

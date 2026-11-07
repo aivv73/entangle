@@ -2,6 +2,13 @@
 
 Both renderers replace complete packed geometry without losing the owner on rejection. The [API reference](../../../../docs/mesh-replacement.md) describes the transaction and native trust boundary.
 
+For native lifetime changes, pair these real-runtime scenarios with the
+[native failure/lifetime skill](../../verify-native-failures/SKILL.md) and the
+[publication/cleanup frontend proofs](../../../../proofs/geometry-publication/README.md).
+The bounded native suite checks paired retirement, graph retention, collection,
+and completion/reset. These scenarios remain required for actual Vulkan effects,
+rollback, retry, and teardown.
+
 ## Sub-features
 
 - `replacement-offscreen` changes real RGBA coverage and range dispatch, rejects removed IDs, and preserves exact RGBA and D32 after invalid candidates.

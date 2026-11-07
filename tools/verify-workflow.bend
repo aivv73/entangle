@@ -45,6 +45,7 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
     add(selected(names,"hierarchy"),native("hierarchy","ecs-render-replay-and-sensitivity","tools/verify-hierarchy.bend",[])),
     add(upload && Bool.not(baseline),native("upload-runtime","runtime","tools/verify-upload-runtime.bend",[])),
     add(upload && Bool.not(baseline),native("upload-native-limit","runtime","tools/verify-upload-native-limit.bend",[])),
+    add(failures && Bool.not(baseline),native("retention","runtime","tools/verify-mesh-replacement.bend",[])),
     add(failures && Bool.not(baseline),native("resource-failures","runtime","tools/verify-resource-failures.bend",[])),
     add(baseline,native("native","native-baseline","tools/verify.bend",[])),
     add(selected(names,"window") && Bool.not(selected(names,"textured-window")),[Step{"window","mesh-window-and-replay","bash",["tools/verify-window-session.sh"]}]),

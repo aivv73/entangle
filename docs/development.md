@@ -36,8 +36,8 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 | `hierarchy` | Root frontend laws and mutations, actual ECS forest/edit/rollback checks, JSON anchors, full-state replay, independent geometry/lighting readbacks, and seven production sensitivity controls. |
 | `hierarchy-window` | Owned Xwayland hierarchy edits, pixel reset, rejection, resize/restore/Close, complete-state replay, plus mesh controls/replay. |
 | `upload` | Root frontend proofs, upload kernel verdict, law and source-policy mutations, real production/native upload boundaries and readback. |
-| `native-failures` | Root frontend proofs and law mutations, bounded production-handler proofs with all mutations, real resource failure/rollback/retry. |
-| `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler sensitivity controls. |
+| `native-failures` | Root/publication/cleanup frontend proofs and law mutations, bounded production-handler and lifetime proofs with all mutations, real mesh/descriptor retention and resource failure/rollback/retry. |
+| `native` | Existing default native/offscreen gate, plus kernel verdict and law, source-policy, and native-handler/lifetime sensitivity controls. |
 | `window` | Owned Xwayland mesh controls, focus/resize/Close, captures and full-state replay. Requires the parent Wayland session and validation layer. |
 | `textured-window` | Owned Xwayland mesh, cube, creation, replacement, textured, and hierarchy windows. Includes camera controls, resize, restore, cleanup, and full-state replay. |
 | `all` | `native` and the extended window scenarios. This covers the registered profiles, not every feature-map scenario or backend. |

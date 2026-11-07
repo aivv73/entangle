@@ -23,7 +23,8 @@ def completed(label: String, result: U32 & (String & String)) -> IO(String):
 def run(+program: String, args: List<String>) -> IO(String):
   do IO<String>:
     IO.print("+ " ++ program)
-    result : U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(program,args,"",16777216,300000))
+    timeout:U32 = Bool.pick(U32,String.eq(program,"./build/verify-native-failures"),1800000,300000)
+    result : U32 & (String & String) <- IO.try(U32 & (String & String),Process.run(program,args,"",16777216,timeout))
     completed(program,result)
 
 def command(program: String, args: List<String>) -> IO(Unit):

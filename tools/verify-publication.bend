@@ -2,6 +2,7 @@ import Base
 import ./upload-boundary/scan.bend as S
 import ./verify-upload-mutations.bend as Files
 import ./verify-native-failures.bend as Mutate
+import ../proofs/geometry-publication/error-proof.bend as ErrorProof
 
 type Module is Data:
   Module{output:String,source:String,imports:String,regions:List<&2,String>}
@@ -10,10 +11,10 @@ type Module is Data:
 # native handle layouts. No effect or replacement transition is admitted.
 def modules() -> List<&2,Module>:
   [Module{"native.bend","deps/bend-vulkan/Vulkan.bend","import Base\n",
-    ["type Buffer ","type DeviceMemory ","type CommandPool ","type Fence ","type ImageHandle ","type ImageView ","type DescriptorSetLayout ","type DescriptorPool ","type DescriptorSet ","type Sampler "]},
+    ["type Buffer ","type DeviceMemory ","type CommandPool ","type Fence ","type ImageHandle ","type ImageView ","type DescriptorSetLayout ","type DescriptorPool ","type DescriptorSet ","type Sampler ","def VkResult(","def Entry.finish("]},
    Module{"buffer.bend","src/scene-buffer.bend","import Base\nimport ./native.bend as V\nimport ../../../../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W\n",["type Buffer "]},
-   Module{"texture.bend","src/scene-texture.bend","import Base\nimport ./native.bend as V\nimport ./buffer.bend as B\n",["type Resource ","type Material "]},
-   Module{"materials.bend","src/scene-materials.bend","import Base\nimport ./texture.bend as T\n",["type Binding ","type Resident ","def ownership(","def retire("]},
+   Module{"texture.bend","src/scene-texture.bend","import Base\nimport ./native.bend as V\nimport ./buffer.bend as B\n",["type Resource ","type Material ","type Release ","def releasing("]},
+   Module{"materials.bend","src/scene-materials.bend","import Base\nimport ./texture.bend as T\nimport ./native.bend as V\n",["type Binding ","type Resident ","def ownership(","def retire(","def collected(","def collected_resident(","def disposed("]},
    Module{"production.bend","src/scene-geometry.bend","import Base\nimport ./buffer.bend as B\nimport ./materials.bend as Materials\nimport ../../../../src/creation.bend as Create\n",["type Buffers ","type Resident ","def published("]}]
 
 def matches(lines:List<&2,String>,+prefix:String) -> Nat:
@@ -68,7 +69,8 @@ def check(+dest:String,+label:String,path:String,source:String,failure:String) -
     _:String <- S.run("mkdir",[copy])
     extract(modules(),copy,path,source)
     _:String <- S.run("cp",["proofs/geometry-publication/LAWS.bend.in",copy ++ "/LAWS.bend"])
-    _:String <- S.run("cp",["proofs/geometry-publication/PROOF.bend.in",copy ++ "/PROOF.bend"])
+    proof:String <- S.read("proofs/geometry-publication/PROOF.bend.in")
+    Files.save(copy ++ "/PROOF.bend",proof ++ ErrorProof.proof())
     result:U32 & (String & String) <- IO.try(U32 & (String & String),Process.run("bend",[copy ++ "/PROOF.bend"],"",16777216,300000))
     record(result,dest,label,failure)
 
@@ -96,7 +98,7 @@ def run(negative:Bool) -> IO(Unit):
     directory:String <- S.run("mktemp",["-d","build/verification/publication-XXXXXXXX"])
     +dest:String = String.trim(directory)
     IO.print("Publication proof evidence: " ++ dest)
-    hashes:String <- S.run("sha256sum",["deps/bend-vulkan/Vulkan.bend","src/scene-buffer.bend","src/scene-texture.bend","src/scene-materials.bend","src/scene-geometry.bend","proofs/geometry-publication/LAWS.bend.in","proofs/geometry-publication/PROOF.bend.in","proofs/geometry-publication/mutations.tsv","tools/verify-publication.bend"])
+    hashes:String <- S.run("sha256sum",["deps/bend-vulkan/Vulkan.bend","src/scene-buffer.bend","src/scene-texture.bend","src/scene-materials.bend","src/scene-geometry.bend","proofs/geometry-publication/LAWS.bend.in","proofs/geometry-publication/PROOF.bend.in","proofs/geometry-publication/error-proof.bend","proofs/geometry-publication/mutations.tsv","tools/verify-publication.bend"])
     Files.save(dest ++ "/sources.sha256",hashes)
     check(dest,"baseline","","","")
     Bool.pick(IO(Unit),negative,

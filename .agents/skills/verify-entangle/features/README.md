@@ -37,7 +37,7 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [Scene hierarchy](scene-hierarchy.md): parent validation, complete affine globals and world bounds, transactional edits, lighting, actual ECS replay, X11 controls, sensitivity controls, and measured sequential propagation.
 - [Checked host uploads](upload-boundary.md): enforced source policy, exact production payload lengths, real Vulkan writes and readback, rejection, and cleanup.
 - [Mesh replacement](mesh-replacement.md): both renderer APIs, changed pixels and ranges, rejected-candidate preservation, recorded commands, multiple submissions, uniform and sampled-image descriptor retention, memory aliases, atomic retirement rejection, collection, and cleanup.
-- [Native resource failures](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded proofs of production handlers for rare driver errors.
+- [Native resource failures and lifetime](resource-failures.md): recording/submission/reset rejection, real allocation failure under a process limit, partial preparation rollback, cleanup diagnostics, terminal teardown, and bounded production proofs of rare driver errors, retirement, reference graphs, and collection.
 - [Mesh movement](mesh-movement.md): six movement keys, held/repeated/opposing input, release, Space reset, and focus loss.
 - [Camera and window controls](camera-window.md): both interactive apps, camera reset, resize, hide/restore, Escape, and Close.
 - [Public scene creation](scene-creation.md): scene descriptions, compilation, separate instances, shared geometry, and validation.
