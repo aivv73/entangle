@@ -1,6 +1,22 @@
 import Base
 import ./LAWS.bend as Laws
+import ./native.bend as V
+import ./texture.bend as T
+import ./materials.bend as Materials
+import ../../../../deps/bend-vulkan/deps/bend-collections/proofs/lib/logic.bend as Logic
 
 def Laws.geometry_install_accept(old_buffers,old_ranges,active,retired,buffers,ranges,next,pending):{==}
 
 def Laws.material_ownership_cons(id,set,owned,rest):{==}
+
+def Laws.material_collection_released(rest,status):{==}
+
+def Laws.material_collection_deferred(remaining,message,rest,status):{==}
+
+def Laws.material_collection_preserves_active(active,remaining,result):{==}
+
+def Laws.material_disposal_reports_pending(head,rest):{==}
+
+def Laws.texture_release_failure_retains_suffix(resource,rest,code,message,next):{==}
+
+def Laws.texture_release_success_continues(resource,rest,next):{==}

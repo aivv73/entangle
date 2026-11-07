@@ -23,3 +23,50 @@ law material_ownership_cons:
   for +owned:List<&2,T.Resource>
   for +rest:List<&2,Materials.Binding>
   {Materials.ownership(Materials.Binding{id,T.Material{set,owned}} <> rest) == owned <> Materials.ownership(rest) : List<&2,List<&2,T.Resource>>}
+
+law material_collection_released:
+  for +rest:List<&2,List<&2,T.Resource>>
+  for status:V.VkResult(Unit)
+  {Materials.collected(T.Released{},(rest,status)) == (rest,status) : List<&2,List<&2,T.Resource>> & V.VkResult(Unit)}
+
+law material_collection_deferred:
+  for +remaining:List<&2,T.Resource>
+  for +message:String
+  for +rest:List<&2,List<&2,T.Resource>>
+  for status:V.VkResult(Unit)
+  {Materials.collected(T.Pending{remaining,(1610612740,message)},(rest,status)) == (remaining <> rest,status) : List<&2,List<&2,T.Resource>> & V.VkResult(Unit)}
+
+law material_collection_failure:
+  for +remaining:List<&2,T.Resource>
+  for +code:U32
+  for +message:String
+  for +rest:List<&2,List<&2,T.Resource>>
+  for status:V.VkResult(Unit)
+  for other:{U32.is_eq(code,1610612740) == False{} : Bool}
+  {Materials.collected(T.Pending{remaining,(code,message)},(rest,status)) ==
+    (remaining <> rest,V.Entry.finish(Unit,Fail{(code,message)},status)) : List<&2,List<&2,T.Resource>> & V.VkResult(Unit)}
+
+law material_collection_preserves_active:
+  for +active:List<&2,Materials.Binding>
+  for +remaining:List<&2,List<&2,T.Resource>>
+  for result:V.VkResult(Unit)
+  {Materials.collected_resident(active,(remaining,result)) == (Materials.Resident{active,remaining},result) : Materials.Resident & V.VkResult(Unit)}
+
+law material_disposal_reports_pending:
+  for +head:List<&2,T.Resource>
+  for +rest:List<&2,List<&2,T.Resource>>
+  {Materials.disposed((head <> rest,Done{Unit{}})) == Fail{(1610612740,"Material cleanup deferred by retained commands")} : V.VkResult(Unit)}
+
+law texture_release_failure_retains_suffix:
+  for +resource:T.Resource
+  for +rest:List<&2,T.Resource>
+  for +code:U32
+  for +message:String
+  for next:IO(T.Release)
+  {T.releasing(resource,rest,Fail{(code,message)},next) == IO.pure(T.Release,T.Pending{resource <> rest,(code,message)}) : IO(T.Release)}
+
+law texture_release_success_continues:
+  for resource:T.Resource
+  for rest:List<&2,T.Resource>
+  for next:IO(T.Release)
+  {T.releasing(resource,rest,Done{Unit{}},next) == next : IO(T.Release)}

@@ -16,7 +16,7 @@ Require exit zero and `ALL PROOFS CHECK` from both proof commands. The root
 command is a frontend proof check. Only the standalone upload command above
 runs the BendTT kernel. Do not describe the root result as a kernel verdict.
 The publication driver checks freshly extracted pure production declarations.
-Require its baseline, three named mutation rejections, and restored pass.
+Require its baseline, ten named mutation rejections, and restored pass.
 The `proofs` workflow profile includes all these commands and preserves a
 source-specific receipt. Pair it with `native hierarchy` after changes to the
 draw-extraction or publication correspondence.
@@ -83,7 +83,7 @@ copies the named production declarations. There is no separate transition model.
 | Root JSON laws | `src/json-boundary.bend`, `src/scene-file.bend`, pinned JSON and bytes packages | Rejected guards, oversized input, incomplete reads, wrong-kind and missing references, model-part preservation, admitted-scene compilability, and depth eight. They do not prove the parser, the complete loader, or parent-anchor expansion. |
 | Root texture and lighting laws | `src/content.bend`, `src/render-format.bend`, `src/lighting.bend` | The 44-byte vertex stride, RGBA byte order, source-image retention, zero-width rejection, and invalid light-direction rejection. Shader behavior and normal-matrix accuracy require separate evidence. |
 | Root hierarchy laws | `src/hierarchy.bend`, `scene-hierarchy.bend`, `scene-draw.bend` | Root and parent matrix expressions, root/child extraction, empty/derived bounds, visiting/missing/invalid rejection, and unchanged world after rejected public edits. Five source mutations bind these claims to production behavior. Numerical and graph coverage additionally use the real ECS/render/replay drivers. |
-| Accepted publication frontend proofs | `src/scene-geometry.bend:published`, `src/scene-materials.bend:ownership,retire`, their complete type closure | Candidate buffers, ranges, and active bindings are published. Prior ownership and both retirement queues are preserved in order. The binding ownership step retains the complete resource list. Three production mutations establish sensitivity. Inspect `sealed` and its callers at every sync. No finite list bound is imposed. |
+| Publication and material cleanup frontend proofs | `src/scene-geometry.bend:published`, `src/scene-materials.bend:ownership,retire,collected,collected_resident,disposed`, `src/scene-texture.bend:releasing`, `Vulkan.bend:Entry.finish`, their complete type closure | Candidate buffers, ranges, and active bindings are published. Prior ownership and both retirement queues are preserved in order. Failed release retains the failed resource and suffix; success continues cleanup. Pending suffixes and active bindings survive collection; unresolved disposal reports deferred cleanup. Ten production mutations establish sensitivity. Inspect `sealed`, `collect_all`, `release`, and their callers at every sync. No finite list bound is imposed. |
 | Standalone upload kernel verdict | `proofs/upload-range/*.bend`, `deps/bend-vulkan/src/core.bend`, imported bend-collections arithmetic | All three U64 inputs, all limb bit patterns, and unbounded natural arithmetic. No offset or no-overflow premise. |
 
 Count root claims with `rg -c '^law ' LAWS.bend`. Quantifiers and premises in
@@ -108,7 +108,13 @@ The feature recipes establish runtime behavior separately.
 | --- | --- | --- |
 | Root frontend proofs, 192 laws | Updated: actual hierarchy draw path and separate inspector snapshots | `94665a580af130b7d13ae1b29228eec14d032ccd` |
 | Accepted publication, two frontend laws | Updated: source-extracted publication and material retirement | `94665a580af130b7d13ae1b29228eec14d032ccd` |
+| Expanded publication/cleanup, nine frontend laws | Verified: ten controls and restored sources pass | Working tree based on `834e23d`, receipt `workflow-H51QSNBC` |
 | Standalone upload, two kernel laws | In sync: theorem and imported production definitions unchanged | `94665a580af130b7d13ae1b29228eec14d032ccd` |
+
+The [lifetime extension record](../../../../proofs/native-failures/lifetime-plan.md)
+preserves the final source-specific receipt, the stricter native unwind gate,
+and the separate unchanged-source upload-kernel evidence. Historical rows above
+retain their original scope and revision.
 
 The November 7, 2026 audit reads every commit in `71c1670..94665a5`, including
 the Asset, content extraction, PNG, OBJ, JSON, math, texture, hierarchy, and

@@ -1,4 +1,4 @@
-# Production native failure verification
+# Production native failure and lifetime verification
 
 The resource-lifecycle failure item uses two kinds of evidence: real Vulkan
 execution for allocation failure, rollback, lifetime rejection, recovery and
@@ -17,6 +17,19 @@ and extracts it under `build/verification/native-formal-tools`. Subsequent
 runs require that version. The generated evidence includes the executable
 hash. The default `tools/verify.bend` gate runs the positive proofs alongside
 the real Vulkan checks.
+
+`--lifetime` selects the nine logical lifetime entries only. Combine it with
+`--mutations` for their production controls and restored baselines. The default
+checks both suites. Each result retains literal arguments, generated source,
+status, and a CBMC log. `run.status` remains nonzero until all selected checks
+finish successfully. The `native` workflow profile supplies the complete
+source-specific receipt and required real-runtime consumers.
+
+Each extracted source is compiled once by `goto-cc` from the same pinned CBMC
+package. The runner checks its version, records the executable/source/GOTO hashes
+and compilation status, and selects proof functions from the retained GOTO file.
+The adapter was qualified against the actual sampled-resource graph: both direct
+C and GOTO checks pass. See the task record for the probe.
 
 ## Connection to production
 
@@ -61,14 +74,93 @@ No Vulkan entry point is mocked, replaced, or invoked by the proof.
 | `verify_idle_failure` | Failed idle does not claim completion or release references; an unknown completion error cannot reach entry-owned device destruction. |
 | `verify_completion` | Completion releases submission edges, preserves recorded edges, invalidates formerly uncertain commands, and quarantines uncertain semaphores. |
 | `verify_idle_success` | Successful idle calls completion for active work and retains recorded ownership. |
+| `verify_lifetime_retirement` | Two pairs seal together after validation. Null handles, foreign buffers, mismatched bindings, offsets, recording references, aliases, and prior errors preserve the original flags and ownership. |
+| `verify_lifetime_graph` | A sampled descriptor/view/image/memory graph and sampler retain every resource. Sealed descendants block recording, active memory checks respect owners, and destruction guards refuse retained resources. |
+| `verify_lifetime_prepare` | Staging preserves prior references on refusal or allocation failure, and installs the complete deduplicated recorded set on success. |
+| `verify_lifetime_collection_00`, `_01`, `_10`, `_11` | Four separate initial list orders cover both buffer/memory adjacencies for each pair. Collection removes exactly eligible allocations, respects owner/loss/reference guards, advances safely past removed rows, and is idempotent. |
+| `verify_lifetime_completion_reset_pending`, `_uncertain` | Both initial phases preserve recorded allocations through completion; two successful resets release their edges, while a descriptor retains its allocation until its own removal. |
 
 `mutations.tsv` deliberately breaks production statements in disposable
 copies. Each case must exit with CBMC's property-failure status and name its
-expected failed assertion. Parse errors, missing markers, timeouts, or an
-unrelated failure do not count as a successful negative control. The original
+expected failed assertion. Any failed unwind assertion rejects the run, even
+when the expected property also fails. Parse errors, missing markers, timeouts,
+or an unrelated failure do not count as a successful negative control. The original
 dependency is never edited. Every original proof runs again afterward.
+`lifetime-mutations.tsv` supplies the lifetime suite's separate controls.
+Its optional sixth field selects the collection counterexample configuration.
+Other entries retain five fields.
+The 23 controls include leaked staged references after refusal or malloc failure,
+and forgotten registry-row deallocation. These fail the standard CBMC leak
+property, so leak checking is itself covered by production-source sensitivity.
 
-## Bounds and assumptions
+## Lifetime correspondence and limits
+
+`lifetime.in.c` copies complete types and helpers, the paired-retirement
+validation/sealing continuation, successful command reset, destruction guards,
+and collection control/metadata statements. Retirement begins after handle/list
+decoding and staging. A symbolic prior error covers refusal before sealing; the
+staging allocator and its list decoding are outside this proof.
+
+Collection observes the exact `DestroyBuffer` and `FreeMemory` call boundaries.
+The extraction requires their complete native call lines, but never invokes or
+substitutes a Vulkan function. The assumption is that these void driver calls do
+not mutate the wrapper's private `bv_rows` metadata. The actual `bv_remove` and
+its `free` statements run unchanged. Boundary assertions check valid ownership,
+retirement, references, and buffer-before-memory order. Real Vulkan retention and
+cleanup remain separately required.
+Its retaining-reference oracle is derived independently from the initial owner
+edges. At memory destruction the observer also checks that the paired buffer
+has been destroyed and is absent from the actual registry. It does not validate
+the production guard by calling the same predicate again.
+
+The initial ownership subgraphs contain at most eight scanned rows and eight
+edges. The retirement entry has two pairs and a recording descriptor path, with
+up to two aliases. The sampled entry has a four-edge command-to-memory path, a
+sampler branch, and an unrelated allocation. Reference staging admits two input
+resources over one prior recorded edge, including duplicates and sealed
+descendants. Collection has two owned pairs, a descriptor holder, and a foreign
+pair. Four concrete-order entries cover the Cartesian product of both
+buffer/memory adjacency orders; each order checks the complete six-bit
+retirement/reference/error input space.
+The completion/reset
+sequence has two pairs, two commands, and a persistent descriptor owner.
+
+`collection-cases.bend` generates every concrete configuration entry for each
+order. Bits 0/2 mark the first/second pair retired, bits 1/3 mark its retaining
+descriptor edge, bit 4 selects an invalid owner, and bit 5 selects device loss.
+The runner requires all 64 values for each order, so the complete product has
+256 checks. Heap identities, pointer safety, allocation bookkeeping, and all
+remaining model choices stay subject to CBMC. The two completion/reset entries
+cover pending and uncertain initial phases separately. There are 261 positive
+lifetime checks per baseline or restored pass. No selected configuration can be
+skipped and still produce `run.status=0`.
+
+Predicate/retirement entries use distinct initial stack objects. Collection uses
+heap victim pairs with static retained/foreign boundary rows; the reset sequence
+uses heap rows/edges. Initial successful heap objects are constructed with
+`__CPROVER_allocate`, and the possible-leak pointer is recorded in the same way
+as the pinned [CBMC allocation model](https://github.com/diffblue/cbmc/blob/cbmc-6.9.0/src/ansi-c/library/stdlib.c).
+`bv_add` and allocation wrappers are outside the claims. Initial allocation
+success is a premise. Failure is enabled before production reference staging,
+which retains its unchanged `malloc` calls. Actual production registry removal
+and the standard `free` checks execute in the proof. Lifetime entries use
+a global unwind bound of six, explicit eight-row registry bounds (nine loop
+tests), two-input staging/retirement bounds, completion's three-edge bound, no
+query slots, and memory-leak checks in addition to pointer/bounds/overflow checks.
+The `.argv` files retain every per-loop override. Unwind assertions stay enabled.
+These are
+finite ownership subgraphs at validated boundaries, not arbitrary native graphs.
+Descriptor population, all allocation wrappers, term decoding, borrowed
+swapchain images, presentation, concurrency, and hardware destruction behavior
+remain outside the formal scope.
+
+The separate [publication harness](../geometry-publication/README.md) proves that
+accepted replacement retains candidate state and all material retirement queues,
+and that pure cleanup decisions preserve pending resources and active bindings.
+The real replacement/failure/texture drivers cover allocation rollback, preserved
+resident bytes, retry, cleanup diagnostics, and zero-object entry teardown.
+
+## Original failure-suite bounds and assumptions
 
 The proof starts with valid object pointers and an acyclic, explicit registry
 topology: two commands belonging to one device, a command belonging to another
