@@ -46,8 +46,21 @@ the timed interval. `measure.bend` alternates five baseline/candidate pairs for
 1000 flat nodes, 256 chain nodes, and 1023 branching nodes; identical complete state
 and image bytes are mandatory. The source receipt must identify both binaries.
 
-Root laws are frontend production-expression proofs, not a kernel theorem of
-floating-point accuracy or all forests. Runtime evidence covers the available
+The [hierarchy formal skill](../../verify-hierarchy-formal/SKILL.md) adds direct
+production proofs through `hierarchy-formal`, also required by `hierarchy`.
+Successful evaluation and the candidate/evaluation pipeline preserve cardinality
+for arbitrary lists. Forest and rejection certificates check actual array
+operations; certified traversal preserves index order. A certified complete batch
+checks both optional writes per row and retains commit administration. Parametric
+forward-parent and real schema qualifications establish concrete entry paths.
+General construction of those certificates from every supported forest and every
+successful ECS read remains open. A pass does not certify all-forest atomicity.
+
+Four symbolic hierarchy claims also require a kernel verdict: successful-result
+cardinality, certified forest visits, certified rejections and sequence order.
+Root laws, concrete hierarchy entry qualifications and ECS publication remain
+frontend proofs. Neither layer proves floating-point accuracy or all-forest
+certificate construction. Runtime evidence covers the available
 Linux Vulkan lane. No spawn/despawn, keep-world reparenting, subtree bounds,
 incremental propagation, persistent RenderScene, or cross-backend claim is made.
 

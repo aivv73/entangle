@@ -1,0 +1,18 @@
+result-drops-cardinality	src/hierarchy.bend	    case 0n:Done{List.reverse(&2,Spatial,acc)}	    case 0n:Done{[]}	Laws.sequence_order
+result-reverses-order	src/hierarchy.bend	    case 0n:Done{List.reverse(&2,Spatial,acc)}	    case 0n:Done{acc}	Laws.sequence_order
+missing-parent-accepted	src/hierarchy.bend	    case False{}:Fail{MissingParent{index}}	    case False{}:visit_mark(Array.get(Mark,array,index),index,next)	Laws.missing_evaluate
+cycle-misclassified	src/hierarchy.bend	    case (array,Visiting{}):Fail{Cycle{index}}	    case (array,Visiting{}):Fail{MissingParent{index}}	Laws.cycle_evaluate
+fuel-misclassified	src/hierarchy.bend	    case 0n:Fail{Cycle{index}}	    case 0n:Fail{MissingParent{index}}	Laws.rejection_visit
+ancestor-discarded	src/hierarchy.bend	    case Done{(array,Spatial{_,global,_})}:save(array,index,derive(local,Some{global},index))	    case Done{(array,Spatial{_,global,_})}:save(array,index,derive(local,None{},index))	parent_saved
+visiting-mark-omitted	src/hierarchy.bend	    case Some{parent}:parent_done(local,index,next(parent,Array.set(Mark,array,index,Visiting{})))	    case Some{parent}:parent_done(local,index,next(parent,array))	Laws.cycle_evaluate
+cached-value-discarded	src/hierarchy.bend	    case (array,Finished{+value}):Done{(array,value)}	    case (array,Finished{+value}):Fail{Cycle{index}}	Laws.forest_visit
+rollback-drops-row	src/scene-hierarchy.bend	    case Row{_,_,_,s} <> rest:s <> rollback(rest)	    case Row{_,_,_,s} <> rest:rollback(rest)	Laws.rollback_length
+parent-edit-drops-suffix	src/scene-hierarchy.bend	    case H.Local{t,_,b,l} <> rest,0n:H.Local{t,parent,b,l} <> rest	    case H.Local{t,_,b,l} <> rest,0n:[H.Local{t,parent,b,l}]	Laws.replace_parent_length
+install-skips-tail	src/scene-hierarchy.bend	      install(rest,tail,spatial(transformed(scope,entity,t),entity,value))	      spatial(transformed(scope,entity,t),entity,value)	install_cons
+install-skips-transform	src/scene-hierarchy.bend	      install(rest,tail,spatial(transformed(scope,entity,t),entity,value))	      install(rest,tail,spatial(scope,entity,value))	install_cons
+install-skips-spatial	src/scene-hierarchy.bend	      install(rest,tail,spatial(transformed(scope,entity,t),entity,value))	      install(rest,tail,transformed(scope,entity,t))	install_cons
+propagation-forgets-restore	src/scene-hierarchy.bend	    case Propagate{}:(commit(world,rows,rollback(rows)),Fail{error})	    case Propagate{}:(world,Fail{error})	Laws.propagation_rejection
+scheduled-write-rewinds-clock	deps/bendvy/src/ecs/clock-state.bend	    case +active <> rest:(State{tick,active <> rest},active)	    case +active <> rest:(State{active,active <> rest},active)	Laws.scheduled_write_clock
+checked-write-refused	deps/bendvy/src/ecs/execution-access.bend	    case True{}:component_modify_physical(~S,~C,~R,~P,~Rest,~V,~lens,transform,scope,Index.physical_index(W.handle_index(~S,handle)))	    case True{}:(scope,None{})	Laws.one_row_ready
+checked-read-changes-stamp	deps/bendvy/src/ecs/chunk-column.bend	    case False{}: stamps	    case False{}: Array.set(L.Stamp,stamps,index,L.Stamp{None{},None{}})	Laws.one_row_read
+commit-leaves-schedule	src/scene-hierarchy.bend	  State.reassemble(~D.Schema,~D.Columns(),~D.Resources(),~Unit,admin,invocation,install(rows,values,scope))	  W.leave_run(~D.Schema,~D.Columns(),~D.Resources(),~Unit,State.reassemble(~D.Schema,~D.Columns(),~D.Resources(),~Unit,admin,invocation,install(rows,values,scope)))	Laws.commit_administration

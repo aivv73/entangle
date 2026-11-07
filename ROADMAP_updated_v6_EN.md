@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 7, 2026 · updated for presentation ownership verification
+**Revision:** 6 · November 7, 2026 · updated for hierarchy formal verification
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
@@ -16,6 +16,13 @@ and resize/Close. Multiple frames in flight and asynchronous presentation requir
 an extended passing production proof and live teardown evidence before enablement.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
+
+**Hierarchy formal verification:** the first proof layer adds four kernel-checked
+hierarchy laws plus frontend cardinality and certified complete publication laws.
+The [skill](.agents/skills/verify-hierarchy-formal/SKILL.md) and
+[task record](proofs/hierarchy/plan.md) distinguish those proofs from the remaining
+general certificate-construction obligations. All-forest atomic publication is
+still unproved. Product code and dependency revisions are unchanged.
 
 **Next release:** `v0.1-alpha` — two non-voxel applications, a public API, a persistent scene representation, and the first practically useful proven guarantee.
 
@@ -94,7 +101,7 @@ an extended passing production proof and live teardown evidence before enablemen
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
