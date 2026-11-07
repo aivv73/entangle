@@ -1,0 +1,64 @@
+$p3-mode  Start the static-model importer with Jonlib's `src/obj.bend`, subject to validation [S41]. Convert parser output into the engine's mesh and material types. Load synchronously through Assets; the importer does not own the ECS world or Vulkan handles.
+
+---
+
+Delegated task node:delegated-task:command%3Amcp%3Ae5dd42a2-3e29-4443-8e90-6e2d3054013c%3Adelegate-task%3Ac43a6b3e-6750-4ddf-836d-4ac9b0214420 (OBJ importer design 2) [completed]:
+[Design written](/tmp/arena-entangle-obj/candidate-2/design.md), 164 lines.
+
+Chosen shape uses a model-level material table and direct `Cmd`/`Attrib` lowering through synchronous Assets. Model the Domain keeps assignments explicit. Boundary Discipline contains parser policy.
+
+Main risks are unqualified S41 runtime behavior, restrictive triangle-only input, and expanded-vertex memory cost. Repository unchanged.
+
+---
+
+Delegated task node:delegated-task:command%3Amcp%3Ae5dd42a2-3e29-4443-8e90-6e2d3054013c%3Adelegate-task%3A26a2ce72-03c0-472f-9742-2313148f13a8 (OBJ importer design 1) [completed]:
+[Design and rationale](/tmp/arena-entangle-obj/candidate-1/design.md) written, 160 lines.
+
+Main choice is a material table with ordered engine-mesh parts, lowered from checked Cmd/Attrib data. It compares paired parts and direct lowering, pins all eight dependency files, and specifies runtime gates.
+
+Risks are unqualified S41 execution, a restrictive triangle/diffuse profile, and repeated packed-vertex costs. No repository files changed or agents spawned.
+
+Delegated task node:delegated-task:command%3Amcp%3Ae5dd42a2-3e29-4443-8e90-6e2d3054013c%3Adelegate-task%3A14e3844a-b4ea-4e73-8726-0ad68597775e (OBJ importer design 3) [completed]:
+Wrote [design.md](/tmp/arena-entangle-obj/candidate-3/design.md), 172 lines.
+
+Main choice is ordered mesh/material pairs lowered from validated `Cmd`/`Attrib`, bypassing raylib assembly.
+
+Risks are pending runtime qualification, restrictive format support, and vertex expansion reaching engine limits sooner. Repository files remain unchanged.
+
+---
+
+Delegated task node:delegated-task:command%3Amcp%3Ae5dd42a2-3e29-4443-8e90-6e2d3054013c%3Adelegate-task%3Aaac2a712-cef1-4ffc-a325-cbeb654a2a6a (Review OBJ importer design selection) [completed]:
+Wrote [cross-judge.md](/tmp/arena-entangle-obj/cross-judge.md).
+
+Independent base choice: **candidate 3**. Coordinator grafts are sound. Small corrections cover bounded lowering, reachable verification thresholds, and explicit empty-MTL rejection.
+
+The report separates proven findings from design judgment. Full runtime qualification remains outstanding. Repository files were untouched.
+
+---
+
+Delegated task node:delegated-task:command%3Amcp%3Ae5dd42a2-3e29-4443-8e90-6e2d3054013c%3Adelegate-task%3Ac3ac779a-ad3c-4555-a38f-9e9a4fde6a14 (Implement synchronous OBJ static-model importer) [completed]:
+Implemented the synchronous, source-only S41 OBJ importer. Local commit **`cf00582cd4912009dde8c737f90f6f45f0a51212`**. No push or Trail changes.
+
+- [model-obj.bend](/home/aivv/Документы/projects/entangle/src/model-obj.bend:559) provides pure `decode` and bounded synchronous `load`.
+- [content.bend](/home/aivv/Документы/projects/entangle/src/content.bend:104) adds ordered mesh/material/label pairs.
+- [model-assets.bend](/home/aivv/Документы/projects/entangle/examples/model-assets.bend) demonstrates Asset loading, release, Creation, and real ECS ticks.
+- [verify-models.bend](/home/aivv/Документы/projects/entangle/tools/verify-models.bend) drives qualification, properties, bounds, files/cache, mutations, source-only closure, and native consumers.
+- [Reference](/home/aivv/Документы/projects/entangle/docs/model-obj.md), [rationale](/home/aivv/Документы/projects/entangle/docs/model-obj-design.md), and [evidence record](/home/aivv/Документы/projects/entangle/docs/verification/2026-11-04-model-obj/README.md) document the profile, pin, licenses, failures, and reproduction.
+
+Passed `bend PROOF.bend`, the compiled model verifier, existing Creation checks, `verify-workflow assets`, `bash tools/model-obj/window-session.sh`, checksum checks, and staged/working-tree diff checks. Exact commands are retained in [commands.log](/home/aivv/Документы/projects/entangle/docs/verification/2026-11-04-model-obj/commands.log).
+
+All required statuses are zero in:
+
+- `build/verification/models-final-wxcB3fIt`
+- `build/verification/workflow-zIbnOaXe`
+- `build/verification/model-window-xnuTk9Ov`
+
+Imported geometry matched independent source values, packed geometry, complete extracted transforms, and RGBA/D32 readbacks. X11 material regions and reversed-face culling passed with zero live Vulkan objects and clean validation.
+
+Fixed an opacity-validator Nat overflow, binary-output directory collision, and dependency registration failure. The upstream table-probe refusal remains an explicit documented error. The default verifier compiled; the full default suite was not rerun.
+
+The profile requires authored triangles and opaque diffuse materials. It makes no universal decimal-parsing or filesystem-race proof claim.
+
+Concurrent workflow/guidance edits, PNG boundary fixes, and the `p3-models.md` deletion remain unstaged. The broad workflow receipt covers that shared checkout and depends on those PNG fixes. Root’s independent review and publication remain.
+
+Model the Domain kept complete pairs; Build the Lever produced rerunnable drivers; Prove It Works required real source, state, and rendering evidence.
