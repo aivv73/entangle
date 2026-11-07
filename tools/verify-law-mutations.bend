@@ -51,7 +51,7 @@ def main() -> IO(Unit):
     +dest:String = String.trim(directory)
     IO.print("Bend law mutation evidence: " ++ dest)
     _:String <- S.run("cp",["-R","--reflink=auto","--","src","proofs","tools","examples","deps","LAWS.bend","PROOF.bend","toolchain.bend",dest])
-    hashes:String <- S.run("sha256sum",["src/asset.bend","src/scene-geometry-policy.bend","src/time.bend","src/upload-size.bend","src/hierarchy.bend","src/scene-hierarchy.bend","deps/bend-vulkan/src/core.bend","LAWS.bend","PROOF.bend","proofs/upload-range/LAWS.bend","proofs/upload-range/PROOF.bend","proofs/law-mutations.tsv","tools/verify-law-mutations.bend"])
+    hashes:String <- S.run("sha256sum",["src/asset.bend","src/scene-geometry-policy.bend","src/time.bend","src/upload-size.bend","src/hierarchy.bend","src/scene-hierarchy.bend","src/scene-draw.bend","src/json-boundary.bend","src/scene-file.bend","src/scene-matrix.bend","src/render-format.bend","src/content.bend","deps/bend-vulkan/src/core.bend","LAWS.bend","PROOF.bend","proofs/upload-range/LAWS.bend","proofs/upload-range/PROOF.bend","proofs/law-mutations.tsv","tools/verify-law-mutations.bend"])
     Files.save(dest ++ "/sources.sha256",hashes)
     gate(dest,"baseline-root","PROOF.bend","")
     gate(dest,"baseline-upload","proofs/upload-range/PROOF.bend","")

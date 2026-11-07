@@ -1,0 +1,25 @@
+import Base
+import ./production.bend as G
+import ./materials.bend as Materials
+import ./texture.bend as T
+import ./native.bend as V
+import ../../../../src/creation.bend as Create
+
+law geometry_install_accept:
+  for old_buffers:Maybe<&2,G.Buffers>
+  for old_ranges:List<&2,Create.Range>
+  for +active:List<&2,Materials.Binding>
+  for +retired:List<&2,List<&2,T.Resource>>
+  for +buffers:Maybe<&2,G.Buffers>
+  for +ranges:List<&2,Create.Range>
+  for +next:List<&2,Materials.Binding>
+  for +pending:List<&2,List<&2,T.Resource>>
+  {G.published(G.Resident{old_buffers,old_ranges,Materials.Resident{active,retired}},G.Resident{buffers,ranges,Materials.Resident{next,pending}}) ==
+    G.Resident{buffers,ranges,Materials.Resident{next,List.concat(&2,List<&2,T.Resource>,[Materials.ownership(active),retired,pending])}} : G.Resident}
+
+law material_ownership_cons:
+  for id:U32
+  for set:V.DescriptorSet
+  for +owned:List<&2,T.Resource>
+  for +rest:List<&2,Materials.Binding>
+  {Materials.ownership(Materials.Binding{id,T.Material{set,owned}} <> rest) == owned <> Materials.ownership(rest) : List<&2,List<&2,T.Resource>>}

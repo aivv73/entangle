@@ -1,4 +1,6 @@
 import ./src/hierarchy.bend as H
+import ./src/scene-hierarchy.bend as Hierarchy
+import ./src/scene-draw.bend as Draw
 import 0x632652e3c1c0183f12728faf3870bb68/bytes.bend as JsonBytes
 import ./src/json-boundary.bend as Json
 import ./src/scene-file.bend as SceneFile
@@ -120,18 +122,38 @@ def Laws.scene_seed_count(count,index):
 def Laws.scene_empty_bootstrap(F,effects,H,Q,caps,commands,scope,queue,handles):
   {==}
 
-def Laws.draw_payload(handle,transform,mesh):{==}
+def Laws.draw_payload(handle,transform,mesh,accepted,local_bounds,lit,global,bounds):{==}
 
-def Laws.draw_handle_independent(left,right,transform,mesh):{==}
+def Laws.draw_child_payload(handle,transform,mesh,accepted,parent,local_bounds,lit,global,bounds):{==}
 
-def Laws.draw_found_order(H,next,frame,handle,transform,mesh,acc,added,changed):{==}
+def Laws.draw_handle_independent(left,right,transform,mesh,spatial):
+  match spatial:
+    case H.Spatial{H.Local{_,parent,_,_},global,_}:{==}
 
-def Laws.draw_absent_strict(H,next,frame,handle,transform,acc,added,changed):{==}
+def Laws.draw_found_order(next,frame,handle,transform,mesh,spatial,acc):{==}
+
+def Laws.draw_absent_strict(next,frame,handle,transform,spatial,acc):{==}
 
 def Laws.row_missing_strict(H,next,frame,handle,transform,acc,added,changed):{==}
 
+def Laws.row_found_order(H,next,frame,handle,transform,mesh,acc,added,changed):{==}
+
+def Laws.row_absent_strict(H,next,frame,handle,transform,acc,added,changed):{==}
+
+def Laws.row_finish_order(frame,acc):{==}
+
 def Laws.draw_finish_order(frame,acc):{==}
 
+def Laws.draw_rows_order(row,rest):{==}
+
+def Laws.draw_rows_count(rows):
+  match rows:
+    case []:{==}
+    case _ <> +rest:Equal.cong(Nat,Nat,n => 1n+n,List.length(&2,Draw.DrawItem,Hierarchy.draw_rows(rest)),List.length(&2,Hierarchy.Row,rest),Laws.draw_rows_count(rest))
+
+def Laws.draw_failure_strict(world,error):{==}
+
+def Laws.draw_success_rows(world,rows):{==}
 
 def Laws.render_push_extent(matrix):
   match matrix:
@@ -478,7 +500,6 @@ def Laws.upload_conversion_exact(n,h):
     UploadNat.eq_from_is_eq(U32.to_nat(U32.from_nat(n)),n,h))
 
 
-def Laws.geometry_install_accept(A,old,fresh):{==}
 def Laws.geometry_install_reject(A,old,fresh):{==}
 def Laws.geometry_pair_allocations(A,vertices,indices):{==}
 def Laws.geometry_empty_allocations(A):{==}

@@ -1,0 +1,6 @@
+import Base
+import ./LAWS.bend as Laws
+
+def Laws.geometry_install_accept(old_buffers,old_ranges,active,retired,buffers,ranges,next,pending):{==}
+
+def Laws.material_ownership_cons(id,set,owned,rest):{==}

@@ -10,6 +10,8 @@ Read [the feature map](features/README.md) first. Entangle's primary interactive
 For formal verification maintenance, follow [the law checks](features/formal-laws.md).
 That entry records covered code, assumptions, commands, mutation controls, and
 the synchronization commit separately from live-window evidence.
+Accepted geometry publication uses freshly extracted pure declarations;
+follow the linked publication driver as well as root `PROOF.bend`.
 
 ## Select required evidence
 
