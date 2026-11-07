@@ -32,8 +32,8 @@ is not yet a general-purpose game engine.
 
 The current native build requires:
 
-- Linux x86-64, Bend 2.0.39, and Clang 23.1.4, with the tools on `PATH`.
-- Node.js or Bun for Bend's default runner.
+- Linux x86-64, Bend 2.0.40 built with Bun 1.4.4, and Clang 23.1.4, with the tools on `PATH`.
+- Bun 1.4.4 to build the pinned compiler; Node.js or Bun for Bend's default runner.
 - Vulkan development headers, `libvulkan.so.1`, and a Vulkan driver with a graphics queue.
 - X11 development headers and an X11 or XWayland display with Vulkan presentation support.
 
@@ -44,6 +44,19 @@ The exact toolchain and dependency versions are recorded in
 git clone https://github.com/aivv73/entangle.git
 cd entangle
 git submodule update --init --recursive --filter=blob:none
+```
+
+Build the pinned compiler with `bend tools/build-bend-toolchain.bend`, then
+prepend the printed `bin` directory to `PATH` before building the demo. This
+checks the exact release revision, real component output, and native
+window-driver compilation. The official 2.0.40 archive embeds Bun 1.3.14 and
+overflows on the large window driver. The
+[upgrade record](docs/verification/2026-11-07-bend-2.0.40/README.md) retains the
+qualification and verification evidence.
+
+With that compiler on `PATH`, build and run the demo:
+
+```sh
 mkdir -p build
 bend examples/scene-window.bend -o build/indexed-window
 ./build/indexed-window

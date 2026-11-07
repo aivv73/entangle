@@ -549,6 +549,13 @@ module deps/bend-vulkan/src/constants.bend
 module deps/bend-vulkan/src/core.bend
 module deps/bend-vulkan/tools/verification.bend
 module deps/bend-vulkan/tools/window_verification/bridge.bend
+module deps/bend-vulkan/tools/window_verification/input/uitest.bend
+deps/bend-vulkan/tools/window_verification/input/uitest.bend send_to
+deps/bend-vulkan/Vulkan.bend Entry.open_window
+deps/bend-vulkan/Vulkan.bend NativeWindow.close
+deps/bend-vulkan/Vulkan.bend NativeWindow
+module deps/bend-vulkan/examples/buffer_roundtrip.bend
+deps/bend-vulkan/examples/buffer_roundtrip.bend require
 module deps/bend-vulkan/tools/window_verification/pixels.bend
 module deps/bendvy/examples/scheduled-health/main.bend
 module deps/bendvy/src/ecs/capabilities.bend

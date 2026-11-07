@@ -65,11 +65,12 @@ git diff --binary > "$entangle_evidence/worktree.patch"
 git submodule status --recursive > "$entangle_evidence/dependencies.txt"
 find src examples tools assets -type f -print0 | sort -z | xargs -0 sha256sum > "$entangle_evidence/sources.sha256"
 sha256sum toolchain.bend LAWS.bend PROOF.bend >> "$entangle_evidence/sources.sha256"
-test "$(bend version)" = 'bend 2.0.39'
+run toolchain bend tools/verify-toolchain.bend
 clang --version > "$entangle_evidence/clang.txt"
 test "$(head -n 1 "$entangle_evidence/clang.txt")" = 'clang version 23.1.4'
 test "$(clang -dumpmachine)" = 'x86_64-pc-linux-gnu'
 run proof bend PROOF.bend
+run build-pointer-driver bend tools/verify-pointer-mutations.bend -o "$entangle_evidence/bin/verify-pointer-mutations"
 run build-app bend examples/mesh-playground.bend -o "$entangle_evidence/bin/mesh-playground"
 run build-driver bend tools/verify-mesh-window.bend -o "$entangle_evidence/bin/verify-mesh-window"
 run build-replay bend tools/replay-mesh-window.bend -o "$entangle_evidence/bin/replay-mesh-window"
@@ -121,6 +122,7 @@ doctor() {
   ps -p "$entangle_xwayland_pid" -o pid,ppid,args
 }
 run doctor doctor
+run pointer "$entangle_evidence/bin/verify-pointer-mutations" +RTS --threads 1 --gpu off
 cd "$entangle_runtime"
 if [ "$entangle_extended" = extended ]; then
   mkdir -p "$entangle_evidence/cube" "$entangle_evidence/creation" "$entangle_evidence/replacement" "$entangle_evidence/textured"

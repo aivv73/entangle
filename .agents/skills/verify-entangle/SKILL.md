@@ -24,11 +24,11 @@ Keep one implementation owner. For a new critical verifier, establish sensitivit
 
 ## Launch
 
-Run from the repository root on Linux x86-64. Read `AGENTS.md`, run `bend guide`, and check `toolchain.bend`. The current native lane requires Bend 2.0.39, Clang 23.1.4, Node.js or Bun, initialized dependencies, Vulkan and X11 development headers, and a Vulkan graphics/presentation device. The live recipe also needs `Xwayland`, a working parent Wayland session, and `VK_LAYER_KHRONOS_validation`.
+Run from the repository root on Linux x86-64. Read `AGENTS.md`, run `bend guide`, and check `toolchain.bend`. The current native lane requires Bend 2.0.40 built with Bun 1.4.4, Clang 23.1.4, Node.js or Bun, initialized dependencies, Vulkan and X11 development headers, and a Vulkan graphics/presentation device. `bend tools/build-bend-toolchain.bend` builds and qualifies the exact compiler source. The official archive's Bun 1.3.14 overflows on the large window driver. The live recipe also needs `Xwayland`, a working parent Wayland session, and `VK_LAYER_KHRONOS_validation`.
 
 Inspect dependencies with `git submodule status --recursive`. If they are missing, use the README's initialization commands. Stop on a build or startup failure and retain its logs. Do not treat a headless pass as a window pass.
 
-The executable launcher contains the complete mesh verification lifecycle. It builds fresh executables, starts an owned rootful Xwayland, runs the doctor, drives the app, replays both traces, and cleans up. Each invocation prints its evidence path. Allow several minutes for compilation.
+The executable launcher contains the complete mesh verification lifecycle. It builds fresh executables, starts an owned rootful Xwayland, runs the doctor, qualifies the pointer ABI with a production mutation and restored baseline, drives the app, replays both traces, and cleans up. Each invocation prints its evidence path. Allow several minutes for compilation.
 
 The isolated working directory redirects the drivers' historical output paths into fresh evidence. Never symlink its `docs` directory to the repository's real `docs`. Never replace the repository's `build/indexed-window` with the mesh executable.
 

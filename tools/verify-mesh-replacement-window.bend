@@ -1,6 +1,6 @@
 import Base
 import bend-window-capture@0.1.0.2/capture.bend as Capture
-import bend-ui-test@0.1.0.1/uitest.bend as UI
+import ../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
 import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
 import ../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
 import ../deps/bend-vulkan/examples/verify_window.bend as Existing

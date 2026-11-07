@@ -54,6 +54,7 @@ def build(+source:String,+name:String,+expected:String) -> IO(Unit):
 def main() -> IO(Unit):
   do IO<Unit>:
     exact("bend",["version"],Pin.bend_version())
+    exact("env",["BUN_BE_BUN=1","bend","--version"],Pin.bend_host_version())
     +compiler : String <- run("clang",["--version"])
     require(String.starts_with(compiler,Pin.clang_version() ++ "\n"),"Wrong Clang version:\n" ++ compiler)
     IO.write(compiler)

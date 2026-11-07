@@ -152,7 +152,7 @@ def boundary_tail(head:Event,pair:List<Event> & Bool) -> List<Event> & Bool:
 # The pinned native backend emits this release batch even if FocusIn follows FocusOut in one poll.
 def focus_boundary(events:List<Event>) -> List<Event> & Bool:
   match events:
-    case Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest:
-      (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Mouse{0,0,1,False{}} <> rest,True{})
+    case Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest:
+      (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest,True{})
     case head <> tail:boundary_tail(head,focus_boundary(tail))
     case []:([],False{})
