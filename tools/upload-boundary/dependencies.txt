@@ -660,3 +660,15 @@ deps/bendvy/src/ecs/execution-composer-layout.bend read
 deps/bendvy/src/ecs/execution-composer-layout.bend view
 deps/bendvy/src/ecs/world.bend execution_clock
 deps/bendvy/src/ecs/world.bend write_clock
+module deps/bendvy/src/ecs/chunk-column.bend
+deps/bendvy/src/ecs/chunk-column.bend Leaf
+module deps/bendvy/src/ecs/clock-state.bend
+deps/bendvy/src/ecs/clock-state.bend State
+deps/bendvy/src/ecs/clock-state.bend write
+deps/bendvy/src/ecs/execution-composer-layout.bend ColumnSlot
+deps/bendvy/src/ecs/execution-composer-layout.bend Viewed
+module deps/bendvy/src/ecs/execution-lifecycle-notices.bend
+deps/bendvy/src/ecs/execution-lifecycle-notices.bend View
+module deps/bendvy/src/ecs/lifecycle.bend
+deps/bendvy/src/ecs/lifecycle.bend Stamp
+deps/bendvy/src/ecs/lifecycle.bend written

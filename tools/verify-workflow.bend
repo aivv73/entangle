@@ -12,7 +12,7 @@ def native(+name:String,kind:String,path:String,args:List<&2,String>) -> List<&2
    Step{name,kind,"./" ++ binary,List.append(&2,String,args,["+RTS","--threads","1","--gpu","off"])}]
 
 def known(name:String) -> Bool:
-  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-window","upload","native-failures","presentation","native","window","textured-window","all"],name)
+  S.has(["toolchain","proofs","assets","images","json","math","textures","hierarchy","hierarchy-formal","hierarchy-window","upload","native-failures","presentation","native","window","textured-window","all"],name)
 
 def valid(names:List<&2,String>) -> Bool:
   match names:
@@ -32,11 +32,12 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
   +upload:Bool = selected(names,"upload") || baseline
   +failures:Bool = selected(names,"native-failures") || selected(names,"textures") || baseline
   +presentation:Bool = selected(names,"presentation") || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window")
+  +hierarchy_formal:Bool = selected(names,"hierarchy-formal") || selected(names,"hierarchy")
   +laws:Bool = proofs || assets || upload || failures || presentation || selected(names,"math") || selected(names,"hierarchy")
   List.concat(&2,Step,[
     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
-    add(laws || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
-    add(laws && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
+    add(laws || hierarchy_formal || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
+    add((laws || hierarchy_formal) && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
     add(laws,native("publication","frontend-and-sensitivity","tools/verify-publication.bend",["--mutations"])),
     add(assets && Bool.not(baseline),native("assets","runtime","tools/verify-assets.bend",[])),
     add(selected(names,"images") && Bool.not(baseline),native("images","runtime-and-sensitivity","tools/verify-images.bend",[])),
@@ -53,6 +54,7 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
     add(selected(names,"textured-window"),[Step{"textured-window","all-renderer-windows-and-replay","bash",["tools/verify-window-session.sh","extended"]}]),
     add(selected(names,"hierarchy-window") && Bool.not(selected(names,"textured-window")),[Step{"hierarchy-window","hierarchy-mesh-windows-and-replay","bash",["tools/verify-window-session.sh","hierarchy"]}]),
     add(proofs || upload,[Step{"upload-kernel","kernel","bend",["proofs/upload-range/PROOF.bend","--verdict"]}]),
+    add(hierarchy_formal,native("hierarchy-formal","kernel-core-frontend-publication-and-sensitivity","tools/verify-hierarchy-formal.bend",[])),
     add(laws,native("law-mutations","sensitivity","tools/verify-law-mutations.bend",[])),
     add(upload,native("upload-mutations","sensitivity","tools/verify-upload-mutations.bend",[])),
     add(failures,native("native-failures","bounded-proof-and-sensitivity","tools/verify-native-failures.bend",["--mutations"])),
@@ -211,7 +213,7 @@ def run(+names:List<&2,String>) -> IO(Unit):
     S.require(ok,"Required verification failed; inspect manifest.tsv and per-stage logs.")
 
 def usage() -> String:
-  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images json math textures hierarchy hierarchy-window upload native-failures presentation native window textured-window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nWindow profiles require presentation ownership proofs. presentation includes mesh resize/Close and replay."
+  "Usage: verify-workflow [--plan] PROFILE...\nProfiles: toolchain proofs assets images json math textures hierarchy hierarchy-formal hierarchy-window upload native-failures presentation native window textured-window all\nEvery selected stage is required; stop on first failure. No arguments runs native.\nWindow profiles require presentation ownership proofs. presentation includes mesh resize/Close and replay."
 
 def choose(names:List<&2,String>,dry:Bool) -> IO(Unit):
   +names:List<&2,String> = names
