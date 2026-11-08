@@ -7,7 +7,7 @@ import ../src/creation.bend as Create
 import ../examples/mesh-playground-content.bend as Content
 import ./verify-mesh-playground.bend as Real
 import ./verify-creation.bend as Creation
-import ../deps/bend-vulkan/tools/verification.bend as Check
+import ./window-verification/check.bend as Check
 
 def checked_state(expected:String,+baseline:List<&2,Old.Row>,pair:Play.Application() & List<&2,Old.Row>) -> IO(Play.Application()):
   (app,+rows) = pair

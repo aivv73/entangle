@@ -1,6 +1,6 @@
 import Base
 import ../../tools/upload-boundary/scan.bend as S
-import ../../deps/bend-vulkan/tools/verification.bend as Output
+import ../../tools/window-verification/check.bend as Output
 import ./collection-cases.bend as Cases
 
 def drop_before(lines:List<&2,String>,+marker:String) -> IO(List<&2,String>):

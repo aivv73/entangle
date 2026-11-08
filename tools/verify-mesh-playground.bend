@@ -1,5 +1,5 @@
 import ../src/content.bend as F
-import ../deps/bend-vulkan/tools/verification.bend as Native
+import ./window-verification/check.bend as Native
 import ../src/scene-render.bend as Render
 import ../examples/scene-render.bend as RenderCheck
 import ../deps/bend-vulkan/Vulkan.bend as V

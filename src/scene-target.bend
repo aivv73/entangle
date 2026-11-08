@@ -4,7 +4,7 @@ import ../deps/bend-vulkan/Vulkan.bend as V
 import ../deps/bend-vulkan/src/core.bend as Core
 import ../deps/bend-vulkan/src/constants.bend as vk
 import ../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W
-import ../deps/bend-vulkan/examples/window.bend as Host
+import ./vulkan-window.bend as Host
 import ../deps/bend-vulkan/examples/indexed_offscreen.bend as Mesh
 import ./scene-texture.bend as T
 import ./error.bend as Error

@@ -2,7 +2,7 @@ import Base
 import ./upload-boundary/scan.bend as S
 import ../proofs/native-failures/extract.bend as Extract
 import ../proofs/native-failures/tool.bend as Tool
-import ../deps/bend-vulkan/tools/verification.bend as Output
+import ./window-verification/check.bend as Output
 
 def targets() -> List<&2,String>:
   ["verify_device_loss","verify_record_reset_failure","verify_submit_result","verify_synced_submission","verify_uncertain_guards","verify_lost_guards","verify_descriptor_failure","verify_fence_reset_failure","verify_idle_failure","verify_completion","verify_idle_success"]

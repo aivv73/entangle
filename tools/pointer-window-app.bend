@@ -1,4 +1,5 @@
 import Base
+import ../src/vulkan-window.bend as Host
 import ../deps/bend-vulkan/Vulkan.bend as V
 import ../deps/bend-vulkan/examples/buffer_roundtrip.bend as Check
 
@@ -28,19 +29,19 @@ def observed(fuel:Nat,+window:V.NativeWindow,seen:U32) -> V.Action(Unit):
   match fuel seen:
     case _ 511:
       do V.Action<Unit>:
-        V.NativeWindow.close(window)
+        Host.close_window(window)
         V.Action.lift(Unit,IO.print("Native Press buttons/down/up, Tool.Mouse, signed F32 coordinates, timestamps, Move and Scroll verified."))
     case 0n _:
       IO.pure(V.VkResult(Unit),Fail{(1,"Pointer events did not retain all three W3C button identities and motion/scroll fields")})
     case 1n+rest _:
       do V.Action<Unit>:
-        snapshot:V.WindowSnapshot <- V.NativeWindow.poll(window,50)
+        snapshot:V.WindowSnapshot <- Host.poll(window,50)
         next:U32 <- pointer(snapshot_events(snapshot),seen)
         observed(rest,window,next)
 
 def run(entry:V.Entry) -> V.Action(Unit):
   do V.Action<Unit>:
-    window:V.NativeWindow <- V.Entry.open_window(entry,"Entangle pointer ABI",200,150)
+    window:V.NativeWindow <- Host.open_window(entry,"Entangle pointer ABI",200,150)
     observed(200n,window,0)
 
 def main() -> IO(Unit):

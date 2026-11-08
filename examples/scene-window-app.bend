@@ -15,7 +15,7 @@ import ../deps/bend-vulkan/Vulkan.bend as V
 import ../src/input.bend as Camera
 import ../src/time.bend as Time
 import ../src/error.bend as Error
-import ../deps/bend-vulkan/examples/window_scene.bend as Geometry
+import ./window-geometry.bend as Geometry
 import ./scene.bend as Check
 import ./scene-render.bend as Extract
 

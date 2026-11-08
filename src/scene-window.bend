@@ -11,7 +11,7 @@ import ../deps/bend-vulkan/Vulkan.bend as V
 import ../deps/bend-vulkan/src/core.bend as Core
 import ../deps/bend-vulkan/src/constants.bend as vk
 import ../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as W
-import ../deps/bend-vulkan/examples/window.bend as Host
+import ./vulkan-window.bend as Host
 import ./scene-target.bend as Indexed
 import ./lighting.bend as Light
 import ../deps/bend-vulkan/examples/indexed_offscreen.bend as Mesh
@@ -78,7 +78,7 @@ def poll(renderer:Renderer) -> V.Action(Renderer & V.WindowSnapshot):
   Renderer{+window,target,resident,probe} = renderer
   WindowState{Host.Context{native,instance,physical,surface,device,g,p},pool,command,acquire,render,present,finished,light} = window
   do V.Action<Renderer & V.WindowSnapshot>:
-    snapshot : V.WindowSnapshot <- V.NativeWindow.poll(native,16)
+    snapshot : V.WindowSnapshot <- Host.poll(native,16)
     return (Renderer{window,target,resident,probe},snapshot)
 
 def record(renderer: WindowState, target: Indexed.Target, frame: Indexed.Frame, +lease: V.Acquisition, camera: M.Mat4, +resident:G.Resident, items:List<&2,Draw.DrawItem>,+probe:Diag.Probe) -> V.Action(Diag.Probe):

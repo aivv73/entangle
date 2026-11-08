@@ -1,9 +1,9 @@
 import Base
-import ../../deps/bend-vulkan/tools/window_verification/input/uitest.bend as UI
-import ../../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
-import ../../deps/bend-vulkan/tools/window_verification/pixels.bend as Pixels
-import ../../deps/bend-vulkan/examples/verify_window.bend as Existing
-import ../../deps/bend-vulkan/tools/verification.bend as Check
+import ../window-verification/input/uitest.bend as UI
+import ../window-verification/bridge.bend as Host
+import ../window-verification/pixels.bend as Pixels
+import ../window-verification/existing.bend as Existing
+import ../window-verification/check.bend as Check
 import ../verify-window.bend as Window
 import ../verify-textured-window.bend as Texture
 

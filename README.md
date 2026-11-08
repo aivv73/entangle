@@ -46,6 +46,19 @@ cd entangle
 git submodule update --init --recursive --filter=blob:none
 ```
 
+The [bend-vulkan update record](docs/verification/2026-11-08-bend-vulkan/README.md)
+records the published library and collections pins. Entangle owns its Bend
+2.0.40 window-event adapter and live-window verification helpers; the upstream
+submodules remain unmodified.
+
+For an existing checkout, synchronize submodule URLs before updating because
+bend-vulkan now uses the aivv73 bend-collections fork:
+
+```sh
+git submodule sync --recursive
+git submodule update --init --recursive --filter=blob:none
+```
+
 Build the pinned compiler with `bend tools/build-bend-toolchain.bend`, then
 prepend the printed `bin` directory to `PATH` before building the demo. This
 checks the exact release revision, real component output, and native

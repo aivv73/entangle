@@ -1,5 +1,5 @@
 import Base
-import ../deps/bend-vulkan/tools/verification.bend as Check
+import ./window-verification/check.bend as Check
 
 def compare(names:List<&2,String>,+before:String,+after:String) -> IO(Unit):
   match names:

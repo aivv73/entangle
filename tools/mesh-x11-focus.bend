@@ -1,5 +1,5 @@
 import Base
-import ../deps/bend-vulkan/tools/verification.bend as Check
+import ./window-verification/check.bend as Check
 
 def sent(pair:Socket & Result<&1,&1,(U32 & String) & List<&2,U32>,Unit>) -> IO(Socket):
   match pair:

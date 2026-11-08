@@ -8,5 +8,5 @@ def native_target() -> String: "x86_64-pc-linux-gnu"
 
 def dependencies() -> List<(String & String)>:
   [("deps/bendvy", "16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee"),
-   ("deps/bend-vulkan", "979a8c2840dcdfd53f41cd70ebaed8de74ec8bed"),
-   ("deps/bend-vulkan/deps/bend-collections", "bc78c4f4cabb536a2a1dd6e308b6a8f0afafda7c")]
+   ("deps/bend-vulkan", "190023575c64915677ae02e4d5ef082b51c239e9"),
+   ("deps/bend-vulkan/deps/bend-collections", "32526a9a3d82ffc988bf4a122f8c37240a70a87b")]

@@ -29,22 +29,24 @@ def main() -> IO(Unit):
     directory:String <- S.run("mktemp",["-d","build/verification/pointer-controls-XXXXXXXX"])
     +dest:String = String.trim(directory)
     IO.print("Pointer ABI evidence: " ++ dest)
-    _:String <- S.run("cp",["-R","--reflink=auto","--","tools","deps",dest])
+    _:String <- S.run("cp",["-R","--reflink=auto","--","src","tools","deps","toolchain.bend",dest])
     _:String <- S.run("mkdir",["-p",dest ++ "/build"])
     Files.save(dest ++ "/run.status","1\n")
     command(dest,"driver-build",["bend","tools/verify-pointer-window.bend","-o","build/verify-pointer-window"],False{})
     gate(dest,"baseline",False{})
-    +path:String = dest ++ "/deps/bend-vulkan/src/x11.c"
+    +path:String = dest ++ "/src/vulkan-window.c"
     +original:String <- S.read(path)
     +changed:String <- Replace.replaced(Replace.replace(String.split(original,'\n'),
       "          value=bv_mouse_event(e,CID(Press),event.xbutton.x,event.xbutton.y,event.xbutton.time,button==Button1 ? 0 : button==Button2 ? 1 : 2,event.type==ButtonPress);",
       "          value=bv_mouse_event(e,CID(Press),event.xbutton.x,event.xbutton.y,event.xbutton.time,button==Button1 ? 0 : button==Button3 ? 1 : 2,event.type==ButtonPress);"))
     Files.save(path,changed)
     Files.save(dest ++ "/mutated-x11.c",changed)
-    command(dest,"mutation-bundle",["python3","deps/bend-vulkan/tools/generate.py"],False{})
+    command(dest,"wrong-button-correspondence",["bend","tools/window-verification/generate.bend"],True{})
+    +correspondence:String <- S.read(dest ++ "/wrong-button-correspondence.log")
+    S.require(String.contains(correspondence,"Vulkan window adapter differs"),"Pointer control did not reject adapter correspondence")
     gate(dest,"wrong-button",True{})
     Files.save(path,original)
-    command(dest,"restored-bundle",["python3","deps/bend-vulkan/tools/generate.py"],False{})
+    command(dest,"restored-correspondence",["bend","tools/window-verification/generate.bend"],False{})
     gate(dest,"restored",False{})
     Files.save(dest ++ "/run.status","0\n")
     IO.print("Native pointer ABI baseline, named W3C button regression rejection, and restored baseline passed.")

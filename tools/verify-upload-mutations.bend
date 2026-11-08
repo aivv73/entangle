@@ -63,7 +63,7 @@ def main() -> IO(Unit):
     mutation(root,dest,"forged-constructor","import Base\nimport ./scene-buffer.bend as Different\ndef attempt() -> Different.Buffer:\n  Different.Buffer{0,0,0}\n")
     mutation(root,dest,"internal-helper","import Base\nimport ./scene-buffer.bend as Different\ndef attempt() -> U32:\n  Different.uploaded\n")
     mutation(root,dest,"staging-import","import Base\nimport ../deps/bend-vulkan/src/upload.bend as Alternate\ndef attempt() -> U32:\n  Alternate.stage_valid\n")
-    mutation(root,dest,"dependency-helper","import Base\nimport ../deps/bend-vulkan/examples/indexed_window.bend as Alternate\ndef attempt() -> U32:\n  Alternate.upload\n")
+    mutation(root,dest,"dependency-helper","import Base\nimport ../deps/bend-vulkan/examples/indexed_offscreen.bend as Alternate\ndef attempt() -> U32:\n  Alternate.buffer\n")
     mutation(root,dest,"foreign-effect","import Base\ndef attempt() -> IO(Unit):\n  import \"./upload-mutation.c\"\n")
     mutation(root,dest,"outside-scope-import","import Base\nimport ../docs/archived.bend as Outside\n")
     save(dest ++ "/src/upload-wrapper.bend","import Base\nimport ../deps/bend-vulkan/Vulkan.bend as Hidden\ndef bypass() -> U32:\n  Hidden.Device.write_memory\n")

@@ -36,6 +36,7 @@ def plan(+names:List<&2,String>) -> List<&2,Step>:
   +laws:Bool = proofs || assets || upload || failures || presentation || selected(names,"math") || selected(names,"hierarchy")
   List.concat(&2,Step,[
     [Step{"toolchain","precondition","bend",["tools/verify-toolchain.bend"]}],
+    add(laws || hierarchy_formal,[Step{"window-abi","source-correspondence","bend",["tools/window-verification/generate.bend"]}]),
     add(laws || hierarchy_formal || selected(names,"window") || selected(names,"textured-window") || selected(names,"hierarchy-window"),native("boundary","source-policy","tools/verify-upload-boundary.bend",[])),
     add((laws || hierarchy_formal) && Bool.not(baseline),[Step{"frontend","frontend","bend",["PROOF.bend"]}]),
     add(laws,native("publication","frontend-and-sensitivity","tools/verify-publication.bend",["--mutations"])),

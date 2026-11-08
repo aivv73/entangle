@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 8, 2026 · updated for the Bend 2.0.40 migration
+**Revision:** 6 · November 8, 2026 · updated for Bend 2.0.40 and bend-vulkan
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
@@ -17,6 +17,13 @@ an extended passing production proof and live teardown evidence before enablemen
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
+**Vulkan dependency update:** complete locally [S57]. The working tree uses published GitHub revision
+`1900235` and its bend-collections fork `32526a9`. Entangle retains the qualified
+Bend 2.0.40 pointer conversion and window verification helpers in its own source.
+The [update record](docs/verification/2026-11-08-bend-vulkan/README.md) records
+all 23 required workflow stages, the separate OBJ window run, inspected
+captures, clean validation, and cleanup. Publication remains separate.
+
 **Hierarchy formal verification:** the first proof layer adds four kernel-checked
 hierarchy laws plus frontend cardinality and certified complete publication laws.
 The [skill](.agents/skills/verify-hierarchy-formal/SKILL.md) and
@@ -29,7 +36,8 @@ and the Bun 1.4.4 compiler host. The pointer ABI, native window bridge, and
 input adapter are migrated. Implementation and verification are complete locally. The
 [upgrade record](docs/verification/2026-11-07-bend-2.0.40/README.md) distinguishes
 the complete product and math receipts, headless and OBJ window evidence,
-proof limits, and the unpushed dependency compatibility commit. This does
+proof limits, and the original unpushed dependency compatibility commit. The
+current published Vulkan pin and engine-owned adapter are recorded in [S57]. This does
 not complete R0's ownership audit.
 
 **Next release:** `v0.1-alpha` — two non-voxel applications, a public API, a persistent scene representation, and the first practically useful proven guarantee.
@@ -109,7 +117,7 @@ not complete R0's ownership audit.
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** use the qualified Bend 2.0.40 toolchain. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** use the qualified Bend 2.0.40 toolchain and verified published Vulkan pin [S57]. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -322,6 +330,7 @@ Baseline, environment, and results: [library split report](deps/bend-vulkan/.aud
 ### Tasks
 
 - [x] Create a separate engine project. Pin compatible Bendvy and `bend-vulkan` revisions on one native toolchain. Completed locally in Entangle on November 2, 2026 [S25].
+- [x] Update to published GitHub `bend-vulkan` revision `1900235` and its collections fork, retaining Bend 2.0.40 window behavior. Completed and verified locally on November 8, 2026 [S57].
 - [x] Add project components `Transform`, `Velocity`, `MeshRef`, and `MaterialRef`. Structural laws and the native consumer are gated by `bend tools/verify.bend`.
 - [x] Create 100 entities sharing a mesh; a Bendvy system changes their position or orientation. Completed on `main` at `ff71773` with shared logical `MeshRef{7}` and translation updates [S26]. The offscreen consumer now supplies the shared mesh payload [S28].
 - [x] Extract only drawing data into a small `DrawList`, not a copy of the entire World. Committed at `feeaa7f`, with proofs and native verification [S27].
@@ -1032,5 +1041,9 @@ Tracked by [trail 21](https://entire.com/et/bend-engine/-/trails/21).
   presentation require an extended passing proof and runtime evidence before
   enablement. Implementation and verification are complete locally; no new
   commit or publication is recorded.
+
+### Published Vulkan dependency
+
+- [S57] Working-tree update based on `cde9752`, November 8, 2026. Entangle pins published GitHub bend-vulkan `1900235` and bend-collections `32526a9`. The Vulkan API, native handlers, and U64 source match the previous base. Engine-owned window support preserves Bend 2.0.40 input behavior while the submodules remain clean. The [update record](docs/verification/2026-11-08-bend-vulkan/README.md) links the complete 23-stage `native hierarchy textured-window` receipt, new pointer correspondence and runtime controls, separate OBJ window evidence, inspected captures, clean validation, exact resets, full-state replay, and cleanup. Implementation and selected verification are complete locally. Available-device Linux checks retain their documented proof limits and make no publication or merge claim.
 
 Source file for revision 6: `ROADMAP_updated_v5.md`. Revision 4 clarified the direction and added a verifiable simulation track; revision 5 recorded the independent E0 window example; revision 6 closed E0 after its clean-checkout gate. Subsequent updates close E1 [S25–S30] and E2 [S31–S37]. E3 checker selection [S38], the universal numeric theorem, production upload enforcement [S39], scoped ABI/transport verification [S40], mesh replacement [S48], buffer-retention verification [S49], failure-handler verification [S50–S51], and sampled-image retention [S52] complete E3 under the recorded verification limits. Resource-lifetime verification [S55] extends those checks. Dependency research [S41–S47] narrows future candidates without changing those statuses. Textured rendering [S53] and scene hierarchy [S54] complete their E4 tasks. E4–E7 and R0–R4 remain incomplete.

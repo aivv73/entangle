@@ -2,7 +2,7 @@ import Base
 import ./upload-boundary/scan.bend as S
 import ./verify-native-failures.bend as Native
 import ../proofs/native-failures/tool.bend as Tool
-import ../deps/bend-vulkan/tools/verification.bend as Output
+import ./window-verification/check.bend as Output
 import ../proofs/presentation/frontend.bend as Frontend
 
 def targets() -> List<&2,String>:

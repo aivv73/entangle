@@ -2,7 +2,7 @@ import Base
 import ../native-failures/extract.bend as Extract
 import ../../tools/verify-native-failures.bend as Native
 import ../../tools/upload-boundary/scan.bend as S
-import ../../deps/bend-vulkan/tools/verification.bend as Output
+import ../../tools/window-verification/check.bend as Output
 
 def ordered(wanted:List<&2,String>,lines:List<&2,String>) -> Bool:
   match wanted lines:

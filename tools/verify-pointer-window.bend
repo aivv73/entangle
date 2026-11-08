@@ -1,8 +1,8 @@
 import Base
 import ./mesh-x11-focus.bend as X
-import ../deps/bend-vulkan/tools/window_verification/bridge.bend as Host
-import ../deps/bend-vulkan/examples/verify_window.bend as Existing
-import ../deps/bend-vulkan/tools/verification.bend as Check
+import ./window-verification/bridge.bend as Host
+import ./window-verification/existing.bend as Existing
+import ./window-verification/check.bend as Check
 
 def event(+id:U32,kind:U32,+button:U32,mask:U32) -> List<&2,U32>:
   List.concat(&2,U32,[[25,0,11,0],X.le(id),X.le(mask),[kind,button,0,0],X.le(U32.add(305419896,button)),X.le(0),X.le(id),X.le(0),[0,0,0,0,244,255,34,0,0,0,1,0]])
