@@ -1,6 +1,6 @@
 import Base
 import bend-window-capture@0.1.0.2/capture.bend as Capture
-import ./window-verification/input/uitest.bend as UI
+import bend-ui-test@0.1.0.2/uitest.bend as UI
 import ./window-verification/bridge.bend as Host
 import ./window-verification/pixels.bend as Pixels
 import ./window-verification/existing.bend as Existing

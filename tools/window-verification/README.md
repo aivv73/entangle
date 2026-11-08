@@ -5,8 +5,9 @@ used by Entangle's previous Entire dependency. These files retain those helpers
 from `a144f7dd4fb4835ca3d5ce17350fc850de049038`, with the already qualified
 [Bend 2.0.40 patch](../../docs/verification/2026-11-07-bend-2.0.40/bend-vulkan.patch).
 `existing.bend` retains the shared process, capture, and file helpers;
-`check.bend` reads the central compiler pin. The input adapter's source and
-package hash are in [input/README.md](input/README.md).
+`check.bend` reads the central compiler pin. Window drivers import
+`bend-ui-test@0.1.0.2` directly. Its immutable package hash and qualification
+are in the [input dependency update record](../../docs/verification/2026-11-08-bend-ui-test/README.md).
 
 The production boundary is [src/vulkan-window.bend](../../src/vulkan-window.bend).
 Its generated C uses the upstream native registry and X11 implementation.
@@ -24,7 +25,7 @@ bend tools/window-verification/generate.bend -o build/generate-vulkan-window
 bend tools/window-verification/generate.bend
 ```
 
-The workflow runs the correspondence check. Its source policy hashes the three
+The workflow runs the correspondence check. Its source policy hashes the two
 Bend modules declaring native effects. The owned window launcher runs the real
 pointer probe, rejects a deliberate middle/right button regression through both
 correspondence and observed events, then restores the passing source. Use the

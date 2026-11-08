@@ -1,4 +1,4 @@
-bend-ui-test@0.1.0.1/uitest.bend send_to
+bend-ui-test@0.1.0.2/uitest.bend send_to
 bend-window-capture@0.1.0.2/capture.bend Capture
 deps/bend-vulkan/Vulkan.bend AcquireNotReady
 deps/bend-vulkan/Vulkan.bend AcquireOutOfDate
@@ -488,7 +488,7 @@ deps/jonlib-png/codec.bend Truncated
 deps/jonlib-png/png.bend decode
 emerging-ezimg@1.3.0.0/main.bend Raster
 emerging-ezimg@1.3.0.0/main.bend decode_png
-module bend-ui-test@0.1.0.1/uitest.bend
+module bend-ui-test@0.1.0.2/uitest.bend
 module bend-window-capture@0.1.0.2/capture.bend
 module deps/bend-vulkan/PROOF.bend
 module deps/bend-vulkan/Vulkan.bend
@@ -561,7 +561,7 @@ module deps/jonlib-obj/obj.bend
 module deps/jonlib-png/codec.bend
 module deps/jonlib-png/png.bend
 module emerging-ezimg@1.3.0.0/main.bend
-package bend-ui-test@0.1.0.1/uitest.bend
+package bend-ui-test@0.1.0.2/uitest.bend
 package bend-window-capture@0.1.0.2/capture.bend
 package emerging-ezimg@1.3.0.0/main.bend
 package 0x37aacddc1dcb57464b8b5ac6c397bd64/json.bend
