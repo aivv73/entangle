@@ -1,5 +1,6 @@
 import Base
 import ./image-decoder/common.bend as C
+import ../toolchain.bend as Pin
 
 def run(+name:String) -> IO(Unit):
   do IO<Unit>:
@@ -12,6 +13,9 @@ def run(+name:String) -> IO(Unit):
 
 def main() -> IO(Unit):
   do IO<Unit>:
+    +version:String <- C.command("bend",["version"])
+    C.require(String.eq(String.trim(version),Pin.bend_version()),"OBJ verification requires " ++ Pin.bend_version() ++ "; found " ++ String.trim(version))
+    IO.write(version)
     _:String <- C.command("mkdir",["-p","build/model-obj/bin"])
     output:String <- C.command("sha256sum",["-c","deps/jonlib-obj/SHA256SUMS"])
     IO.write(output)
