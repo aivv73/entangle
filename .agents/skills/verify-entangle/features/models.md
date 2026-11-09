@@ -14,7 +14,10 @@ bend tools/verify-models.bend -o build/verify-models
 ./build/verify-models +RTS --threads 1 --gpu off
 ```
 
-The Bend driver verifies the exact pinned parser and licenses, complete source
+The Bend driver first requires the Bend version in `toolchain.bend` (currently
+2.0.40). The standalone source closure needs no Jonlib compiler overlay; see the
+[compatibility record](../../../../docs/verification/2026-11-09-jonlib-bend/README.md).
+It verifies the exact pinned parser and licenses, complete source
 words and labels against independent authored values, generated text/index
 properties, reachable bounds, real file/cache/retry and closure behavior,
 isolated production mutations, and a source-only inventory without Creation,

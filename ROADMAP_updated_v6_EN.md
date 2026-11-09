@@ -30,6 +30,16 @@ is removed. The [update record](docs/verification/2026-11-08-bend-ui-test/README
 retains native qualification, the complete window workflow, separate OBJ
 evidence, and the compiler stack settings needed by the passing gate.
 
+**Standalone Jonlib compiler compatibility:** verified locally on stock Bend
+2.0.40, the latest stable release checked November 9, 2026. The OBJ and PNG
+drivers enforce the repository compiler pin. Their complete dedicated suites,
+root frontend proofs, and native JSON consumer pass with the original upstream
+sources and integrity hashes. The [compatibility record](docs/verification/2026-11-09-jonlib-bend/README.md)
+retains version-rejection controls and the intermittent initial PNG descriptor
+measurement. The registered workflow remains blocked by the Clang distribution
+preflight; the next validation step is to qualify that toolchain and rerun
+`native images json`. This does not close any additional E4 feature.
+
 **Hierarchy formal verification:** the first proof layer adds four kernel-checked
 hierarchy laws plus frontend cardinality and certified complete publication laws.
 The [skill](.agents/skills/verify-hierarchy-formal/SKILL.md) and

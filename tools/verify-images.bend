@@ -1,5 +1,6 @@
 import Base
 import ./image-decoder/common.bend as C
+import ../toolchain.bend as Pin
 
 def command(program:String,args:List<String>) -> IO(Unit):
   do IO<Unit>:
@@ -8,6 +9,9 @@ def command(program:String,args:List<String>) -> IO(Unit):
 
 def main() -> IO(Unit):
   do IO<Unit>:
+    +version:String <- C.command("bend",["version"])
+    C.require(String.eq(String.trim(version),Pin.bend_version()),"PNG verification requires " ++ Pin.bend_version() ++ "; found " ++ String.trim(version))
+    IO.write(version)
     command("mkdir",["-p","build/image-comparison"])
     command("sha256sum",["-c","deps/jonlib-png/SHA256SUMS"])
     command("sha256sum",["-c","docs/verification/2026-11-04-image-decoder/corpus/SHA256SUMS"])
