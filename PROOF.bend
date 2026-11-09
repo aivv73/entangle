@@ -19,7 +19,6 @@ import ./src/creation.bend as Create
 import ./src/measurement-counters.bend as Counts
 import ./src/scene-matrix.bend as Render
 import ./deps/bend-vulkan/PROOF.bend as Vulkan
-import ./deps/bendvy/test-fixtures/execution-laws/PROOF.bend as ECS
 import ./tools/component-consumer.bend as Consumer
 import ./examples/scene-seeds.bend as Seeds
 import Base
@@ -35,10 +34,9 @@ import ./LAWS.bend as Laws
 import ./src/asset.bend as Asset
 import ./src/scene-spawn.bend as Spawn
 import ./src/scene-schema.bend as SceneSchema
-import ./deps/bendvy/src/ecs/execution-command-removed.bend as Removed
+import ./deps/bendvy/src/ecs/world.bend as W
 
-def Laws.scene_sync_boundary_pair(id,requested,remaining):
-  {==}
+def Laws.scene_sync_boundary_pair(spawn,move):{==}
 
 def Laws.vec3_reconstruct(value):
   match value:
@@ -94,14 +92,13 @@ def Laws.translation_replacement(old, translation, rotation, scale):
 def Laws.scene_step_adapter(state):
   {==}
 
-def Laws.scene_move_view_independent(H,modify,scope,handle,left,right,rest):
-  {==}
+def Laws.scene_move_view_independent(left,right,value):{==}
 
-def Laws.scene_move_current_component(H,modify,scope,handle,view,rest):
-  {==}
+def Laws.scene_move_current_component(H,cap,scope,handle,value):{==}
 
-def Laws.scene_move_query_refusal(H,modify,scope):
-  {==}
+def Laws.scene_move_query_refusal(H,cap,scope,mode,handle):{==}
+
+def Laws.scene_move_write(H,cap,scope,value):{==}
 
 def Laws.scene_translation(x,y,z,rotation,scale):
   {==}
@@ -119,8 +116,7 @@ def Laws.scene_seed_count(count,index):
     case 1n++rest:
       Equal.cong(Nat,Nat,n => 1n+n,List.length(&2,Create.Seed,Seeds.values(rest,U32.inc(index))),rest,Laws.scene_seed_count(rest,U32.inc(index)))
 
-def Laws.scene_empty_bootstrap(F,effects,H,Q,caps,commands,scope,queue,handles):
-  {==}
+def Laws.scene_empty_bootstrap(world,handles):{==}
 
 def Laws.draw_payload(handle,transform,mesh,accepted,local_bounds,lit,global,bounds):{==}
 
@@ -416,11 +412,7 @@ def Laws.creation_bad_transform_third(number):{==}
 
 def Laws.creation_duplicate_preserves_geometry(id,mesh,material,pairs,geometry,next):{==}
 
-def Laws.creation_bundle_count(seeds):
-  match seeds:
-    case []:{==}
-    case Create.Seed{transform,mesh,spatial} <> +rest:
-      Equal.cong(Nat,Nat,n => 1n+n,List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(rest)),List.length(&2,Create.Seed,rest),Laws.creation_bundle_count(rest))
+def Laws.creation_bundle_count(seeds):{==}
 
 def Laws.player_key_106_last_state(a,b,keys):
   match keys:
@@ -468,16 +460,22 @@ def Laws.player_translation_preserves_pose(current,d):
   match current d:
     case C.Transform{C.Vec3{x,y,z},r,s} C.Vec3{dx,dy,dz}:{==}
 
-def Laws.player_boot_no_write(H,modify,scope):{==}
-def Laws.player_idle_no_write(H,modify,scope,h,keys,initial):{==}
-def Laws.player_writer_retained_handle(H,modify,scope,h,keys,initial):{==}
-def Laws.player_reset_writer(H,modify,scope,h,keys,initial):{==}
+def Laws.player_boot_no_write(entity,current):{==}
+
+def Laws.player_idle_no_write(keys,current,initial,idle):
+  Equal.cong(Bool,Maybe<&2,C.Transform>,stop => Bool.pick(Maybe<&2,C.Transform>,stop,None{},Player.moved(Player.translate(keys,current))),Player.idle(keys),True{},idle)
+
+def Laws.player_writer_retained_handle(h,entity,keys,initial,current,reset):
+  match h entity:
+    case W.Handle{ln,lk} W.Handle{rn,rk}:{==}
+
+def Laws.player_reset_writer(keys,current,initial):{==}
 
 def Laws.player_inactive_clock_anchor(clock,now):{==}
 def Laws.player_active_clock_policy(clock,now):{==}
 def Laws.player_native_focus_boundary(rest):{==}
 
-def Laws.player_query_gate(H,modify,state,scope):{==}
+def Laws.player_query_gate(H,cap,scope):{==}
 
 def Laws.upload_range_universal(c,o,l):
   UploadLaws.universal(c,o,l)

@@ -17,6 +17,7 @@ import ../examples/mesh-playground-content.bend as Content
 import ../examples/scene.bend as Check
 import ./verify-creation.bend as Creation
 import ../deps/bendvy/src/ecs/inspector.bend as I
+import ../deps/bendvy/src/ecs/world.bend as W
 
 def observed(pair:Play.Application() & (I.Instance<D.Schema> & Result<&2,&2,Unit,Old.Snapshot>)) -> IO(Play.Application() & List<&2,Old.Row>):
   match pair:
@@ -150,16 +151,40 @@ def apply_action(action:Action,+baseline:List<&2,Old.Row>,pair:Play.Application(
         action_result(2,rows,baseline,after)
     case Origin{}, (app,+rows):action_result(0,rows,baseline,(app,rows))
 
-def result_rows(pair:Play.Application() & List<&2,Old.Row>) -> IO(String):
-  (_,rows) = pair
-  IO.pure(String,Evidence.rows(rows))
+type Replay is Data:
+  Replay{namespace:U32,state:String}
+
+# Independent worlds have different namespaces. Compare through one checked
+# namespace bijection, retaining every entity index/generation and payload bit.
+def scoped_rows(rows:List<&2,Old.Row>,+namespace:U32) -> Result<&2,&2,Unit,String>:
+  match rows:
+    case []:Done{""}
+    case Old.Row{W.Handle{actual,key},transform,mesh} <> rest:
+      do Result<&2,&2,Unit,String>:
+        _:Unit <- Bool.pick(Result<&2,&2,Unit,Unit>,U32.is_eq(actual,namespace),Done{Unit{}},Fail{Unit{}})
+        suffix:String <- scoped_rows(rest,namespace)
+        return Evidence.row(Old.Row{W.Handle{0,key},transform,mesh}) ++ ";" ++ suffix
+
+def scoped_result(namespace:U32,result:Result<&2,&2,Unit,String>) -> IO(Replay):
+  match result:
+    case Done{state}:IO.pure(Replay,Replay{namespace,state})
+    case _:IO.die(Replay,1,"Replay rows crossed world namespaces")
+
+def replay_rows(first:List<&2,Old.Row>,rows:List<&2,Old.Row>) -> IO(Replay):
+  match first:
+    case Old.Row{W.Handle{+namespace,_},_,_} <> _:scoped_result(namespace,scoped_rows(rows,namespace))
+    case _:IO.die(Replay,1,"Replay has no player")
+
+def result_rows(pair:Play.Application() & List<&2,Old.Row>) -> IO(Replay):
+  match pair:
+    case (_,+rows):replay_rows(rows,rows)
 
 
-def actions(xs:List<&2,Action>,+baseline:List<&2,Old.Row>,pair:Play.Application() & List<&2,Old.Row>) -> IO(String):
+def actions(xs:List<&2,Action>,+baseline:List<&2,Old.Row>,pair:Play.Application() & List<&2,Old.Row>) -> IO(Replay):
   match xs:
     case []:result_rows(pair)
     case action <> rest:
-      do IO<String>:
+      do IO<Replay>:
         next:Play.Application() & List<&2,Old.Row> <- apply_action(action,baseline,pair)
         actions(rest,baseline,next)
 
@@ -172,12 +197,12 @@ def script() -> List<&2,Action>:
    Hold{32,True{}},Hold{106,True{}},Ticks{0n},Ticks{1n},Origin{},Stable{4n},Hold{106,True{}},Changed{2n},Active{False{}},Stable{4n},Active{True{}},Stable{4n},
    Hold{108,True{}},Hold{117,True{}},Hold{107,True{}},Ticks{200n},Stable{4n},Hold{32,True{}},Ticks{1n},Origin{},Stable{4n}]
 
-def replay_started(pair:Play.Application() & List<&2,Old.Row>) -> IO(String):
+def replay_started(pair:Play.Application() & List<&2,Old.Row>) -> IO(Replay):
   (app,+rows) = pair
   actions(script(),rows,(app,rows))
 
-def replay(+seeds:List<&2,Create.Seed>) -> IO(String):
-  do IO<String>:
+def replay(+seeds:List<&2,Create.Seed>) -> IO(Replay):
+  do IO<Replay>:
     app:Play.Application() <- Play.create(seeds)
     pair:Play.Application() & List<&2,Old.Row> <- snapshot(app)
     pair:Play.Application() & List<&2,Old.Row> <- initial_rows(seeds,pair)
@@ -230,13 +255,20 @@ def retained(seeds:List<&2,Create.Seed>,geometry:Create.Geometry) -> IO(Unit):
     first:Play.Application() & List<&2,Old.Row> <- snapshot(app)
     retained_started(geometry,first)
 
+def replay_equal(left:Replay,right:Replay) -> IO(Unit):
+  Replay{ln,first} = left
+  Replay{rn,second} = right
+  do IO<Unit>:
+    Check.require(Bool.not(U32.is_eq(ln,rn)),"Independent ECS worlds share a namespace")
+    Check.require(String.eq(first,second),"Real ECS replay changed scoped identities or bits")
+
 def verified(compiled:Create.Compiled) -> IO(Unit):
   Create.Compiled{+seeds,+geometry} = compiled
   do IO<Unit>:
     Check.require(Create.geometry_valid(geometry) && ranges(geometry) && shape_counts(Content.octahedron(),6n,8n) && shape_counts(Content.tetrahedron(),4n,4n) && shape_counts(Content.prism(),6n,8n) && shape_counts(Content.platform(),8n,12n),"Compiled geometry invalid")
-    +first:String <- replay(seeds)
-    second:String <- replay(seeds)
-    Check.require(String.eq(first,second),"Real ECS replay changed full identities or bits")
+    first:Replay <- replay(seeds)
+    second:Replay <- replay(seeds)
+    replay_equal(first,second)
     retained(seeds,geometry)
     IO.print("Real ECS per-tick invariants and deterministic replay passed: held, repeat, release, opposites on all axes, zero-step pending reset, one-shot reset, focus clear, bounds, static transforms/identities/mesh and player rotation/scale.")
 

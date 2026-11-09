@@ -51,4 +51,9 @@ def main() -> IO(Unit):
       "    case Create.Seed{t,m,H.Spatial{H.Local{_,p,_,_},g,_}} <> rest:Draw.item(p,t,m,g) <> draws(rest)",
       "    case Create.Seed{t,m,H.Spatial{H.Local{_,p,_,_},g,_}} <> rest:Draw.DrawItem{t,m} <> draws(rest)",
       "hierarchy/render","Static textured consumer discarded derived transforms")
-    IO.print("Hierarchy baseline, seven production regressions and seven restored baselines passed")
+    Gate.gate(dest,"baseline-world-namespaces","verify-mesh-playground","")
+    mutation(dest,"world-namespace","src/scene.bend",
+      "    world:WI.Creation<D.Schema,D.Store,Unit,Unit> <- WI.create(~D.Schema,~D.Store,~Unit,~Unit,~D.empty,Unit{})",
+      "    world:WI.Creation<D.Schema,D.Store,Unit,Unit> <- WI.with_namespace(~D.Schema,~D.Store,~Unit,~Unit,~D.empty,1,Unit{})",
+      "verify-mesh-playground","Independent ECS worlds share a namespace")
+    IO.print("Hierarchy and world identity baselines, eight production regressions and eight restored baselines passed")

@@ -1,6 +1,10 @@
 # Hierarchy formal verification
 
-Source baseline: `601ac1f1422a6c3fb869d20a22f357ffae438c54`.
+Original source baseline: `601ac1f1422a6c3fb869d20a22f357ffae438c54`.
+The [ECS migration record](../../docs/verification/2026-11-09-ecs-migration/README.md)
+records current working-tree synchronization against Bendvy `59833ad`, including
+the migrated production witnesses and fresh mutation/kernel receipts. The
+original dated results below remain historical evidence for their own sources.
 
 ## Observable acceptance
 
@@ -56,11 +60,12 @@ cycle and missing-parent entry laws hold for arbitrary transforms/bounds/lit
 flags, independent of numerical admission.
 
 `install_complete` proves that every certified row/value pair reaches the supplied
-final scope. `ready` requires success from **both** transform and spatial optional
-write results at every intermediate scope. `commit_administration` retains the
-supplied administration and invocation. `one_row_read` and `one_row_ready` qualify
-actual checked access through the production schema, lenses, columns and stamps
-at physical slot zero, with arbitrary component payloads, stamps and ticks. This
+final scope. `ready` requires **both** transform and spatial canonical write
+results to be `True` at every intermediate world. `commit_administration` finishes
+only the run scope owned by that commit, preserving an enclosing active run.
+`one_row_read` and `one_row_ready` qualify actual checked access through the
+production schema families, World allocator, default indexed columns and stamps for live entity
+slot one (payload cell zero), with arbitrary payloads, stamps and ticks. This
 is a concrete schema qualification, not a mock or a proof of every column tree.
 
 `propagation_rejection` restores accepted checkpoints through canonical commit.
@@ -83,7 +88,7 @@ The full requested all-forest atomic publication contract remains **incomplete**
   and a nonempty qualification do not imply general certificate existence.
 
 The recommended next work is the retained-access bridge. It discharges the exact
-reason `install` can discard optional results and supports the broader publication
+reason `install` can discard checked write results and supports the broader publication
 contract. Do not redesign product code or weaken this obligation merely to obtain
 an unconditional-looking proof. Numerically admissible acyclic forests remain
 separate from a theorem of floating-point accuracy.

@@ -70,17 +70,19 @@ preserves fractional time, and ignores clock regression until the high-water
 sample is exceeded. Every executed step validates and extracts. Rendering uses
 the final list and reuses it on zero-step polls.
 
-[Scene.configure](../src/scene.bend) disables automatic deferred barriers, enables
-final apply, and inserts an explicit barrier before movement. Bootstrap precedes
-movement, so its deferred spawns are visible to movement in the same tick.
-[Bendvy's deferred executor](../deps/bendvy/src/ecs/execution-deferred-schedule.bend)
-performs final apply on successful schedule completion. These existing barriers
-are part of the current scene schedule, not eight application phases.
+[Scene.steps](../src/scene-runtime.bend) builds bootstrap, barrier, movement,
+barrier using the current [Bendvy schedule](../deps/bendvy/src/ecs/schedule.bend).
+Bootstrap's deferred spawns are visible to movement in the same tick. The static
+schedule also executes remaining steps and barriers after a system error, then
+returns the first error; Entangle's tick rejects that result without retry.
+These two explicit barriers are part of the scene schedule, not eight separate
+application phases.
 
-The [schema](../src/scene-schema.bend) contains `Transform` and `MeshRef`.
-There is no hierarchy or global-transform propagation phase.
-[Extraction](../src/scene-observe.bend) copies those components into detached
-`DrawItem` values. The target global-transform phase therefore remains future work.
+The [schema](../src/scene-schema.bend) owns `Transform`, `MeshRef`, and `Spatial`
+columns. [Hierarchy propagation](../src/scene-hierarchy.bend) follows the schedule
+and derives globals and world bounds before extraction. Invalid derived state
+restores accepted spatial checkpoints. [Extraction](../src/scene-observe.bend)
+returns detached local or global drawing items without another writable world.
 
 The [window renderer](../src/scene-window.bend) currently combines rendering and
 completion handling inside `Win.frame`. For an acquired image, it submits drawing,
@@ -103,9 +105,10 @@ The current implementation has one frame in flight.
 - The [baseline collector](../examples/scene-window-baseline.bend) drains events
   and renders with the initial camera. It measures the shared tick, extraction,
   and renderer paths; it is not an interactive-input reference.
-- [Bendvy schedule completion](../deps/bendvy/src/ecs/execution-generalized-root-application.bend)
-  performs world lifecycle maintenance before extraction. It is not the final
-  renderer-completion phase and must not move after rendering to match its name.
+- [Bendvy schedule completion](../deps/bendvy/src/ecs/schedule.bend) returns
+  the world after the explicit final barrier. Entangle then propagates hierarchy
+  state before extraction. No removed execution-journal maintenance is implied;
+  renderer completion remains a distinct phase.
 - The executable's `completed` function handles the terminal application result
   after [App's resource scope](../src/app.bend) returns. It is shutdown handling,
   not a per-frame phase.

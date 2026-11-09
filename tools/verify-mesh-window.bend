@@ -177,7 +177,11 @@ def color_count(pixels:List<&2,U32>,+color:U32) -> U32:
 
 def colors(frame:Pixels.Frame) -> IO(Unit):
   Pixels.Frame{_,_,+pixels} = frame
-  Check.assert(U32.is_gt(color_count(pixels,16741133),100) && U32.is_gt(color_count(pixels,55781),100) && U32.is_gt(color_count(pixels,15017650),100) && U32.is_gt(color_count(pixels,7568007),100),"Native capture must contain all four mesh materials")
+  # The 0.9 channels lie at the RGBA8 rounding boundary (229.5).
+  # Accept its two adjacent bytes; every other channel remains exact.
+  cyan:U32 = U32.add(color_count(pixels,55781),color_count(pixels,55782))
+  magenta:U32 = U32.add(color_count(pixels,15017650),color_count(pixels,15083186))
+  Check.assert(U32.is_gt(color_count(pixels,16741133),100) && U32.is_gt(cyan,100) && U32.is_gt(magenta,100) && U32.is_gt(color_count(pixels,7568007),100),"Native capture must contain all four mesh materials")
 
 def live(+display:String,+port:U32) -> IO(Unit):
   do IO<Unit>:
@@ -186,8 +190,8 @@ def live(+display:String,+port:U32) -> IO(Unit):
     IO.try(Unit,Host.control(id,2,0,0))
     Focus.set(port,id)
     +baseline:Pixels.Frame <- WindowCheck.wait(pid,id,WindowCheck.Populated{640,480})
-    colors(baseline)
     save("initial",baseline)
+    colors(baseline)
     axes([105,107,106,108,117,111],display,pid,id,baseline,port)
     held(display,pid,id,baseline,port)
     IO.print("Native held/repeat/opposite/release/reset, six camera controls, real focus loss, unmap/restore, repeated resize and unfocused Escape passed.")

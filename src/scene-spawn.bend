@@ -1,92 +1,57 @@
-import ../deps/bendvy/src/ecs/execution-effects.bend as Effects
 import Base
-import ./creation.bend as Create
 import ./scene-schema.bend as D
-import ./components.bend as V
-import ../deps/bendvy/src/ecs/owner-product.bend as Product
-import ../deps/bendvy/src/ecs/execution-composer-layout.bend as L
-import ../deps/bendvy/src/ecs/execution-command-system.bend as Cmd
-import ../deps/bendvy/src/ecs/execution-command-local.bend as Local
-import ../deps/bendvy/src/ecs/execution-command-permission.bend as Permission
-import ../deps/bendvy/src/ecs/execution-command-buffer.bend as Buffer
-import ../deps/bendvy/src/ecs/execution-command-removed.bend as Removed
-import ../deps/bendvy/src/ecs/execution-builder.bend as Build
-import ../deps/bendvy/src/ecs/execution-resource-program.bend as Program
-import ../deps/bendvy/src/ecs/execution-declaration.bend as Decl
-import ../deps/bendvy/src/ecs/execution-system.bend as Sys
-import ../deps/bendvy/src/ecs/execution-generalized-command-leaf.bend as Author
+import ./creation.bend as Create
 import ../deps/bendvy/src/ecs/world.bend as W
+import ../deps/bendvy/src/ecs/system.bend as Sys
+import ../deps/bendvy/src/ecs/transaction.bend as T
+import ../deps/bendvy/src/ecs/commands.bend as Cmd
+import ../deps/bendvy/src/ecs/trace-facts.bend as Trace
 
-def route() -> L.Route:L.InLeft{L.AtLeaf{}}
+type User is Data:
+  User{seeds:List<&2,Create.Seed>,handles:List<&2,W.Handle<D.Schema>>,returned:List<&2,Create.Seed>}
 
-def Ops(Permit:Data,F:(Type -> Type),H:Type,Q:Type) -> Type:Permission.EntityCommands<Q,D.Schema,D.components(),Permit,F>
+def initial(seeds:List<&2,Create.Seed>) -> User:User{seeds,[],[]}
 
-type User is Type:
-  User{seeds:List<Removed.Removed(D.components())>,handles:List<&2,W.Handle<D.Schema>>,returned:List<Removed.Removed(D.components())>}
+def installed(next:D.World() -> D.World(),pair:D.World() & Bool) -> D.World():
+  (world,_) = pair
+  next(world)
 
-def bundles(seeds:List<&2,Create.Seed>) -> List<Removed.Removed(D.components())>:
+# The deferred command owns its seed. Activation precedes these canonical
+# structural writes; no second scene store owns component values.
+def populate(world:D.World(),entity:W.Handle<D.Schema>,seed:Create.Seed) -> D.World():
+  Create.Seed{transform,mesh,spatial} = seed
+  +entity:W.Handle<D.Schema> = entity
+  installed(w => installed(w => w,D.install_spatial(w,entity,spatial)),D.install_mesh(installed(w => w,D.install_transform(world,entity,transform)),entity,mesh))
+
+def reserved(next:T.Tx<D.World(),Unit> -> List<&2,W.Handle<D.Schema>> -> T.Tx<D.World(),Unit> & (User & T.Outcome<String>),rest:List<&2,Create.Seed>,handles:List<&2,W.Handle<D.Schema>>,seed:Create.Seed,pair:T.Tx<D.World(),Unit> & W.Reservation<D.Schema>) -> T.Tx<D.World(),Unit> & (User & T.Outcome<String>):
+  match pair:
+    case (tx,W.Reserved{handle}):next(tx,handle <> handles)
+    case (tx,W.ReservationRejected{_}):(tx,(User{rest,handles,[seed]},T.Failure{"spawn reservation refused"}))
+
+def queued(seeds:List<&2,Create.Seed>,tx:T.Tx<D.World(),Unit>,handles:List<&2,W.Handle<D.Schema>>) -> T.Tx<D.World(),Unit> & (User & T.Outcome<String>):
   match seeds:
-    case []:[]
-    case Create.Seed{transform,mesh,spatial} <> rest:Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> bundles(rest)
+    case []:(tx,(User{[],List.reverse(&2,W.Handle<D.Schema>,handles),[]},T.Success{}))
+    case +seed <> +rest:reserved(tx => hs => queued(rest,tx,hs),rest,handles,seed,Cmd.tx_spawn(~D.Schema,~D.Store,~Unit,~Unit,~Create.Seed,~populate,tx,seed))
 
-def initial(seeds:List<&2,Create.Seed>) -> User:User{bundles(seeds),[],[]}
-
-def granted(~Permit:Data,~F:(Type -> Type),~H:Type,~Q:Type,-B:Type,-K:Type,book:B,result:K & Ops(Permit,
-  F,H,Q)) -> B & (K & Ops(Permit,F,H,Q)):(book,result)
-
-def declaration(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~Q:Type,~commands:Local.Commands<Q,
-  D.Schema,V.Transform>,~B:Type,~builder:Build.Builder(~D.Schema,~D.Columns(),~D.Columns(),~D.Resources(),
-  ~Permit,~F,~H,~B),~K:Type,~entity:Permission.Grant(~D.Schema,~D.components(),~Permit,~F,~Q,~K),~relations:Permission.RelationGrant(~D.Schema,
-  ~D.resources(),~Q,~K),~scopes:Permission.ScopeGrant(~D.Schema,~D.resources(),~Q,~K),book:B,permission:K) -> B & (K & Ops(Permit,
-  F,H,Q)):
-  granted(~Permit,~F,~H,~Q,B,K,book,Permission.entity(~D.Schema,~D.components(),~Permit,~F,~Q,~K,~entity,
-    permission))
-
-def seeded(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~Q:Type,seeds:List<Removed.Removed(D.components())>,
-  scope:H,queue:Q,handles:List<&2,W.Handle<D.Schema>>) -> F(H & (Q & (User & Sys.Completion<String,Unit>))):
-  Effects.pure(~F,(H & (Q & (User & Sys.Completion<String,Unit>))),effects,(scope,(queue,(User{seeds,
-    handles,[]},Sys.Success{Unit{}}))))
-
-def admitted(~F:(Type -> Type),~H:Type,~Q:Type,next:H -> Q -> List<&2,W.Handle<D.Schema>> -> List<Removed.Removed(D.components())> -> F(H & (Q & (User & Sys.Completion<String,
-  Unit>))),scope:H,handles:List<&2,W.Handle<D.Schema>>,result:Q & Buffer.SpawnAdmission<D.Schema,Removed.Removed(D.components())>) -> F(H & (Q & (User & Sys.Completion<String,
-  Unit>))):
+def finished(user:User,result:T.Returned<D.World(),String>) -> Sys.Outcome<D.World(),String,User>:
   match result:
-    case (queue,Buffer.SpawnQueued{handle}):next(scope,queue,handle <> handles,[])
-    case (queue,Buffer.SpawnRejected{bundle,_}):next(scope,queue,handles,[bundle])
+    case T.Returned{world,T.Success{}}:Sys.Succeeded{world,user}
+    case T.Returned{world,T.Failure{error}}:Sys.Failed{world,error}
 
-def queue_seeds(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~Q:Type,~spawn:Q -> Removed.Removed(D.components()) -> F(Q & Buffer.SpawnAdmission<D.Schema,
-  Removed.Removed(D.components())>),seeds:List<Removed.Removed(D.components())>,scope:H,queue:Q,handles:List<&2,
-  W.Handle<D.Schema>>,returned:List<Removed.Removed(D.components())>) -> F(H & (Q & (User & Sys.Completion<String,
-  Unit>))):
-  match seeds returned:
-    case [], []:seeded(~Permit,~F,~effects,~H,~Q,[],scope,queue,List.reverse(&2,W.Handle<D.Schema>,handles))
-    case seed <> rest, []:Effects.bind(~F,(Q & Buffer.SpawnAdmission<D.Schema,Removed.Removed(D.components())>),
-      (H & (Q & (User & Sys.Completion<String,Unit>))),effects,spawn(queue,seed),result => admitted(~F,
-      ~H,~Q,queue_seeds(~Permit,~F,~effects,~H,~Q,~spawn,rest),scope,handles,result))
-    case seeds, returned:Effects.pure(~F,(H & (Q & (User & Sys.Completion<String,Unit>))),effects,(scope,
-      (queue,(User{seeds,handles,returned},Sys.BodyError{"spawn reservation refused",Unit{}}))))
+def staged(pair:T.Tx<D.World(),Unit> & (User & T.Outcome<String>)) -> Sys.Outcome<D.World(),String,User>:
+  (tx,(user,outcome)) = pair
+  finished(user,Cmd.tx_finish(~D.Schema,~D.Store,~Unit,~Unit,~String,tx,outcome))
 
-def body(~Permit:Data,~F:(Type -> Type),~effects:Effects.Effects<F>,~H:Type,~Q:Type,~caps:Ops(Permit,
-  F,H,Q),~commands:Local.Commands<Q,D.Schema,V.Transform>,scope:H,queue:Q,user:User) -> F(H & (Q & (User & Sys.Completion<String,
-  Unit>))):
+def runner(world:D.World(),user:User) -> Sys.Outcome<D.World(),String,User>:
   match user:
-    case User{[],handles,[]}:seeded(~Permit,~F,~effects,~H,~Q,[],scope,queue,handles)
-    case User{seeds,handles,[]}:queue_seeds(~Permit,~F,~effects,~H,~Q,~Permission.spawn_field(~Q,~D.Schema,
-      ~D.components(),~Permit,~F,caps),seeds,scope,queue,handles,[])
-    case user:Effects.pure(~F,(H & (Q & (User & Sys.Completion<String,Unit>))),effects,(scope,(queue,
-      (user,Sys.BodyError{"spawn bundle retained after refusal",Unit{}}))))
+    case User{[],handles,[]}:Sys.Succeeded{world,User{[],handles,[]}}
+    case User{seeds,_,[]}:staged(queued(seeds,T.Tx{world,[],[],[],Trace.Off{}},[]))
+    case _:Sys.Failed{world,"spawn bundle retained after refusal"}
 
-def kernel(~Permit:Data,~token:Permit,~F:(Type -> Type),~effects:Effects.Effects<F>,~request:Permit -> F(W.Reservation<D.Schema>),
-  ~H:Type,~B:Type,~builder:Build.Builder(~D.Schema,~D.Columns(),~D.Columns(),~D.Resources(),~Permit,~F,
-  ~H,~B),book:B) -> B & Cmd.ScopedOps(~D.Schema,~D.components(),~D.resources(),~route(),~Ops,Permit,F,
-  H):
-  Cmd.program_for_buffer(~D.Schema,~D.Columns(),~D.Resources(),~D.components(),~D.resources(),~route(),
-    ~Ops,~declaration,~Permit,~token,~F,~effects,~request,~H,~B,~builder,book)
+def Registry() -> Type:Sys.Registry<D.Schema,D.Store,Unit,Unit,User,String,User,runner>
 
-def compilation() -> Decl.Compilation<D.Schema,D.Columns(),D.Columns(),D.Resources(),Cmd.ScopedOps(~D.Schema,
-  ~D.components(),~D.resources(),~route(),~Ops)>:
-  Program.compile_framework(~D.Schema,~D.Columns(),~D.Columns(),~D.Resources(),~Cmd.ScopedOps(~D.Schema,
-    ~D.components(),~D.resources(),~route(),~Ops),~kernel)
+def define(world:D.World()) -> Sys.RegistrationResult<D.Schema,D.Store,Unit,Unit,User,String,User,runner>:
+  Sys.register(~D.Schema,~D.Store,~Unit,~Unit,~User,~String,~User,~runner,world,"Scene bootstrap",["spawn","transform","mesh-ref","spatial"])
 
-def Node() -> Type:Author.Node(~D.Schema,~D.components(),~D.resources(),~Unit,~route(),~Ops,~User,~String,
-  ~Unit,~declaration,~body)
+def run(owner:Registry(),world:D.World(),user:User) -> Sys.RunResult<D.Schema,D.Store,Unit,Unit,User,String,User,runner>:
+  Sys.run(~D.Schema,~D.Store,~Unit,~Unit,~User,~String,~User,~runner,owner,world,user)

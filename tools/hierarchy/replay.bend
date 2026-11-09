@@ -37,10 +37,36 @@ def replay(lines:List<&2,String>,pair:Scene.Application() & List<&2,HW.Row>,+cou
         pair:Scene.Application() & List<&2,HW.Row> <- selected(String.starts_with(head,"hierarchy-step="),head,pair)
         replay(tail,pair,U32.add(count,Bool.to_u32(String.starts_with(head,"hierarchy-step="))))
 
+def namespace_value(value:Maybe<&2,U32>) -> IO(U32):
+  match value:
+    case Some{value}:IO.pure(U32,value)
+    case _:IO.die(U32,1,"Malformed recorded world namespace")
+
+def namespace_fields(fields:List<&2,String>) -> IO(U32):
+  match fields:
+    case first <> _:namespace_value(U32.read(first))
+    case _:IO.die(U32,1,"Missing recorded world namespace")
+
+def namespace_record(fields:List<&2,String>) -> IO(U32):
+  match fields:
+    case [_,state]:namespace_fields(String.split(String.drop(state,6n),','))
+    case _:IO.die(U32,1,"Malformed hierarchy state record")
+
+def namespace_selected(selected:Bool,head:String,next:IO(U32)) -> IO(U32):
+  match selected:
+    case True{}:namespace_record(String.split(head,' '))
+    case False{}:next
+
+def recorded_namespace(lines:List<&2,String>) -> IO(U32):
+  match lines:
+    case []:IO.die(U32,1,"Missing hierarchy replay state")
+    case +head <> tail:namespace_selected(String.starts_with(head,"hierarchy-step="),head,recorded_namespace(tail))
+
 def run(path:String) -> IO(Unit):
   do IO<Unit>:
-    log:String <- S.read(path)
-    pair:Scene.Application() & List<&2,HW.Row> <- Drive.boot()
+    +log:String <- S.read(path)
+    namespace:U32 <- recorded_namespace(String.lines(log))
+    pair:Scene.Application() & List<&2,HW.Row> <- Drive.boot_namespace(namespace)
     +count:U32 <- replay(String.lines(log),pair,0)
     S.require(U32.is_ge(count,10),"Hierarchy replay lacks the required actions")
     IO.print("Hierarchy deterministic replay matched " ++ U32.show(count) ++ " commands and complete entity/local/parent/global/bounds bits")

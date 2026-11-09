@@ -1,5 +1,4 @@
 import Base
-import ../../deps/bendvy/src/ecs/execution-state.bend as State
 import ./LAWS.bend as Laws
 import ./spec.bend as V
 import ../../src/hierarchy.bend as H
@@ -7,6 +6,7 @@ import ../../src/scene-hierarchy.bend as S
 import ../../src/components.bend as C
 import ../../src/scene-schema.bend as D
 import ../../deps/bendvy/src/ecs/world.bend as W
+import ../../deps/bendvy/src/ecs/lifecycle.bend as Life
 
 def Laws.cycle_evaluate(a,b,bounds,lit):{==}
 def Laws.missing_evaluate(transform,bounds,lit):{==}
@@ -195,8 +195,8 @@ def Laws.install_complete(batch,before,after,witness):
     case V.Pair{+row,+value,+rest}:
       (middle,(next,(transform_ok,(spatial_ok,tail)))) = witness
       install_cons(row,value,rest,before,middle,next,after,
-        Equal.cong(S.Scope() & Maybe<&2,C.Transform>,S.Scope(),S.written(C.Transform),V.transform_write(before,V.entity(row),V.transform(value)),(middle,Some{V.transform(value)}),transform_ok),
-        Equal.cong(S.Scope() & Maybe<&2,H.Spatial>,S.Scope(),S.written(H.Spatial),V.spatial_write(middle,V.entity(row),value),(next,Some{value}),spatial_ok),
+        Equal.cong(S.Scope() & Bool,S.Scope(),S.written,V.transform_write(before,V.entity(row),V.transform(value)),(middle,True{}),transform_ok),
+        Equal.cong(S.Scope() & Bool,S.Scope(),S.written,V.spatial_write(middle,V.entity(row),value),(next,True{}),spatial_ok),
         Laws.install_complete(rest,next,after,tail))
 
 def transform_candidate(+rows:List<&2,S.Row>,+transform:C.Transform,result:Result<&2,&2,H.Error,U32>) -> V.candidate_length(Result.bind(&2,&2,H.Error,U32,List<&2,H.Local>,result,n => Done{S.replace_transform(S.locals(rows),U32.to_nat(n),transform)}),List.length(&2,S.Row,rows)):
@@ -223,8 +223,8 @@ def Laws.candidate_length(edit,rows):
 def Laws.propagation_rejection(world,rows,error):{==}
 def Laws.scheduled_write_clock(now,active,rest):{==}
 
-def Laws.commit_administration(batch,before,after,admin,invocation,witness):
-  Equal.cong(S.Scope(),D.World(),scope => State.reassemble(~D.Schema,~D.Columns(),~D.Resources(),~Unit,admin,invocation,scope),S.install(V.rows(batch),V.values(batch),before),after,Laws.install_complete(batch,before,after,witness))
+def Laws.commit_administration(batch,before,after,owned,witness):
+  Equal.cong(S.Scope(),D.World(),scope => W.finish_run(~D.Schema,~D.Store,~Unit,~Unit,owned,scope),S.install(V.rows(batch),V.values(batch),before),after,Laws.install_complete(batch,before,after,witness))
 
 def publish_length(+size:Nat,+result:Result<&2,&2,H.Error,List<&2,H.Local>>,proof:V.candidate_length(result,size)) -> V.reusable_length(Result.bind(&2,&2,H.Error,List<&2,H.Local>,List<&2,H.Spatial>,result,xs => H.evaluate(xs)),size):
   match result:
@@ -266,7 +266,9 @@ def Laws.pair_lists(rows,values,equal):
 
 def Laws.one_row_read(old,mesh,accepted,stamp,tick):{==}
 def Laws.one_row_ready(old,mesh,accepted,stamp,tick,fresh):
-  (V.changed_scope(old,mesh,accepted,stamp,tick,fresh,False{}),(V.changed_scope(old,mesh,accepted,stamp,tick,fresh,True{}),({==},({==},{==}))))
+  match stamp:
+    case Life.Stamp{added,changed}:
+      (V.changed_scope(old,mesh,accepted,Life.Stamp{added,changed},tick,fresh,False{}),(V.changed_scope(old,mesh,accepted,Life.Stamp{added,changed},tick,fresh,True{}),({==},({==},{==}))))
 
 def Laws.forward_certificate(child,root,child_value,root_value,child_parent,root_parent,root_derived,child_derived):
   (

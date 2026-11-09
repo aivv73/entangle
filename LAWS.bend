@@ -17,7 +17,7 @@ import ./deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as UploadWord
 import ./src/mesh-control.bend as Player
 import ./src/creation.bend as Create
 import ./src/headless.bend as Headless
-import ./src/scene.bend as Scene
+import ./src/scene-runtime.bend as Scene
 import ./src/time.bend as Time
 import ./src/input.bend as Input
 import ./src/measurement-counters.bend as Counts
@@ -28,35 +28,26 @@ import ./src/upload-size.bend as UploadSize
 import ./src/scene-geometry-policy.bend as Geometry
 import ./src/asset.bend as Asset
 
-import ./deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
-import ./deps/bendvy/src/ecs/execution-inspector-component.bend as Columns
-import ./deps/bendvy/src/ecs/execution-composer-layout.bend as Layout
 import ./src/components.bend as C
 import ./tools/component-consumer.bend as Consumer
 import ./src/scene-step.bend as Step
 import ./src/scene-motion.bend as Move
 import ./src/scene-spawn.bend as Spawn
 import ./src/scene-schema.bend as SceneSchema
-import ./deps/bendvy/src/ecs/execution-command-removed.bend as Removed
-import ./deps/bendvy/src/ecs/owner-product.bend as Product
-import ./deps/bendvy/src/ecs/execution-effects.bend as Effects
-import ./deps/bendvy/src/ecs/execution-system.bend as Sys
 import ./deps/bendvy/src/ecs/world.bend as W
-import ./deps/bendvy/src/ecs/execution-command-local.bend as Local
+import ./deps/bendvy/src/ecs/system.bend as Sys
+import ./deps/bendvy/src/ecs/schedule.bend as Schedule
+import ./deps/bendvy/src/ecs/capabilities.bend as Cap
+import ./deps/bendvy/src/ecs/transaction.bend as T
 import ./src/scene-draw.bend as Draw
 import ./src/scene-observe.bend as Observe
 import ./deps/bendvy/src/ecs/inspector.bend as Inspector
 import ./deps/bendvy/src/ecs/component.bend as Component
-import ./deps/bendvy/src/ecs/execution-query.bend as Query
 
 law scene_sync_boundary_pair:
-  for +id:U32
-  for +requested:List<&2,U32>
-  for +remaining:List<&2,U32>
-  {Deferred.boundaries(Deferred.sync_returned(
-    Deferred.sync_entered(Deferred.On{[]},id,requested),id,remaining)) ==
-    [Deferred.ApplyEntered{Deferred.Sync{[id]},requested},
-     Deferred.ApplyReturned{Deferred.Sync{[id]},remaining}] : List<&2,Deferred.Boundary>}
+  for +spawn:U32
+  for +move:U32
+  {Scene.steps(spawn,move) == [Schedule.System{spawn,0},Schedule.Barrier{},Schedule.System{move,0},Schedule.Barrier{}] : List<&2,Schedule.Step>}
 
 law vec3_reconstruct:
   for +value: C.Vec3
@@ -131,32 +122,33 @@ law scene_step_adapter:
   {Move.translate(state) == Step.step(Unit{},state) : C.Transform & Unit}
 
 law scene_move_view_independent:
-  for H:Type
-  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for scope:H
-  for handle:W.Handle<SceneSchema.Schema>
-  for left:Maybe<&2,C.Transform>
-  for right:Maybe<&2,C.Transform>
-  for rest:List<&2,Query.GeneralRow<SceneSchema.Schema,C.Transform>>
-  {Move.move_rows(~H,~modify,Query.GeneralRow{handle,left} <> rest,scope) ==
-    Move.move_rows(~H,~modify,Query.GeneralRow{handle,right} <> rest,scope) : H & (Unit & Sys.Completion<String,Unit>)}
+  for left:W.Handle<SceneSchema.Schema>
+  for right:W.Handle<SceneSchema.Schema>
+  for +value:C.Transform
+  {Move.next(Move.Automatic{},left,value) == Move.next(Move.Automatic{},right,value) : Maybe<&2,C.Transform>}
 
 law scene_move_current_component:
   for H:Type
-  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for cap:Cap.Write<H,C.Transform,C.Transform>
   for scope:H
   for handle:W.Handle<SceneSchema.Schema>
-  for view:Maybe<&2,C.Transform>
-  for rest:List<&2,Query.GeneralRow<SceneSchema.Schema,C.Transform>>
-  {Move.move_rows(~H,~modify,Query.GeneralRow{handle,view} <> rest,scope) ==
-    Move.edited(~H,Move.move_rows(~H,~modify,rest),modify(Unit,scope,handle,Move.translate)) : H & (Unit & Sys.Completion<String,Unit>)}
+  for value:C.Transform
+  {Move.current(~H,~cap,Move.Automatic{},handle,(scope,Component.Found{value})) == Move.write(~H,~cap,scope,Player.moved(Step.step(Unit{},value))) : H & (T.Outcome<String> & Unit)}
 
 law scene_move_query_refusal:
   for H:Type
-  for modify:@-Out:Type -> H -> W.Handle<SceneSchema.Schema> -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
+  for cap:Cap.Write<H,C.Transform,C.Transform>
   for scope:H
-  {Move.selected(~H,~modify,(scope,Query.SelectionRefused{})) ==
-    (scope,(Unit{},Sys.BodyError{"transform query refused",Unit{}})) : H & (Unit & Sys.Completion<String,Unit>)}
+  for mode:Move.Mode
+  for handle:W.Handle<SceneSchema.Schema>
+  {Move.current(~H,~cap,mode,handle,(scope,Component.MissingEntity{})) == (scope,(T.Failure{"transform read refused"},Unit{})) : H & (T.Outcome<String> & Unit)}
+
+law scene_move_write:
+  for H:Type
+  for cap:Cap.Write<H,C.Transform,C.Transform>
+  for scope:H
+  for value:C.Transform
+  {Move.write(~H,~cap,scope,Some{value}) == (Cap.set(~H,~C.Transform,~C.Transform,~cap,scope,value),(T.Success{},Unit{})) : H & (T.Outcome<String> & Unit)}
 
 law scene_translation:
   for +x:F32
@@ -183,17 +175,9 @@ law scene_seed_count:
   {List.length(&2,Create.Seed,Seeds.values(count,index)) == count : Nat}
 
 law scene_empty_bootstrap:
-  for F:Type -> Type
-  for effects:Effects.Effects<F>
-  for H:Type
-  for Q:Type
-  for caps:Spawn.Ops(Unit,F,H,Q)
-  for commands:Local.Commands<Q,SceneSchema.Schema,C.Transform>
-  for scope:H
-  for queue:Q
+  for world:SceneSchema.World()
   for +handles:List<&2,W.Handle<SceneSchema.Schema>>
-  {Spawn.body(~Unit,~F,~effects,~H,~Q,~caps,~commands,scope,queue,Spawn.User{[],handles,[]}) == Effects.pure(~F,(H & (Q & (Spawn.User & Sys.Completion<String,Unit>))),effects,(scope,(queue,(Spawn.User{[],handles,[]},Sys.Success{Unit{}})))) : F(H & (Q & (Spawn.User & Sys.Completion<String,Unit>)))}
-
+  {Spawn.runner(world,Spawn.User{[],handles,[]}) == Sys.Succeeded{world,Spawn.User{[],handles,[]}} : Sys.Outcome<SceneSchema.World(),String,Spawn.User>}
 
 law draw_payload:
   for handle:W.Handle<SceneSchema.Schema>
@@ -284,8 +268,7 @@ law row_finish_order:
   for acc:List<&2,Observe.Row>
   {Observe.values(~Observe.Row,~Observe.row,
     ~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,
-    ~Columns.get(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,
-      ~SceneSchema.components(),~Layout.InRight{Layout.InLeft{Layout.AtLeaf{}}},~{==}),[],frame,acc) ==
+    ~Observe.mesh_read(~Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit>,Inspector.plan_caps(~SceneSchema.Schema,~SceneSchema.Columns(),~SceneSchema.Resources(),~Unit,~Observe.Ops,Observe.plan())),[],frame,acc) ==
     (frame,Done{List.reverse(&2,Observe.Row,acc)}) : Inspector.Frame<SceneSchema.Schema,SceneSchema.Columns(),SceneSchema.Resources(),Unit> & Result<&2,&2,Unit,List<&2,Observe.Row>>}
 
 law draw_finish_order:
@@ -534,11 +517,11 @@ law creation_tint_position:
   {F.tint(F.Vertex{position,color,uv,normal},material) == F.Vertex{position,tinted,uv,normal} : F.Vertex}
 
 law creation_bundle_order:
-  for transform:C.Transform
-  for mesh:C.MeshRef
-  for spatial:H.Spatial
-  for rest:List<&2,Create.Seed>
-  {Spawn.bundles(Create.Seed{transform,mesh,spatial} <> rest) == Product.Owner{Some{transform},Product.Owner{Some{mesh},Some{spatial}}} <> Spawn.bundles(rest) : List<Removed.Removed(SceneSchema.components())>}
+  for +transform:C.Transform
+  for +mesh:C.MeshRef
+  for +spatial:H.Spatial
+  for +rest:List<&2,Create.Seed>
+  {Spawn.initial(Create.Seed{transform,mesh,spatial} <> rest) == Spawn.User{Create.Seed{transform,mesh,spatial} <> rest,[],[]} : Spawn.User}
 
 law creation_empty:
   {Create.compile(Create.Scene{[]}) == Done{Create.Compiled{[],Create.Geometry{[],[],[]}}} : Result<&2,&2,Create.Error,Create.Compiled>}
@@ -617,7 +600,7 @@ law creation_duplicate_preserves_geometry:
 
 law creation_bundle_count:
   for +seeds:List<&2,Create.Seed>
-  {List.length(&1,Removed.Removed(SceneSchema.components()),Spawn.bundles(seeds)) == List.length(&2,Create.Seed,seeds) : Nat}
+  {Spawn.initial(seeds) == Spawn.User{seeds,[],[]} : Spawn.User}
 
 law player_key_106_last_state:
   for a:Bool
@@ -689,37 +672,31 @@ law player_translation_preserves_pose:
   {Player.pose_fields(Player.shifted(current,d)) == Player.pose_fields((current,Unit{})) : C.Quat & C.Vec3}
 
 law player_boot_no_write:
-  for ~H:Type
-  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for scope:H
-  {Player.control(~H,~modify,scope,Player.Boot{}) == (scope,(Player.Boot{},Sys.Success{Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+  for entity:Player.Handle()
+  for current:C.Transform
+  {Player.decide(Player.Boot{},entity,current) == None{} : Maybe<&2,C.Transform>}
 
 law player_idle_no_write:
-  for ~H:Type
-  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for scope:H
-  for +h:Player.Handle()
   for +keys:Player.Keys
-  for +initial:C.Transform
-  {Player.moving(~H,~modify,scope,h,keys,initial,True{}) == (scope,(Player.PlayerReady{h,keys,initial,False{}},Sys.Success{Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+  for current:C.Transform
+  for initial:C.Transform
+  for idle:{Player.idle(keys) == True{} : Bool}
+  {Player.decision(keys,current,initial,False{}) == None{} : Maybe<&2,C.Transform>}
 
 law player_writer_retained_handle:
-  for ~H:Type
-  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for scope:H
   for +h:Player.Handle()
+  for +entity:Player.Handle()
   for +keys:Player.Keys
   for +initial:C.Transform
-  {Player.moving(~H,~modify,scope,h,keys,initial,False{}) == Player.edited(~H,Player.PlayerReady{h,keys,initial,False{}},modify(Unit,scope,h,Player.translate(keys))) : H & (Player.Control & Sys.Completion<String,Unit>)}
+  for current:C.Transform
+  for +reset:Bool
+  {Player.decide(Player.PlayerReady{h,keys,initial,reset},entity,current) == Bool.pick(Maybe<&2,C.Transform>,SceneSchema.same(h,entity),Player.decision(keys,current,initial,reset),None{}) : Maybe<&2,C.Transform>}
 
 law player_reset_writer:
-  for ~H:Type
-  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for scope:H
-  for +h:Player.Handle()
   for keys:Player.Keys
+  for current:C.Transform
   for +initial:C.Transform
-  {Player.control(~H,~modify,scope,Player.PlayerReady{h,keys,initial,True{}}) == Player.edited(~H,Player.PlayerReady{h,Player.empty(),initial,False{}},modify(Unit,scope,h,_ => (initial,Unit{}))) : H & (Player.Control & Sys.Completion<String,Unit>)}
+  {Player.decision(keys,current,initial,True{}) == Some{initial} : Maybe<&2,C.Transform>}
 
 law player_inactive_clock_anchor:
   for clock:Time.Clock
@@ -736,11 +713,10 @@ law player_native_focus_boundary:
   {Player.focus_boundary(Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest) == (Key{119,False{}} <> Key{115,False{}} <> Key{97,False{}} <> Key{100,False{}} <> Key{113,False{}} <> Key{101,False{}} <> Lost{0} <> rest,True{}) : List<Event> & Bool}
 
 law player_query_gate:
-  for ~H:Type
-  for ~modify:@-Out:Type -> H -> Player.Handle() -> (C.Transform -> C.Transform & Out) -> H & Query.GeneralEdit<C.Transform,Out>
-  for state:Player.Control
+  for H:Type
+  for cap:Cap.Write<H,C.Transform,C.Transform>
   for scope:H
-  {Player.selected(~H,~modify,state,(scope,Query.SelectionRefused{})) == (scope,(state,Sys.BodyError{"player transform query refused",Unit{}})) : H & (Player.Control & Sys.Completion<String,Unit>)}
+  {Move.write(~H,~cap,scope,None{}) == (scope,(T.Success{},Unit{})) : H & (T.Outcome<String> & Unit)}
 
 law upload_range_universal:
   for +c:UploadWord.U64

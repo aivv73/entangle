@@ -1,26 +1,16 @@
 import Base
+import ../deps/bendvy/src/ecs/schedule.bend as Scheduled
+import ../deps/bendvy/src/ecs/system.bend as Sys
+import ../deps/bendvy/src/ecs/ordinary-system.bend as Ordinary
 import ../src/creation.bend as Create
 import ./scene-seeds.bend as Seeds
 import ../src/scene-step.bend as Step
 import ../src/scene-spawn.bend as Spawn
-import ../deps/bendvy/src/ecs/execution-generalized-root-application.bend as Root
-import ../deps/bendvy/src/ecs/execution-deferred-schedule.bend as Deferred
-import ../deps/bendvy/src/ecs/execution-deferred-settings.bend as Settings
-import ../deps/bendvy/src/ecs/dependency-executor.bend as Exec
-import ../deps/bendvy/src/ecs/dependency-registration.bend as Reg
-import ../deps/bendvy/src/ecs/execution-retained-system.bend as Retained
-import ../deps/bendvy/src/ecs/execution-command-system.bend as Cmd
-import ../deps/bendvy/src/ecs/execution-system.bend as Sys
-import ../deps/bendvy/src/ecs/execution-command-local.bend as Local
-import ../deps/bendvy/src/ecs/execution-command-buffer.bend as Buffer
-import ../deps/bendvy/src/ecs/execution-command-removed.bend as Removed
-import ../deps/bendvy/src/ecs/owner-product.bend as Product
 import ../src/scene-draw.bend as Draw
-import ../deps/bendvy/src/ecs/execution-schedule.bend as Scheduled
-import ../deps/bendvy/src/ecs/dependency-application.bend as App
 import ../deps/bendvy/src/ecs/change-tick.bend as Tick
 import ../src/components.bend as C
-import ../src/scene.bend as Scene
+import ../src/scene-runtime.bend as Scene
+import ../src/scene.bend as Factory
 import ../src/scene-schema.bend as D
 import ../src/scene-observe.bend as Observe
 import ../deps/bendvy/src/ecs/world.bend as W
@@ -40,92 +30,21 @@ def require(ok:Bool,message:String) -> IO(Unit):
     case True{}:IO.pure(Unit,Unit{})
     case False{}:IO.die(Unit,1,message)
 
-def run_observed(app:Scene.Application()) -> Scheduled.ObservedScheduled<Scene.State(),String,Unit>:
-  Root.run_observed(~D.Schema,~D.components(),~D.resources(),~Unit,~Scene.Nodes(),~Unit,~Unit,~String,
-    ~Unit,~Scene.dispatch(),~Scene.guard_dispatch(),~Scene.handle,~Scene.apply,True{},app)
+def run_observed(app:Scene.Application()) -> Scene.Application() & Scene.Report:Scene.run(app)
 
-def receipt_cons(head:Observe.Receipt(),+handle:W.Handle<D.Schema>,
-  result:List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool)) -> List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool):
-  match result:
-    case (rest,(handles,ok)):(head <> rest,(handle <> handles,ok))
-
-def receipt_summary(values:List<Observe.Receipt()>) -> List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool):
-  match values:
-    case []:([],([],True{}))
-    case Buffer.Spawned{+handle,Product.Owner{None{},Product.Owner{None{},None{}}}} <> rest:
-      receipt_cons(Buffer.Spawned{handle,Product.Owner{None{},Product.Owner{None{},None{}}}},handle,receipt_summary(rest))
-    case head <> rest:(head <> rest,([],False{}))
-
-def summarized(restore:List<Observe.Receipt()> -> Scene.Owner(),id:U32,exhausted:Bool,
-  result:List<Observe.Receipt()> & (List<&2,W.Handle<D.Schema>> & Bool)) -> Scene.Owner() & Bootstrap:
-  match result:
-    case (receipts,(handles,ok)):(restore(receipts),Bootstrap{id,handles,ok,True{},exhausted})
-
-def seeds_empty(values:List<Removed.Removed(D.components())>) -> List<Removed.Removed(D.components())> & Bool:
-  match values:
-    case []:([],True{})
-    case head <> rest:(head <> rest,False{})
-
-def bootstrap_seeds(restore:List<Removed.Removed(D.components())> -> List<Observe.Receipt()> -> Scene.Owner(),
-  id:U32,receipts:List<Observe.Receipt()>,result:List<Removed.Removed(D.components())> & Bool) -> Scene.Owner() & Bootstrap:
-  match result:
-    case (seeds,exhausted):summarized(restore(seeds),id,exhausted,receipt_summary(receipts))
-
-def bootstrap_summary(owner:Scene.Owner()) -> Scene.Owner() & Bootstrap:
-  match owner:
-    case Cmd.Owner{Sys.Owner{ns,+id,name,access,cursor,Local.Local{Spawn.User{seeds,handles,[]},Buffer.Buffer{[],receipts},permission}}}:
-      bootstrap_seeds(seeds => receipts => Cmd.Owner{Sys.Owner{ns,id,name,access,cursor,
-        Local.Local{Spawn.User{seeds,handles,[]},Buffer.Buffer{[],receipts},permission}}},id,receipts,seeds_empty(seeds))
-    case Cmd.Owner{Sys.Owner{ns,+id,name,access,cursor,local}}:
-      (Cmd.Owner{Sys.Owner{ns,id,name,access,cursor,local}},Bootstrap{id,[],False{},False{},False{}})
-
-def move_id(owner:Scene.Peer()) -> Scene.Peer() & U32:
-  Sys.Owner{ns,+id,name,access,cursor,local} = owner
-  (Sys.Owner{ns,id,name,access,cursor,local},id)
-
-def inventory_move(rebuild:Scene.PeerBinding() -> Scene.Application(),bootstrap:Bootstrap,syncs:List<&2,U32>,drained:Bool,
-  result:Scene.PeerBinding() & U32) -> Scene.Application() & Inventory:
-  match result:
-    case (right,id):(rebuild(right),Inventory{bootstrap,id,syncs,drained})
-
-def inventory_spawn(rebuild:Scene.Binding() -> Scene.PeerBinding() -> Scene.Application(),right:Scene.PeerBinding(),
-  syncs:List<&2,U32>,drained:Bool,result:Scene.Binding() & Bootstrap) -> Scene.Application() & Inventory:
-  match result:
-    case (left,bootstrap):inventory_move(rebuild(left),bootstrap,syncs,drained,
-      Retained.map_owner(Scene.PeerCompilation(),Scene.Peer(),U32,move_id,right))
-
-def no_ids(values:List<&2,U32>) -> Bool:
-  match values:
-    case []:True{}
-    case _:False{}
-
-def inventory(app:Scene.Application()) -> Scene.Application() & Inventory:
-  Scheduled.Scheduled{App.State{world,Reg.Product{left,right,routing},guards,handler,stateBindings},plan,bindings,
-    Scheduled.Deferred{systems,settings,+unapplied,Settings.Built{compiled,+syncs},publication}} = app
-  inventory_spawn(left => right => Scheduled.Scheduled{App.State{world,Reg.Product{left,right,routing},guards,
-    handler,stateBindings},plan,bindings,Scheduled.Deferred{systems,settings,unapplied,Settings.Built{compiled,
-    syncs},publication}},right,syncs,no_ids(unapplied),
-    Retained.map_owner(Scene.Compilation(),Scene.Owner(),Bootstrap,bootstrap_summary,left))
-
-def require_report(+spawn:U32,+move:U32,report:App.Report<String,Unit>) -> IO(Unit):
+def require_report(+spawn:U32,+move:U32,report:Scene.Report) -> IO(Unit):
   match report:
-    case App.Finished{[Exec.Ran{left,Unit{}},Exec.Ran{right,Unit{}}]}:
-      require(U32.is_eq(left,spawn) && U32.is_eq(right,move) && Bool.not(U32.is_eq(spawn,move)),
-        "scene invocation roles or order differ")
-    case App.Finished{_}:IO.die(Unit,1,"scene finished with unexpected invocation observations")
-    case App.Stopped{_,_}:IO.die(Unit,1,"scene stopped; retained writes and publication are not retried")
-    case App.Invalid{_}:IO.die(Unit,1,"scene schedule invalid; retained application is not retried")
+    case Scene.Finished{[Scheduled.Ran{left},Scheduled.Applied{},Scheduled.Ran{right},Scheduled.Applied{}]}:
+      require(U32.is_eq(left,spawn) && U32.is_eq(right,move) && Bool.not(U32.is_eq(spawn,move)),"scene invocation roles, barriers or order differ")
+    case _:IO.die(Unit,1,"scene schedule did not finish; returned state is not retried")
 
-def require_boundaries(+spawn:U32,+move:U32,syncs:List<&2,U32>,values:List<&2,Deferred.Boundary>) -> IO(U32):
-  match values:
-    case [Deferred.ApplyEntered{Deferred.Sync{[+sync]},[left]},
-      Deferred.ApplyReturned{Deferred.Sync{[returned]},[]},
-      Deferred.ApplyEntered{Deferred.Final{},[right]},Deferred.ApplyReturned{Deferred.Final{},[]}]:
+def require_boundaries(spawn:U32,move:U32,syncs:List<&2,U32>,report:Scene.Report) -> IO(U32):
+  match syncs:
+    case [1,3]:
       do IO<U32>:
-        require(U32.is_eq(left,spawn) && U32.is_eq(right,move) && U32.is_eq(sync,returned) &&
-          Settings.member(sync,syncs),"scene publication boundary IDs differ from retained inventory")
-        IO.pure(U32,sync)
-    case _:IO.die(U32,1,"scene requires exactly four drained sync/final boundary events")
+        require_report(spawn,move,report)
+        return 1
+    case _:IO.die(U32,1,"scene plan requires explicit bootstrap and final barriers")
 
 def equal(left:W.Handle<D.Schema>,right:W.Handle<D.Schema>) -> Bool:
   W.Handle{ln,lk} = left
@@ -147,6 +66,22 @@ def subset(left:List<&2,W.Handle<D.Schema>>,+right:List<&2,W.Handle<D.Schema>>) 
 
 def same(+left:List<&2,W.Handle<D.Schema>>,+right:List<&2,W.Handle<D.Schema>>) -> Bool:
   distinct(left) && distinct(right) && subset(left,right) && subset(right,left)
+
+def barrier_indices(steps:List<&2,Scheduled.Step>,+index:U32) -> List<&2,U32>:
+  match steps:
+    case []:[]
+    case Scheduled.Barrier{} <> rest:index <> barrier_indices(rest,U32.inc(index))
+    case _ <> rest:barrier_indices(rest,U32.inc(index))
+
+def inventoried(rebuild:D.World() -> Scene.Application(),id:U32,move:U32,seeds:List<&2,Create.Seed>,handles:List<&2,W.Handle<D.Schema>>,returned:List<&2,Create.Seed>,steps:List<&2,Scheduled.Step>,pair:D.World() & Bool) -> Scene.Application() & Inventory:
+  (world,drained) = pair
+  +handles:List<&2,W.Handle<D.Schema>> = handles
+  (rebuild(world),Inventory{Bootstrap{id,handles,distinct(handles),Observe.exhausted(returned),Observe.exhausted(seeds)},move,barrier_indices(steps,0),drained})
+
+def inventory(app:Scene.Application()) -> Scene.Application() & Inventory:
+  match app:
+    case Scene.Application{world,Scheduled.Schedule{ns,name,+steps,Scene.Owners{Sys.Registry{ln,+lid,lname,la,lc},Ordinary.Owner{Sys.Registry{rn,+rid,rname,ra,rc},slot,clauses},Spawn.User{+seeds,+handles,+returned},mode}}}:
+      inventoried(world => Scene.Application{world,Scheduled.Schedule{ns,name,steps,Scene.Owners{Sys.Registry{ln,lid,lname,la,lc},Ordinary.Owner{Sys.Registry{rn,rid,rname,ra,rc},slot,clauses},Spawn.User{seeds,handles,returned},mode}}},lid,rid,seeds,handles,returned,steps,Observe.drained(world))
 
 def identities(handles:List<&2,W.Handle<D.Schema>>,+index:U32) -> List<&2,Identity>:
   match handles:
@@ -282,9 +217,8 @@ def clocked(rebuild:D.World() -> Scene.Application(),result:D.World() & Tick.Tic
     case (world,clock):(rebuild(world),clock)
 
 def app_clock(app:Scene.Application()) -> Scene.Application() & Tick.Tick:
-  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
-  clocked(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},
-    W.clock(~D.Schema,~D.Columns(),~D.Resources(),~Unit,world))
+  Scene.Application{world,schedule} = app
+  clocked(world => Scene.Application{world,schedule},W.clock(~D.Schema,~D.Store,~Unit,~Unit,world))
 
 def checked_clock(next:Scene.Application() -> IO(Unit),before:Tick.Tick,result:Scene.Application() & Tick.Tick) -> IO(Unit):
   match result:
@@ -364,7 +298,7 @@ def returned_inventory(next:Scene.Application() -> I.Instance<D.Schema> -> List<
   match result:
     case (app,Inventory{Bootstrap{id,receipts,valid,clean,exhausted},right,syncs,drained}):
       do IO<Unit>:
-        require(U32.is_eq(id,spawn) && U32.is_eq(right,move) && Settings.member(sync,syncs),"scene retained roles changed")
+        require(U32.is_eq(id,spawn) && U32.is_eq(right,move) && Scheduled.contains(syncs,sync),"scene retained roles changed")
         require(valid && clean && exhausted && drained,"scene returned refused receipts, pending commands, seeds, or unapplied systems")
         observed(next,tick,baseline,previous,receipts,"boundaries tick=" ++ U32.show(tick) ++ " start=" ++ Nat.show(start) ++
           " finish=100 receipts=100 updates=100 spawn=" ++ U32.show(spawn) ++ " move=" ++ U32.show(move) ++
@@ -373,12 +307,12 @@ def returned_inventory(next:Scene.Application() -> I.Instance<D.Schema> -> List<
 def executed(next:Scene.Application() -> I.Instance<D.Schema> -> List<&2,Identity> -> List<&2,Observe.Row> -> IO(Unit),
   tick:U32,baseline:List<&2,Identity>,previous:List<&2,Observe.Row>,start:Nat,info:Inventory,
   prior:List<&2,Observe.Row>,retained:Draw.DrawList,instance:I.Instance<D.Schema>,
-  result:Scheduled.ObservedScheduled<Scene.State(),String,Unit>) -> IO(Unit):
+  result:Scene.Application() & Scene.Report) -> IO(Unit):
   Inventory{Bootstrap{+spawn,_,_,_,_},+move,syncs,_} = info
-  Scheduled.ObservedScheduled{app,report,boundaries} = result
+  (app,+report) = result
   do IO<Unit>:
     require_report(spawn,move,report)
-    sync : U32 <- require_boundaries(spawn,move,syncs,boundaries)
+    sync : U32 <- require_boundaries(spawn,move,syncs,report)
     retained_checked(app => instance => returned_inventory(next,tick,baseline,previous,start,spawn,move,sync,
       instance,inventory(app)),prior,retained,app,instance)
 
@@ -440,5 +374,5 @@ def initial(result:Scene.Application() & (I.Instance<D.Schema> & Result<&2,&2,Un
 
 def main() -> IO(Unit):
   do IO<Unit>:
-    app : Scene.Application() <- Scene.create(Seeds.defaults())
+    app : Scene.Application() <- Factory.create(Seeds.defaults())
     initial(Observe.snapshot(app,I.Fresh{}))

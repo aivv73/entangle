@@ -33,9 +33,9 @@ nonfinite inputs. It adds no normalization or finite-value checks.
 The ECS application remains the persistent owner of scene transforms.
 The [state ownership contract](state-ownership.md) defines the current write
 boundary and the required exclusive transfer for future simulation chunks.
-`scene-motion.translate` receives the current component through the registered
-writer, calls `Step.step`, and returns its result to that writer. The existing
-`move_rows` recursion processes selected entities sequentially. It does not
+`scene-motion.current` receives the canonical value read through the registered
+ordinary query, applies `translate`/`Step.step`, and supplies its replacement to
+the declared setter. The query processes selected entities sequentially. It does not
 collect a second writable list of transforms or dispatch parallel work.
 
 `Scene.run` remains the pure whole-scene operation. It consumes the retained
@@ -43,8 +43,8 @@ application and returns the updated application and Bendvy report. The
 application includes world storage, bootstrap state, system owners, and schedule
 state. Detached drawing data is an observation, not an authoritative store.
 
-Bootstrap still publishes before movement. Successful schedule completion still
-performs final apply. `Finished`, `Stopped`, and `Invalid` reports, including
+Bootstrap publishes before movement. The explicit final barrier also runs after
+returned system errors under the new static scheduler. `Finished`, `Stopped`, and `Invalid` reports, including
 ordered invocation observations, remain separate from the kernel's empty
 gameplay-event output. `Scene.tick` still checks for exactly two successful,
 distinct system invocations in IO.

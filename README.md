@@ -52,7 +52,9 @@ records the published library and collections pins. Entangle owns its Bend
 submodules remain unmodified.
 
 For an existing checkout, synchronize submodule URLs before updating because
-bend-vulkan now uses the aivv73 bend-collections fork:
+Bendvy and bend-collections now use the aivv73 forks. Entangle uses Bendvy's
+current component, query, system, and schedule APIs; see the
+[ECS migration record](docs/verification/2026-11-09-ecs-migration/README.md).
 
 ```sh
 git submodule sync --recursive

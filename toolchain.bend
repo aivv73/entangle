@@ -7,6 +7,6 @@ def clang_version() -> String: "clang version 23.1.4"
 def native_target() -> String: "x86_64-pc-linux-gnu"
 
 def dependencies() -> List<(String & String)>:
-  [("deps/bendvy", "16405fbeb75cd6da1eb8c79ea48d3532ee9a30ee"),
+  [("deps/bendvy", "59833adc4dc007588d3b43158e0144abbdad45b4"),
    ("deps/bend-vulkan", "190023575c64915677ae02e4d5ef082b51c239e9"),
    ("deps/bend-vulkan/deps/bend-collections", "32526a9a3d82ffc988bf4a122f8c37240a70a87b")]

@@ -1,7 +1,7 @@
 import Base
 import ../../deps/bendvy/src/ecs/lifecycle.bend as Life
 import ../../src/scene-schema.bend as D
-import ../../deps/bendvy/src/ecs/execution-state.bend as State
+import ../../deps/bendvy/src/ecs/world.bend as W
 import ../../deps/bendvy/src/ecs/change-tick.bend as Tick
 import ../../deps/bendvy/src/ecs/clock-state.bend as Clock
 import ./spec.bend as V
@@ -94,10 +94,9 @@ law commit_administration:
   for +batch:V.Batch
   for -before:S.Scope()
   for -after:S.Scope()
-  for admin:State.Administration<D.Schema,D.Columns(),D.Resources(),Unit>
-  for invocation:State.Invocation<D.Schema>
+  for +owned:Bool
   for witness:V.ready(batch,before,after)
-  {S.commit_scope(V.rows(batch),V.values(batch),(admin,(invocation,before))) == State.reassemble(~D.Schema,~D.Columns(),~D.Resources(),~Unit,admin,invocation,after) : D.World()}
+  {S.commit_scope(V.rows(batch),V.values(batch),(before,owned)) == W.finish_run(~D.Schema,~D.Store,~Unit,~Unit,owned,after) : D.World()}
 
 law publication_lengths:
   for +edit:S.Edit

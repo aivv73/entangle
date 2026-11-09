@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 8, 2026 · updated for Bend 2.0.40, bend-vulkan, and bend-ui-test
+**Revision:** 6 · November 9, 2026 · updated for Bend 2.0.40, bend-vulkan, bend-ui-test, and the Bendvy fork
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
@@ -23,6 +23,16 @@ Bend 2.0.40 pointer conversion and window verification helpers in its own source
 The [update record](docs/verification/2026-11-08-bend-vulkan/README.md) records
 all 23 required workflow stages, the separate OBJ window run, inspected
 captures, clean validation, and cleanup. Publication remains separate.
+
+**Bendvy ECS migration:** complete locally at aivv73 fork revision `59833ad`.
+Both applications use the current component families, ordinary queries,
+registered systems, and explicit schedules. Headless batching, adapter proofs,
+hierarchy publication witnesses, and production sensitivity controls pass.
+Direct native rendering, live-window controls, replay, and cleanup checks pass;
+the standard toolchain gate retains the environment's existing Clang distribution
+mismatch and is not a passing workflow.
+The [migration record](docs/verification/2026-11-09-ecs-migration/README.md)
+retains the required scope and receipts.
 
 **UI verification dependency update:** complete locally [S58]. All seven window
 drivers use the published `bend-ui-test@0.1.0.2` package. The old input adapter
@@ -133,7 +143,7 @@ not complete R0's ownership audit.
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** use the qualified Bend 2.0.40 toolchain, verified published Vulkan pin [S57], and updated window input package [S58]. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** resolve the current environment's Clang distribution mismatch before claiming a passing canonical workflow for the Bendvy ECS migration at `59833ad`; direct native, window, replay, and sensitivity evidence is complete locally. Retain the qualified Bend 2.0.40 version, published Vulkan pin [S57], and input package [S58]. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -346,6 +356,8 @@ Baseline, environment, and results: [library split report](deps/bend-vulkan/.aud
 ### Tasks
 
 - [x] Create a separate engine project. Pin compatible Bendvy and `bend-vulkan` revisions on one native toolchain. Completed locally in Entangle on November 2, 2026 [S25].
+- [x] Switch Bendvy's source to the aivv73 fork at the existing `16405fb` pin. A fresh fork checkout and native headless batching pass; the [update record](docs/verification/2026-11-09-bendvy-fork/README.md) retains the toolchain gate's existing Clang environment failure separately.
+- [x] Migrate to the fork's current ECS at `59833ad`, preserving production scenes, controls, hierarchy, replay, and cleanup. The [migration record](docs/verification/2026-11-09-ecs-migration/README.md) retains direct native/window checks, proofs and sensitivity controls, and the canonical workflow's compiler-precondition failure. Publication is tracked separately by the branch history; no merge is claimed.
 - [x] Update to published GitHub `bend-vulkan` revision `1900235` and its collections fork, retaining Bend 2.0.40 window behavior. Completed and verified locally on November 8, 2026 [S57].
 - [x] Update all seven native window verification drivers to published `bend-ui-test@0.1.0.2` and remove the compatibility copy. Native qualification, the complete window workflow, and separate OBJ checks pass locally with the documented compiler stack settings [S58].
 - [x] Add project components `Transform`, `Velocity`, `MeshRef`, and `MaterialRef`. Structural laws and the native consumer are gated by `bend tools/verify.bend`.
