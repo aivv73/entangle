@@ -1,6 +1,6 @@
 [submodule "deps/bendvy"]
 	path = deps/bendvy
-	url = https://github.com/dearlordylord/bendvy.git
+	url = https://github.com/aivv73/bendvy.git
 	shallow = true
 [submodule "deps/bend-vulkan"]
 	path = deps/bend-vulkan

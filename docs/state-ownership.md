@@ -18,7 +18,7 @@ A single owner does not mean that only one system may ever write a component.
 | Representation | Authority |
 | --- | --- |
 | `Scene.Application()` and its `D.World()` | Retain component storage, allocator, deferred commands, and schedule state. |
-| Registered `GeneralWriter` and its execution scope `H` | Authorize an update of the current component in that world. The operation consumes and returns the scope. |
+| Registered ordinary query and its declared `Cap.Write` over opaque `H` | Authorize an update of the current component in that world. The operation consumes and returns the scope. |
 | `C.Transform`, query row views, and `Observe.Snapshot` | Copyable values. They carry no scope or writer and cannot publish themselves. |
 | `Draw.DrawList` | Detached rendering input. It has neither entity handles nor a component writer. |
 | Future owned simulation chunks | A partition of authoritative storage while tasks hold it. Ordinary ECS access to that partition must be unavailable until ownership returns. |
@@ -40,23 +40,24 @@ source bounds, rollback checkpoint, and derived global matrix/world bounds.
 Its payload-to-view projections copy values for observation.
 They do not transfer component storage to the reader.
 
-[`scene.bend`](../src/scene.bend) retains the world inside `Scene.Application()`.
+[`scene-runtime.bend`](../src/scene-runtime.bend) retains the world inside `Scene.Application()`.
 `Scene.run` consumes that application and returns its successor with a schedule
 report. Bootstrap publishes initial components before the movement system runs.
 
-[`scene-motion.bend`](../src/scene-motion.bend) requests a `WriteRows` capability
-for transforms on entities with `MeshRef`. `move_rows` uses the selected handle
-and discards the row's copied transform. `GeneralWriter.modify` supplies the
-current stored transform to `translate`, which calls `Step.step` and returns the
-replacement. Each call returns the scope used by the next row.
+[`scene-motion.bend`](../src/scene-motion.bend) declares a Transform write and
+requires MeshRef through the current ordinary-query API. Its body reads the
+canonical component through `Cap.get`, applies `Step.step`, and passes the
+replacement to `Cap.set`. The query threads the actual owner through each row.
+The mesh controller uses the same declared query and compares the complete
+retained player handle before selecting a replacement.
 
 Calling `Step.step` on a snapshot calculates a detached value. It does not update
 the scene. Production movement has no snapshot-to-world writeback operation.
 Later systems must also update through the owner instead of installing values
 computed from an earlier observation without an explicit conflict policy.
 
-Numerical writes are immediate. A refused query returns the incoming scope.
-A refused write stops movement and retains earlier accepted writes. Structural
+Numerical writes are immediate. Ordinary query errors retain performed effects
+under the pinned runner's preserving completion policy. Structural
 commands publish at the schedule's apply boundaries. Ownership transfer must not
 silently turn these operations into an atomic batch or add rollback. The explicit
 [hierarchy publication contract](scene-hierarchy.md) adds a domain validation
@@ -101,7 +102,7 @@ operations before production simulation uses it:
    schedule contract. Render extraction observes a completed state boundary.
 
 These are requirements for a future API, not descriptions of a shipped lease or
-split operation. The pinned dependency's `chunk-column.Column` is an affine
+split operation. The pinned dependency's `column.Column` is an affine
 storage implementation. Its existence does not establish a safe Entangle task
 handoff. If exclusive transfer cannot be expressed, simulation remains sequential
 through the current ECS writer. Independently allocated chunks may be canonical
@@ -135,13 +136,14 @@ must remove any duplicate writer path in the same change.
 
 `LAWS.bend` states general claims against the current production adapter:
 
-- `scene_move_view_independent` proves that substituting any optional head-row
-  view leaves traversal unchanged for arbitrary remaining rows and scope.
-- `scene_move_current_component` proves that traversal passes `Move.translate`
-  to the supplied writer for that handle, then continues with the returned scope.
-- `scene_move_query_refusal` proves that a refused query returns the incoming
-  scope with the query error and does not call the writer.
-- `scene_step_adapter` binds that callback to the numerical kernel. Existing
+- `scene_move_view_independent` proves the automatic step depends on the current
+  component rather than the query's detached handle identity.
+- `scene_move_current_component` binds the actual declared component read to
+  the numerical step and setter; `scene_move_write` checks that the declared
+  setter receives the replacement and returns the authoritative owner.
+- `scene_move_query_refusal` preserves the incoming scope with an error when
+  the canonical component read refuses, without calling the setter.
+- `scene_step_adapter` binds movement to the numerical kernel. Existing
   kernel laws specify its translation, preserved rotation and scale, and output.
 
 `PROOF.bend` checks these claims. They assume the supplied writer's contract and

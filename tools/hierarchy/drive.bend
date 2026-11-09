@@ -9,6 +9,8 @@ import ../../src/components.bend as C
 import ../../src/hierarchy.bend as H
 import ../../src/scene-matrix.bend as M
 import ../../deps/bendvy/src/ecs/world.bend as W
+import ../../deps/bendvy/src/ecs/world-io.bend as WI
+import ../../src/scene-motion.bend as Motion
 import ../../deps/bendvy/src/ecs/entity-key.bend as K
 import ../verify-creation.bend as Consumer
 import ../upload-boundary/scan.bend as S
@@ -85,6 +87,21 @@ def boot() -> IO(Scene.Application() & List<&2,HW.Row>):
   do IO<Scene.Application() & List<&2,HW.Row>>:
     compiled:Create.Compiled <- Consumer.compiled(Create.compile(Scenes.showcase()))
     start(compiled)
+
+# Replay runs in a fresh process and restores the trace's world namespace.
+# Full handles and all recorded component bits are still compared unchanged.
+def start_namespace(namespace:U32,compiled:Create.Compiled) -> IO(Scene.Application() & List<&2,HW.Row>):
+  Create.Compiled{seeds,_} = compiled
+  do IO<Scene.Application() & List<&2,HW.Row>>:
+    created:WI.Creation<D.Schema,D.Store,Unit,Unit> <- WI.with_namespace(~D.Schema,~D.Store,~Unit,~Unit,~D.empty,namespace,Unit{})
+    app:Scene.Application() <- Scene.created(seeds,Motion.Automatic{},created)
+    app:Scene.Application() <- Scene.tick(app)
+    Check.observe(app)
+
+def boot_namespace(namespace:U32) -> IO(Scene.Application() & List<&2,HW.Row>):
+  do IO<Scene.Application() & List<&2,HW.Row>>:
+    compiled:Create.Compiled <- Consumer.compiled(Create.compile(Scenes.showcase()))
+    start_namespace(namespace,compiled)
 
 def series(codes:List<&2,U32>,pair:Scene.Application() & List<&2,HW.Row>) -> IO(Scene.Application() & List<&2,HW.Row>):
   match codes:

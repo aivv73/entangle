@@ -5,10 +5,8 @@ import ../../src/components.bend as C
 import ../../src/content.bend as F
 import ../../src/scene-matrix.bend as M
 import ../../src/scene-schema.bend as D
-import ../../src/scene.bend as Scene
+import ../../src/scene-runtime.bend as Scene
 import ../../src/creation.bend as Create
-import ../../deps/bendvy/src/ecs/execution-schedule.bend as Scheduled
-import ../../deps/bendvy/src/ecs/dependency-application.bend as App
 import ../../deps/bendvy/src/ecs/world.bend as W
 import ../../deps/bendvy/src/ecs/entity-key.bend as Key
 import ../upload-boundary/scan.bend as S
@@ -19,8 +17,8 @@ def captured(rebuild:D.World() -> Scene.Application(),pair:D.World() & Result<&2
     case _:IO.die(Scene.Application() & List<&2,HW.Row>,1,"Hierarchy ECS observation failed")
 
 def capture(app:Scene.Application()) -> IO(Scene.Application() & List<&2,HW.Row>):
-  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
-  captured(world => Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred},HW.read(world))
+  Scene.Application{world,schedule} = app
+  captured(world => Scene.Application{world,schedule},HW.read(world))
 
 def at(rows:List<&2,HW.Row>,index:Nat) -> Maybe<&2,HW.Row>:
   match rows index:

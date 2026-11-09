@@ -1,9 +1,9 @@
 import Base
-import ../../deps/bendvy/src/ecs/owner-product.bend as Product
-import ../../deps/bendvy/src/ecs/chunk-column.bend as Col
+import ../../deps/bendvy/src/ecs/column.bend as Col
+import ../../deps/bendvy/src/ecs/indexed-lifecycle.bend as Metadata
+import ../../deps/bendvy/src/ecs/entity-allocator.bend as A
+import ../../deps/bendvy/src/ecs/clock-state.bend as Clock
 import ../../deps/bendvy/src/ecs/lifecycle.bend as Life
-import ../../deps/bendvy/src/ecs/execution-state.bend as State
-import ../../deps/bendvy/src/ecs/execution-lifecycle-notices.bend as Notice
 import ../../deps/bendvy/src/ecs/entity-key.bend as Key
 import ../../deps/bendvy/src/ecs/change-tick.bend as Tick
 import ../../src/hierarchy.bend as H
@@ -11,8 +11,6 @@ import ../../src/scene-hierarchy.bend as S
 import ../../src/components.bend as C
 import ../../src/scene-schema.bend as D
 import ../../deps/bendvy/src/ecs/world.bend as W
-import ../../deps/bendvy/src/ecs/execution-layout-access.bend as Write
-import ../../deps/bendvy/src/ecs/execution-composer-layout.bend as L
 
 def length_result(result:Result<&2,&1,H.Error,List<&2,H.Spatial>>,size:Nat) -> Type:
   match result:
@@ -126,11 +124,11 @@ def transform(spatial:H.Spatial) -> C.Transform:
   H.Spatial{H.Local{t,_,_,_},_,_} = spatial
   t
 
-def transform_write(scope:S.Scope(),entity:W.Handle<D.Schema>,+value:C.Transform) -> S.Scope() & Maybe<&2,C.Transform>:
-  Write.component_modify(~D.Schema,~D.Columns(),~D.Resources(),~D.components(),~L.InLeft{L.AtLeaf{}},~{==},_ => (value,value))(scope,entity)
+def transform_write(scope:S.Scope(),entity:W.Handle<D.Schema>,value:C.Transform) -> S.Scope() & Bool:
+  D.write_transform(scope,entity,value)
 
-def spatial_write(scope:S.Scope(),entity:W.Handle<D.Schema>,+value:H.Spatial) -> S.Scope() & Maybe<&2,H.Spatial>:
-  Write.component_modify(~D.Schema,~D.Columns(),~D.Resources(),~D.components(),~L.InRight{L.InRight{L.AtLeaf{}}},~{==},_ => (value,value))(scope,entity)
+def spatial_write(scope:S.Scope(),entity:W.Handle<D.Schema>,value:H.Spatial) -> S.Scope() & Bool:
+  D.write_spatial(scope,entity,value)
 
 type Batch is Data:
   EmptyBatch{}
@@ -157,28 +155,36 @@ def ready(batch:Batch,-before:S.Scope(),-after:S.Scope()) -> Type:
     case EmptyBatch{}:{before == after : S.Scope()}
     case Pair{+row,+value,rest}:
       Sigma<&1,&1,S.Scope(),middle => Sigma<&1,&1,S.Scope(),next =>
-        {transform_write(before,entity(row),transform(value)) == (middle,Some{transform(value)}) : S.Scope() & Maybe<&2,C.Transform>} &
-        ({spatial_write(middle,entity(row),value) == (next,Some{value}) : S.Scope() & Maybe<&2,H.Spatial>} & ready(rest,next,after))>>
+        {transform_write(before,entity(row),transform(value)) == (middle,True{}) : S.Scope() & Bool} &
+        ({spatial_write(middle,entity(row),value) == (next,True{}) : S.Scope() & Bool} & ready(rest,next,after))>>
 
 def candidate_length(result:Result<&2,&2,H.Error,List<&2,H.Local>>,size:Nat) -> Type:
   match result:
     case Fail{_}:Unit
     case Done{items}:{List.length(&2,H.Local,items) == size : Nat}
 
-# Real schema qualification: eight cells with a distinct replacement at slot 0.
-def cells(-A:Data,+first:A,+rest:A) -> Array<Maybe<&1,L.Viewed<A,A>>>:
-  ANode{ANode{ANode{ALeaf{Some{L.Viewed{first,first}}},ALeaf{Some{L.Viewed{rest,rest}}}},ANode{ALeaf{Some{L.Viewed{rest,rest}}},ALeaf{Some{L.Viewed{rest,rest}}}}},ANode{ANode{ALeaf{Some{L.Viewed{rest,rest}}},ALeaf{Some{L.Viewed{rest,rest}}}},ANode{ALeaf{Some{L.Viewed{rest,rest}}},ALeaf{Some{L.Viewed{rest,rest}}}}}}
-
-def stamps(+first:Life.Stamp,+rest:Life.Stamp) -> Array<Life.Stamp>:
-  ANode{ANode{ANode{ALeaf{first},ALeaf{rest}},ANode{ALeaf{rest},ALeaf{rest}}},ANode{ANode{ALeaf{rest},ALeaf{rest}},ANode{ALeaf{rest},ALeaf{rest}}}}
+# Real schema qualification: eight payload cells and one canonical live handle.
+def cells(-A:Data,+first:A,+rest:A) -> Array<Maybe<&1,A>>:
+  ANode{ANode{ANode{ALeaf{Some{first}},ALeaf{Some{rest}}},ANode{ALeaf{Some{rest}},ALeaf{Some{rest}}}},ANode{ANode{ALeaf{Some{rest}},ALeaf{Some{rest}}},ANode{ALeaf{Some{rest}},ALeaf{Some{rest}}}}}
 
 def handle() -> W.Handle<D.Schema>:W.Handle{1,Key.EntityKey{1,1}}
 
+def allocator() -> A.Allocator:
+  A.Allocator{2,1,ANode{ALeaf{A.Slot{0,A.Consumed{}}},ALeaf{A.Slot{1,A.Live{}}}},2,1n,[],[Key.EntityKey{1,1}]}
+
+def marks(+first:Maybe<&2,Tick.Tick>,+rest:Maybe<&2,Tick.Tick>) -> Array<Maybe<&2,Tick.Tick>>:
+  ANode{ANode{ANode{ALeaf{first},ALeaf{rest}},ANode{ALeaf{rest},ALeaf{rest}}},ANode{ANode{ALeaf{rest},ALeaf{rest}},ANode{ALeaf{rest},ALeaf{rest}}}}
+
+def metadata(first:Life.Stamp,rest:Life.Stamp) -> Metadata.Metadata:
+  Life.Stamp{added,changed} = first
+  Life.Stamp{old_added,old_changed} = rest
+  Metadata.Metadata{marks(added,old_added),marks(changed,old_changed),8,3n,[]}
+
 def scope(+old:C.Transform,+mesh:C.MeshRef,+accepted:H.Spatial,+stamp:Life.Stamp,+tick:Tick.Tick) -> S.Scope():
-  State.Scope{Product.Owner{L.ColumnSlot{Col.Leaf{cells(C.Transform,old,old),stamps(stamp,stamp)}},Product.Owner{L.ColumnSlot{Col.Leaf{cells(C.MeshRef,mesh,mesh),stamps(stamp,stamp)}},L.ColumnSlot{Col.Leaf{cells(H.Spatial,accepted,accepted),stamps(stamp,stamp)}}}},Unit{},[handle()],tick,None{},Notice.View{1,[],[]}}
+  W.World{1,allocator(),D.Store{Col.indexed_wrap(~D.Schema,~C.Transform,cells(C.Transform,old,old),metadata(stamp,stamp)),Col.indexed_wrap(~D.Schema,~C.MeshRef,cells(C.MeshRef,mesh,mesh),metadata(stamp,stamp)),Col.indexed_wrap(~D.Schema,~H.Spatial,cells(H.Spatial,accepted,accepted),metadata(stamp,stamp))},Unit{},[],[],[],1,Clock.State{tick,[tick]}}
 
 def changed_scope(+old:C.Transform,+mesh:C.MeshRef,+accepted:H.Spatial,+stamp:Life.Stamp,+tick:Tick.Tick,+fresh:H.Spatial,+spatial:Bool) -> S.Scope():
-  State.Scope{Product.Owner{L.ColumnSlot{Col.Leaf{cells(C.Transform,transform(fresh),old),stamps(Life.written(True{},stamp,tick),stamp)}},Product.Owner{L.ColumnSlot{Col.Leaf{cells(C.MeshRef,mesh,mesh),stamps(stamp,stamp)}},L.ColumnSlot{Col.Leaf{cells(H.Spatial,Bool.pick(H.Spatial,spatial,fresh,accepted),accepted),stamps(Bool.pick(Life.Stamp,spatial,Life.written(True{},stamp,tick),stamp),stamp)}}}},Unit{},[handle()],tick,None{},Notice.View{1,[],[]}}
+  W.World{1,allocator(),D.Store{Col.indexed_wrap(~D.Schema,~C.Transform,cells(C.Transform,transform(fresh),old),metadata(Life.written(True{},stamp,tick),stamp)),Col.indexed_wrap(~D.Schema,~C.MeshRef,cells(C.MeshRef,mesh,mesh),metadata(stamp,stamp)),Col.indexed_wrap(~D.Schema,~H.Spatial,cells(H.Spatial,Bool.pick(H.Spatial,spatial,fresh,accepted),accepted),metadata(Bool.pick(Life.Stamp,spatial,Life.written(True{},stamp,tick),stamp),stamp))},Unit{},[],[],[],1,Clock.State{tick,[tick]}}
 
 def one_batch(old:C.Transform,mesh:C.MeshRef,accepted:H.Spatial,fresh:H.Spatial) -> Batch:
   Pair{S.Row{handle(),old,mesh,accepted},fresh,EmptyBatch{}}

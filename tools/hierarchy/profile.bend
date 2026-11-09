@@ -2,14 +2,13 @@ import Base
 import ./benchmark.bend as B
 import ./check.bend as Check
 import ./scenes.bend as Scenes
-import ../../src/scene.bend as Scene
+import ../../src/scene-runtime.bend as Scene
+import ../../src/scene.bend as Factory
 import ../../src/scene-hierarchy.bend as HW
 import ../../src/hierarchy.bend as H
 import ../../src/scene-schema.bend as D
 import ../../src/creation.bend as Create
 import ../../deps/bendvy/src/ecs/world.bend as W
-import ../../deps/bendvy/src/ecs/execution-schedule.bend as Scheduled
-import ../../deps/bendvy/src/ecs/dependency-application.bend as App
 import ../../deps/bend-vulkan/deps/bend-collections/src/math/u64.bend as U
 import ../verify-creation.bend as Consumer
 
@@ -43,11 +42,11 @@ def read(result:D.World() & Result<&2,&2,H.Error,List<&2,HW.Row>>,edit:HW.Edit,s
         derived(world,rows,Result.bind(&2,&2,H.Error,List<&2,H.Local>,List<&2,H.Spatial>,HW.candidate(edit,rows),xs => H.evaluate(xs)),start)
 
 def profile(app:Scene.Application(),edit:HW.Edit) -> IO(Scene.Application()):
-  Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred} = app
+  Scene.Application{world,schedule} = app
   do IO<Scene.Application()>:
     start:U.U64 <- B.time()
     world:D.World() <- read(HW.read(world),edit,start)
-    return Scheduled.Scheduled{App.State{world,nodes,guards,handler,stateBindings},settings,bindings,deferred}
+    return Scene.Application{world,schedule}
 
 def measured(pair:Scene.Application() & List<&2,HW.Row>) -> IO(Unit):
   (app,rows) = pair
@@ -60,7 +59,7 @@ def measured(pair:Scene.Application() & List<&2,HW.Row>) -> IO(Unit):
 def start(compiled:Create.Compiled) -> IO(Unit):
   Create.Compiled{seeds,_} = compiled
   do IO<Unit>:
-    app:Scene.Application() <- Scene.create(seeds)
+    app:Scene.Application() <- Factory.create(seeds)
     app:Scene.Application() <- Scene.tick(app)
     pair:Scene.Application() & List<&2,HW.Row> <- Check.capture(app)
     measured(pair)

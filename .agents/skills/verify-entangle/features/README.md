@@ -47,6 +47,7 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [Camera and window controls](camera-window.md): both interactive apps, camera reset, resize, hide/restore, Escape, and Close.
 - [Public scene creation](scene-creation.md): scene descriptions, compilation, separate instances, shared geometry, and validation.
 - [Headless simulation](headless-simulation.md): eight production ticks, zero-step preservation, split batches, and observations.
+- [Current Bendvy ECS](../../../../docs/verification/2026-11-09-ecs-migration/README.md): schema-bound component families, ordinary registered movement, deferred bootstrap, explicit barriers, full reservation identities, passive extraction, hierarchy publication witnesses, and replay using the trace's recorded world namespace.
 - [Offscreen rendering](offscreen-rendering.md): image output, exact coverage/depth, retained draws, and resource cleanup.
 - [Textured materials](../../../../docs/textured-materials.md): vertex attributes, PNG cache release, sampling and lighting, camera updates, texture replacement and retention, shader controls, and the textured X11 example.
 

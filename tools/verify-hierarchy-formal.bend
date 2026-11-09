@@ -68,7 +68,7 @@ def mutations(+dest:String,lines:List<&2,String>) -> IO(Unit):
         mutations(dest,rest)
 
 def fingerprint() -> IO(String):
-  S.run("sha256sum",["src/hierarchy.bend","src/scene-hierarchy.bend","src/scene-schema.bend","deps/bendvy/src/ecs/execution-access.bend","deps/bendvy/src/ecs/execution-layout-access.bend","deps/bendvy/src/ecs/execution-query-identity.bend","deps/bendvy/src/ecs/chunk-column.bend","deps/bendvy/src/ecs/clock-state.bend","proofs/hierarchy/spec.bend","proofs/hierarchy/LAWS.bend","proofs/hierarchy/PROOF.bend","proofs/hierarchy/mutations.tsv","tools/verify-hierarchy-formal.bend","tools/verify-publication.bend"])
+  S.run("sha256sum",["src/hierarchy.bend","src/scene-hierarchy.bend","src/scene-schema.bend","deps/bendvy/src/ecs/component.bend","deps/bendvy/src/ecs/column.bend","deps/bendvy/src/ecs/indexed-lifecycle.bend","deps/bendvy/src/ecs/entity-allocator.bend","deps/bendvy/src/ecs/world.bend","deps/bendvy/src/ecs/clock-state.bend","proofs/hierarchy/spec.bend","proofs/hierarchy/LAWS.bend","proofs/hierarchy/PROOF.bend","proofs/hierarchy/mutations.tsv","tools/verify-hierarchy-formal.bend","tools/verify-publication.bend"])
 
 def main() -> IO(Unit):
   do IO<Unit>:
