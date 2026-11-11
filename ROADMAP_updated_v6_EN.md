@@ -1,6 +1,6 @@
 # Game Engine in Bend — Roadmap
 
-**Revision:** 6 · November 9, 2026 · updated for Bend 2.0.40, bend-vulkan, bend-ui-test, and the Bendvy fork
+**Revision:** 6 · November 11, 2026 · updated for asset-loading acceptance, Bend 2.0.40, bend-vulkan, bend-ui-test, and the Bendvy fork
 
 **Engine repository:** [Entangle on GitHub](https://github.com/aivv73/entangle). **Vulkan library:** [bend-vulkan on GitHub](https://github.com/aivv73/bend-vulkan). Historical task and verification records remain linked to Entire.
 
@@ -14,6 +14,8 @@
 render/presentation completion, semaphore/fence reuse, retry and uncertainty,
 and resize/Close. Multiple frames in flight and asynchronous presentation require
 an extended passing production proof and live teardown evidence before enablement.
+
+**Asset-loading acceptance:** complete locally on November 11, 2026, against source revision `43d0b62`. All 15 required stages in the [assets, images, and JSON workflow receipt](build/verification/workflow-7uMZbCZY/manifest.tsv) passed. The [separate OBJ verifier](build/verification/workflow-7uMZbCZY/models.stdout) and [direct CLI probes](build/verification/workflow-7uMZbCZY/supplemental.json) also passed. Coverage includes structural corruption, missing sources and dependencies, unsupported variants, cached success and failure, explicit retry, and bounded descriptor checks. PNG checksum-only corruption remains accepted. Exact cache keys and direct JSON manifest loading do not deduplicate path aliases or duplicate paths. Evidence is local and ignored by Git. E4 still requires the model-viewer and gameplay consumers.
 
 **Goal:** an independent, modular game engine, with Bevy-like modularity but a simulation core designed around Bend's computational model. Engine logic and new algorithms are implemented in Bend; native code stays at the system boundary.
 
@@ -143,7 +145,7 @@ not complete R0's ownership audit.
 - Moved two-phase parallel simulation into a separate experiment. MMO support, sharding, and a new scheduler were not added to the required scope.
 - Preserved the Bend-first principle: do not move the engine architecture into C/Rust under the pretext of easier integration.
 
-**Next action:** resolve the current environment's Clang distribution mismatch before claiming a passing canonical workflow for the Bendvy ECS migration at `59833ad`; direct native, window, replay, and sensitivity evidence is complete locally. Retain the qualified Bend 2.0.40 version, published Vulkan pin [S57], and input package [S58]. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers and asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** resolve the current environment's Clang distribution mismatch before claiming a passing canonical workflow for the Bendvy ECS migration at `59833ad`; direct native, window, replay, and sensitivity evidence is complete locally. Retain the qualified Bend 2.0.40 version, published Vulkan pin [S57], and input package [S58]. Close the hierarchy forest/array and retained-handle/column proof bridges before claiming general atomic publication. The remaining E4 product work is model-viewer/gameplay consumers. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
@@ -526,7 +528,7 @@ Capacity pools such as `bend-kit-resources` do not track recorded commands, subm
 - [x] Extend the position/color vertex format with UVs and normals. [Textured materials and directional lighting](docs/textured-materials.md) now use real RGBA8 upload, deferred texture ownership, the existing camera, and both Vulkan rendering paths [S53]. The [textured cube example](examples/textured-scene.bend) loads a PNG through Assets. Implementation and verification are complete; [Trail 30](https://entire.com/et/bend-engine/-/trails/30) records publication state.
 - [x] Add [scene hierarchy](docs/scene-hierarchy.md) through the public API and JSON: keep-local parenting, full affine GlobalTransform, and transactional rejection of cycles, self-links, missing parents, and invalid numerical state [S54]. Implementation and verification are complete; Trail 31 records publication.
 - [x] Propagate parent changes to descendant transforms, world bounds, and lighting through both renderers. Full sequential recalculation, real ECS/replay/window evidence, general laws, sensitivity controls, and one measured read-path improvement are [recorded](docs/verification/2026-11-05-scene-hierarchy/README.md) [S54]. Incremental render change tracking and persistent RenderScene remain E5 work.
-- [ ] Check corrupted files, missing assets, unsupported variants, and repeated loading.
+- [x] Check corrupted files, missing assets, unsupported variants, and repeated loading. Completed locally on November 11, 2026. The [workflow receipt](build/verification/workflow-7uMZbCZY/manifest.tsv), [OBJ results](build/verification/workflow-7uMZbCZY/models.stdout), and [CLI probes](build/verification/workflow-7uMZbCZY/supplemental.json) retain the passing evidence. PNG checksum tolerance and cache-key limits remain as documented above.
 - [ ] Make a model viewer and a small scene with gameplay interaction the two required consumers.
 
 ### Importer and math limits
@@ -901,7 +903,7 @@ Complete, E2. App extraction and static startup registration are on `main` [S31,
 
 **Audit pinned Bend ownership and extend the headless simulation reference (R0).** Reuse E2's step, ownership contract, and CPU runner. Check actual array ownership operations and parallel calls, record an ADR, and define reproducible correctness and benchmark workloads. E2 does not establish chunk transfer or parallel execution. R0 remains an optional experiment after E2, not the next required alpha stage.
 
-**Next action:** use the qualified Bend 2.0.40 toolchain and updated window input package [S58] to implement the remaining model-viewer and gameplay consumers and consolidate asset-error/repeated-loading acceptance. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
+**Next action:** use the qualified Bend 2.0.40 toolchain and updated window input package [S58] to implement the remaining model-viewer and gameplay consumers. Scene hierarchy is implemented and verified [S54]; task closure and code publication are recorded separately under [Trail 31](https://entire.com/et/bend-engine/-/trails/31). E4 remains incomplete, and E5 persistent RenderScene remains planned. Use the [development workflow](docs/development.md) to define required evidence before implementation. Require the presentation prerequisite before multiple frames in flight or asynchronous presentation [S56].
 
 ---
 
