@@ -31,6 +31,7 @@ bend tools/verify-workflow.bend -o build/verify-workflow
 | `assets` | Root frontend proofs, law mutations, real file/cache/release/retry and source-consumer checks. |
 | `images` | Assets plus PNG corpus, full-pixel comparison, real file/cache behavior and decoder mutations. |
 | `json` | Assets plus strict scene/manifest files, reference and resource limits, cache/retry, parser qualification, production mutations and real ECS/offscreen comparison. |
+| `consumers` | Asset and JSON checks, the viewer and courier native windows, real ECS objective coordinates and exact reset, production sensitivity, root laws and controls, and bounded presentation ownership. |
 | `math` | Pinned S41 adapter qualification, exact numerical contracts, production projection and adapter controls, root law mutations, and retained native scene/state/readback comparisons. Downloads the rejected candidate for evaluation only. |
 | `textures` | Source laws, shader regeneration, real RGBA/D32 sampling and lighting, camera updates, texture rollback/retention/replacement, production mutations, and the native failure profile. |
 | `hierarchy` | Root frontend laws and mutations, hierarchy formal checks below, actual ECS forest/edit/rollback checks, JSON anchors, full-state replay, independent geometry/lighting readbacks, and eight runtime production sensitivity controls, including independent world namespaces. |

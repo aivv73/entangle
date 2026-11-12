@@ -51,4 +51,6 @@ Use the [verification profiles](../../../../docs/development.md#run-verification
 - [Offscreen rendering](offscreen-rendering.md): image output, exact coverage/depth, retained draws, and resource cleanup.
 - [Textured materials](../../../../docs/textured-materials.md): vertex attributes, PNG cache release, sampling and lighting, camera updates, texture replacement and retention, shader controls, and the textured X11 example.
 
+- [E4 model viewer and energy courier](../../../../docs/verification/2026-11-11-consumers/README.md) use the `consumers` workflow profile. The native X11 driver covers camera controls, gameplay pickup and delivery, visible progression, exact reset, resize restore, invalid-model fallback, Close, and zero Vulkan objects. The separate native ECS driver compares independent objective coordinates and every reset identity and transform bit. A production mutation checks the carried-crystal oracle.
+
 Application module registration is a developer API described in `docs/modules-registration.md`. This seed map does not claim exhaustive API coverage. Extend it when a task changes an unmapped user path.

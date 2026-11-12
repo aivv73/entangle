@@ -1,3 +1,4 @@
+import ./examples/courier-state.bend as Courier
 import ./src/json-boundary.bend as Json
 import ./src/hierarchy.bend as H
 import ./src/scene-hierarchy.bend as Hierarchy
@@ -1195,3 +1196,22 @@ law hierarchy_transform_rejection_preserves_world:
   for rows:List<&2,Hierarchy.Row>
   for error:H.Error
   {Hierarchy.evaluated(Hierarchy.SetTransform{entity,transform},world,rows,Fail{error}) == (world,Fail{error}) : SceneSchema.World() & Result<&2,&2,H.Error,Unit>}
+
+law courier_reset_restores_every_state:
+  for state:Courier.State
+  {Courier.key(120,state) == Courier.initial() : Courier.State}
+
+law courier_complete_interaction_absorbs:
+  for x:U32
+  for z:U32
+  {Courier.interact(x,z,Courier.Complete{}) == Courier.Complete{} : Courier.Phase}
+
+law courier_complete_movement_stops:
+  for x:U32
+  for z:U32
+  {Courier.key(106,Courier.State{x,z,Courier.Complete{}}) == Courier.State{x,z,Courier.Complete{}} : Courier.State}
+
+law courier_search_cannot_complete:
+  for +x:U32
+  for +z:U32
+  {Courier.interact(x,z,Courier.Searching{}) == Bool.pick(Courier.Phase,U32.is_eq(x,1) && U32.is_eq(z,3),Courier.Carrying{},Courier.Searching{}) : Courier.Phase}

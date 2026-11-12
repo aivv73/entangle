@@ -106,6 +106,34 @@ This example loads a PNG through Asset and draws two textured, lit cubes.
 It uses the same camera controls. See the [material and lifetime reference](docs/textured-materials.md)
 for the vertex layout, lighting parameters, limits, and verification commands.
 
+## Run the E4 consumers
+
+Build the model viewer and the small gameplay scene from the repository root.
+
+```sh
+mkdir -p build
+bend examples/model-viewer.bend -o build/model-viewer
+./build/model-viewer
+# Or supply a triangulated, opaque diffuse OBJ model.
+./build/model-viewer path/to/model.obj
+bend examples/energy-courier.bend -o build/energy-courier
+./build/energy-courier
+```
+
+The viewer centers and fits the model. WASD orbits, QE zooms, and R resets the
+camera. Invalid custom input prints its loading error and displays the bundled
+beacon. The bundled models are original CC0 assets.
+
+Energy courier loads its scene and asset manifest from disk. Press J twice and
+Space to collect the amber crystal. Press L four times and Space to deliver it
+to the violet pad. I and K move across the other grid axis. The crystal follows
+the courier when carried. Successful delivery raises the crystal and expands
+the pad. X resets the full scene. Camera controls match the viewer.
+Escape or the window close button exits either application.
+
+See the [consumer verification record](docs/verification/2026-11-11-consumers/README.md)
+for acceptance, controls, and evidence limits.
+
 ## Create a scene
 
 Describe source geometry with `Vertex`, `Mesh`, and `Basic` from `src/content.bend`.
