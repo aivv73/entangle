@@ -1,3 +1,4 @@
+import ./examples/courier-state.bend as Courier
 import ./src/hierarchy.bend as H
 import ./src/scene-hierarchy.bend as Hierarchy
 import ./src/scene-draw.bend as Draw
@@ -805,3 +806,8 @@ def Laws.hierarchy_missing_rejected(array,index,next):{==}
 def Laws.hierarchy_invalid_derived_rejected(index,local,global,bounds):{==}
 def Laws.hierarchy_parent_rejection_preserves_world(entity,parent,world,rows,error):{==}
 def Laws.hierarchy_transform_rejection_preserves_world(entity,transform,world,rows,error):{==}
+
+def Laws.courier_reset_restores_every_state(state):{==}
+def Laws.courier_complete_interaction_absorbs(x,z):{==}
+def Laws.courier_complete_movement_stops(x,z):{==}
+def Laws.courier_search_cannot_complete(x,z):{==}
